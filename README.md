@@ -25,5 +25,5 @@ the same as Clojure. By using this software in any fashion, you are
 agreeing to be bound by the terms of this license. You must not remove
 this notice, or any other, from this software. A copy of the license
 can be found in
-[resources/public/epl-v10.html](https://rawgit.com/brunchboy/afterglow/master/resources/public/epl-v10.html)
+[LICENSE](https://rawgit.com/brunchboy/dysentery/master/LICENSE)
 within this project.
