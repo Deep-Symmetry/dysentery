@@ -18,6 +18,77 @@ That said, if you find anything wrong, or discover anything new,
 *please* open an issue or submit a pull request so we can all improve
 our understanding together.
 
+Dysentery is currently being developed as a
+[Clojure](http://clojure.org/) library, because I find that to be the
+most powerful development environment available to me at the moment.
+When released, it will be usable as a standard Java package on Maven
+Central, but for now if you want to play with it you'll need to learn
+a little bit about Clojure.
+
+The only feature implemented so far is the ability to watch for DJ
+Link traffic on all your network interfaces, and tell you what devices
+have been noticed, and the local and broadcast addresses you will want
+to use when creating a virtual CDJ device to participate in that
+network. Here is an example of trying that out by running Dysentery as
+an executable jar on my network at home:
+
+```
+> java -jar target/dysentery.jar
+Looking for DJ Link devices...
+Found:
+   CDJ-2000nexus /172.16.42.5
+   DJM-2000nexus /172.16.42.3
+   CDJ-2000nexus /172.16.42.4
+
+To communicate create a virtual CDJ with address /172.16.42.2
+and use broadcast address /172.16.42.255
+```
+
+To build it yourself, and play with it interactively, you will need to
+clone this repository and install [Leiningen](http://leiningen.org).
+Then, within the directory into which you cloned the repo, you can
+type `lein repl` to enter a Clojure Read-Eval-Print-Loop with the
+project loaded:
+
+```
+> lein repl
+nREPL server started on port 53806 on host 127.0.0.1 - nrepl://127.0.0.1:53806
+REPL-y 0.3.7, nREPL 0.2.12
+Clojure 1.8.0
+Java HotSpot(TM) 64-Bit Server VM 1.8.0_77-b03
+dysentery loaded.
+dysentery.core=> 
+```
+
+At that point, you can evalute Clojure expressions:
+
+```clojure
+(find-devices)
+;; => Looking for DJ Link devices...
+;; => Found:
+;; =>   CDJ-2000nexus /172.16.42.5
+;; =>   DJM-2000nexus /172.16.42.3
+;; =>   CDJ-2000nexus /172.16.42.4
+;; =>
+;; => To communicate create a virtual CDJ with address /172.16.42.2
+;; => and use broadcast address /172.16.42.255
+nil
+```
+
+To build the executable jar:
+
+```
+> lein uberjar
+Compiling dysentery.core
+Compiling dysentery.finder
+Compiling dysentery.util
+Created /Users/james/git/dysentery/target/dysentery-0.1.0-SNAPSHOT.jar
+Created /Users/james/git/dysentery/target/dysentery.jar
+```
+
+There will soon be much more here, and much more documentation, if all
+goes as planned.
+
 ### History
 
 This research began in the summer of 2015 as I was trying to figure
