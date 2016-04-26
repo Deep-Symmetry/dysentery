@@ -3,7 +3,7 @@ Exploring ways to participate in a Pioneer Pro DJ Link network.
 
 [![License](https://img.shields.io/badge/License-Eclipse%20Public%20License%201.0-blue.svg)](#license)
 
-### Status
+## Status
 
 This is in no way a sanctioned implementation of the protocols. It
 should be obvious, but:
@@ -88,6 +88,14 @@ Created /Users/james/git/dysentery/target/dysentery.jar
 
 There will soon be much more here, and much more documentation, if all
 goes as planned.
+
+### Analysis
+
+The packet capture being used to implement this protocol can be
+[downloaded](doc/assets/powerup.pcapng) so you can see if you notice
+anything we have not. Our analysis so far can be found
+[here](doc/assets/CaptureAnalysis.pdf). Please help us figure out
+more if you can!
 
 ### History
 
