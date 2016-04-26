@@ -1,39 +1,58 @@
 \documentclass[11pt]{article}
 
+\usepackage[english]{babel}
+\usepackage{courier}
+\usepackage[bottom]{footmisc}
 \usepackage{bytefield}
+\usepackage{hyperref}
+
 \title{DJ Link Packet Analysis}
-\author{James Elliott}
+\author{James Elliott\\Deep Symmetry, LLC}
 
 \begin{document}
 
 \maketitle
 
+\abstract{The protocol used by Pioneer professional DJ equipment to
+  communicate and coordinate performances can be monitored to provide
+  useful information for synchronizing other software, such as light
+  shows and sequencers. By creating a ``virtual CDJ'' that sends
+  appropriate packets to the network, other devices can be induced to
+  send packets containing even more useful information about their
+  state. This paper documents what has been learned so far about the
+  protocol, and how to accomplish these tasks.}
+
 \section{Mixer Startup}
 
 When the mixer starts up, after it obtains an IP address (or gives up
 on doing that and self-assigns an address), it sends out what look
-like a series of packets simply announcing its existence to UDP port
-50000 on the broadcast address of the local network.
+like a series of packets\footnote{The packet capture described in this
+  analysis can be found at
+  \url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/powerup.pcapng}}
+simply announcing its existence to UDP port 50000 on the broadcast
+address of the local network.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.5em]{16}
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
-        \bitboxes*{1}{{51} {73} {70} {74} {31} {57} {6d} {4a} {4f} {4c} {\textbf{0a}} {00}}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{0a}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with 00)} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{01} {02} {00} {25} {02}} \\
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 02}} \\
   \end{bytefield}
   \caption{Initial announcement packets from Mixer}
   \label{fig:mixerInitial}
 \end{figure}
 
-These have a data length of 37 bytes, appear roughly every 300
-milliseconds, and have the content shown in Figure
-\ref{fig:mixerInitial}.
+These have a data length of 37\footnote{Values within packets are
+  shown in hexadecimal, while packet lengths and byte offsets are
+  discussed in decimal.} bytes, appear roughly every 300 milliseconds,
+and have the content shown in Figure \ref{fig:mixerInitial}.
 
 The tenth byte (inside what is labeled the header) is bolded because
 its value changes in the different types of packets which follow.
@@ -50,12 +69,13 @@ port they are connected to?
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
-        \bitboxes*{1}{{51} {73} {70} {74} {31} {57} {6d} {4a} {4f} {4c} {\textbf{00}} {00}}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{00}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with 00)} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{01} {02} {00} {2c} {\emph{N}} {02}} &
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {\emph{N}} {\tt 02}} &
     \bitbox{6}{MAC address} \\
   \end{bytefield}
   \caption{First-stage Mixer device number assignment packets}
@@ -77,30 +97,31 @@ a data length of 50 bytes, and are again sent to UDP port 50000 on the
 local network broadcast address, at roughly 300 millisecond intervals,
 with the content shown in Figure \ref{fig:mixerStage2}.
 
-I identify these as claiming/identifying the device number because the
-value \emph{D} at byte 46 is the same as the device number that the
-mixer uses to identify itself (0x21) and the same is true for the
-corresponding packets seen from the CDJs (they use device numbers 2
-and 3, as they are connected to those ports/channels on the mixer).
-
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{bytefield}[bitwidth=1.5em]{16}
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
-        \bitboxes*{1}{{51} {73} {70} {74} {31} {57} {6d} {4a} {4f} {4c} {\textbf{02}} {00}}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{02}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with 00)} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{01} {02} {00} {32}} &
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 32}} &
     \bitbox{4}{IP address} & \bitbox{6}{MAC address} &
     \bitbox{1}{\emph{D}} & \bitbox{1}{\emph{N}} \\
-    \bitboxes*{1}{{02} {01}} \\
+    \bitboxes*{1}{{\tt 02} {\tt 01}} \\
   \end{bytefield}
   \caption{Second-stage Mixer device number assignment packets}
   \label{fig:mixerStage2}
 \end{figure}
+
+I identify these as claiming/identifying the device number because the
+value \emph{D} at byte 46 is the same as the device number that the
+mixer uses to identify itself ({\tt 0x21}) and the same is true for the
+corresponding packets seen from the CDJs (they use device numbers 2
+and 3, as they are connected to those ports/channels on the mixer).
 
 As with the previous series of three packets, the value \emph{N} at
 byte 47 takes on the values 1, 2, and 3 in the three packets.
@@ -115,12 +136,13 @@ content shown in Figure \ref{fig:mixerStage3}.
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
-        \bitboxes*{1}{{51} {73} {70} {74} {31} {57} {6d} {4a} {4f} {4c} {\textbf{04}} {00}}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{04}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with 00)} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{01} {02} {00} {26}} &
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 26}} &
     \bitbox{1}{\emph{D}} & \bitbox{1}{\emph{N}} \\
   \end{bytefield}
   \caption{Final-stage Mixer device number assignment packets}
@@ -128,8 +150,9 @@ content shown in Figure \ref{fig:mixerStage3}.
 \end{figure}
 
 As before the value \emph{D} at byte 36 is the same as the device
-number that the mixer uses to identify itself (0x21) and \emph{N} at
-byte 37 takes on the values 1, 2, and 3 in the three packets.
+number that the mixer uses to identify itself ({\tt 0x21}) and
+\emph{N} at byte 37 takes on the values 1, 2, and 3 in the three
+packets.
 
 Once those are sent, the mixer seems to settle down and send what
 looks like a keep-alive packet to retain presence on the network and
@@ -143,15 +166,16 @@ the content shown in Figure \ref{fig:mixerKeepalive}.
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
-        \bitboxes*{1}{{51} {73} {70} {74} {31} {57} {6d} {4a} {4f} {4c} {\textbf{06}} {00}}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{06}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with 00)} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{01} {02} {00} {36}} &
-    \bitbox{1}{\emph{D}} & \bitbox{1}{02} &
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
+    \bitbox{1}{\emph{D}} & \bitbox{1}{\tt 02} &
     \bitbox{6}{MAC address} & \bitbox{4}{IP address} \\
-    \bitboxes*{1}{{01} {00} {00} {00} {02} {00}} \\
+    \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 02} {\tt 00}} \\
   \end{bytefield}
   \caption{Mixer keep-alive packets}
   \label{fig:mixerKeepalive}
@@ -162,64 +186,67 @@ the content shown in Figure \ref{fig:mixerKeepalive}.
 When a CDJ starts up the procedure and packets are nearly identical,
 with groups of three packets sent at 300 millisecond intervals to port
 50000 of the local network broadcast address. The only difference
-between Figure \ref{fig:mixerInitial} and Figure \ref{fig:cdjInitial}
-is the final byte, which is 01 for the CDJ, and was 02 for the mixer.
+between Figure \ref{fig:cdjInitial} and Figure \ref{fig:mixerInitial}
+is the final byte, which is {\tt 0x01} for the CDJ, and was {\tt 0x02}
+for the mixer.
 
 \begin{figure}[h]
   \begin{bytefield}[bitwidth=1.5em]{16}
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
-        \bitboxes*{1}{{51} {73} {70} {74} {31} {57} {6d} {4a} {4f} {4c} {\textbf{0a}} {00}}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{0a}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with 00)} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{01} {02} {00} {25} {01}} \\
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 01}} \\
   \end{bytefield}
   \caption{Initial announcement packets from CDJ}
   \label{fig:cdjInitial}
 \end{figure}
 
 Similarly, the next series of three packets from the CDJ are nearly
-identical to those from the mixer. The only differences between Figure
-\ref{fig:mixerStage1} and Figure \ref{fig:cdjStage1} is byte 37
-(immediately after the packet counter \emph{N}), which again is 01 for
-the CDJ, and was 02 for the mixer.
+identical to those from the mixer. The only difference between Figure
+\ref{fig:cdjStage1} and Figure \ref{fig:mixerStage1} is byte 37
+(immediately after the packet counter \emph{N}), which again is {\tt
+  0x01} for the CDJ, and was {\tt 0x02} for the mixer.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.5em]{16}
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
-        \bitboxes*{1}{{51} {73} {70} {74} {31} {57} {6d} {4a} {4f} {4c} {\textbf{00}} {00}}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a}
+          {\tt 4f} {\tt 4c} {\tt \textbf{00}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with 00)} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{01} {02} {00} {2c} {\emph{N}} {01}} &
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {\emph{N}} {\tt 01}} &
     \bitbox{6}{MAC address} \\
   \end{bytefield}
   \caption{First-stage CDJ device number assignment packets}
   \label{fig:cdjStage1}
 \end{figure}
 
-However it appears that the CDJ skips the second stage of claiming a
-device number, probably because it is configured to be automatically
-assigned a device number based on the port of the mixer to which it is
-connected, and we cannot see a packet that the mixer sent it assigning
-it that device number. Instead, it jumps right to the end of the third
-and final stage, sending a single 38-byte packet with header byte 10
-set to 04 (which identified the three packets of the third stage when
-the mixer was starting up), with content identical to Figure
-\ref{fig:mixerStage3}.
+However it appears that in this capture the CDJ skips the second stage
+of claiming a device number, probably because it is configured to be
+automatically assigned a device number based on the port of the mixer
+to which it is connected, and we cannot see a packet that the mixer
+sent it assigning it that device number. Instead, it jumps right to
+the end of the third and final stage, sending a single 38-byte packet
+with header byte 10 set to {tt 04} (which identified the three packets
+of the third stage when the mixer was starting up), with content
+identical to Figure \ref{fig:mixerStage3}.
 
-Even though the value of \emph{N} is 01, this is the only packet in
-this series that the CDJ sends. It would probably behave differently
-if configured to assign its own device number (behaving like we saw
-the mixer behave in claiming its device number).
+Even though the value of \emph{N} is {\tt 01}, this is the only packet
+in this series that the CDJ sends. It would probably behave
+differently if configured to assign its own device number (behaving
+like we saw the mixer behave in claiming its device number).
 
-It then moves to the final keep-alive stage, sending out 54-byte
+The CDJ then moves to the keep-alive stage, sending out 54-byte
 packets with the content shown in Figure \ref{fig:cdjKeepalive}.
 
 \begin{figure}[h]
@@ -227,15 +254,16 @@ packets with the content shown in Figure \ref{fig:cdjKeepalive}.
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
-        \bitboxes*{1}{{51} {73} {70} {74} {31} {57} {6d} {4a} {4f} {4c} {\textbf{06}} {00}}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{06}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with 00)} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{01} {02} {00} {36}} &
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
     \bitbox{1}{\emph{D}} & \bitbox{1}{01} &
     \bitbox{6}{MAC address} & \bitbox{4}{IP address} \\
-    \bitboxes*{1}{{01} {00} {00} {00} {01} {00}} \\
+    \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 01} {\tt 00}} \\
   \end{bytefield}
   \caption{CDJ keep-alive packets}
   \label{fig:cdjKeepalive}
@@ -243,10 +271,145 @@ packets with the content shown in Figure \ref{fig:cdjKeepalive}.
 
 As seems to always be the case when comparing mixer and CDJ packets,
 the difference between this and Figure \ref{fig:mixerKeepalive} is
-that byte 37 (following the device number \emph{D}) has the value 01
-rather than 02, and the same is true of the second-to-last byte in
-each of the packets. (Byte 52 is 01 in Figure \ref{fig:cdjKeepalive}
-and 02 in Figure \ref{fig:mixerKeepalive}.
+that byte 37 (following the device number \emph{D}) has the value {\tt
+  01} rather than {\tt 02}, and the same is true of the second-to-last
+byte in each of the packets. (Byte 52 is {\tt 01} in Figure
+\ref{fig:cdjKeepalive} and {\tt 02} in Figure \ref{fig:mixerKeepalive}.
+
+\section{Tracking BPM and Beats}
+
+For some time now,
+Afterglow\footnote{\url{https://github.com/brunchboy/afterglow\#afterglow}}
+has been able to synchronize its light shows with music being played
+on Pioneer equipment by observing packets broadcast by the mixer to
+port 50001. Until recently, however, it was not possible to tell which
+player was the Master, so there was no way to determine the down beat
+(the start of each measure). This section will be expanded and more
+details provided as Afterglow is updated to take advantage of the
+discoveries described in the next section.
+
+Until then, here is a summary of what is currently done. A socket is
+opened and bound to port 50001. Whenever a packet from the mixer is
+received on this socket, if the length is 96 bytes, it is known to
+contain beat and BPM information. The current BPM can be obtained as:
+
+\[ \frac{byte[90] \times 256 + byte[91]}{100} \]
+
+These packets are sent on each beat, and the current beat number (1,
+2, 3 or 4) is sent in $byte[92]$. However, the beat number is
+\emph{not} synchronized with the master player, and so it is not
+useful for much. We expect to make use of the Virtual CDJ technique to
+determine the actual beat number soon.
+
+\section{Creating a Virtual CDJ}
+
+Although some useful information can be obtained simply by watching
+broadcast traffic on a network containing Pioneer gear, in order to
+get important details it is necessary to cause the gear to send you
+information directly. This can be done by simulating a ``Virtual
+CDJ''.\footnote{Thanks are due to Diogo Santos for discovering the
+  trick of creating a virtual CDJ in order to receive detailed status
+  information from other devices.}
+
+To do this, bind a UDP server socket to port 50002 on the network
+interface on which you are receiving DJ-Link traffic, and start
+sending keep-alive packets to port 50000 on the broadcast address as
+if you were a CDJ. Follow the structure shown in Figure
+\ref{fig:cdjKeepalive}, but use the actual MAC and IP addresses of the
+network interface on which you are receiving DJ-Link traffic, so the
+devices can see how to reach you.
+
+You can use a value like 5 for \emph{D} (the device/player number) so
+as not to conflict with any actual players you have on the network,
+and any name you would like. As long as you are sending these packets
+roughly every 1.5 seconds, the other players and mixers will begin
+sending packets directly to the socket you have opened on port 50002.
+
+We are just beginning to analyze all the information which can be
+gleaned from these packets, but here is what we know so
+far.\footnote{Examples of packets discussed in this section can be
+  found in the capture at
+  \url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/to-virtual.pcapng}}
+
+\subsection{Mixer Status Packets}
+
+Packets from the mixer will have a length of 56 bytes and the content
+shown in Figure \ref{fig:mixerStatus}.
+
+\begin{figure}[h]
+  \begin{bytefield}[bitwidth=1.5em]{16}
+    \bitheader{0-15} \\
+    \begin{rightwordgroup}{Name}
+      \begin{leftwordgroup}{Header}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{29}}}
+        & \bitbox[lrt]{5}{}
+      \end{leftwordgroup} \\
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{rightwordgroup} \\
+    \bitbox{1}{\tt 00} & \bitbox{1}{\emph{D}} & \bitboxes*{1}{{\tt 00} {\tt 14}} &
+    \bitbox{1}{\emph{D}} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt d0} {\tt 00} {\tt 10} {\tt 00}
+      {\tt 00} {\tt 80} {\tt 00} {\tt 2e} {\tt e0}} \\
+    \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09} {\tt 00} {\tt 04}}
+  \end{bytefield}
+  \caption{Mixer status packets}
+  \label{fig:mixerStatus}
+\end{figure}
+
+Packets coming from a DJM-2000 nexus connected as the only mixer on
+the network contain a value of 33 ({\tt 0x21}) for their Device Number
+\emph{D} (bytes 33 and 36).
+
+\subsection{CDJ Status Packets}
+
+Packets from a CDJ will have a length of 212 bytes and the content
+shown in Figure \ref{fig:cdjStatus}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.5em]{16}
+    \bitheader{0-15} \\
+    \begin{rightwordgroup}{Name}
+      \begin{leftwordgroup}{Header}
+        \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+          {\tt 4c} {\tt \textbf{0a}}}
+        & \bitbox[lrt]{5}{}
+      \end{leftwordgroup} \\
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{rightwordgroup} \\
+    \bitbox{1}{\tt 03} & \bitbox{1}{\emph{D}} & \bitboxes*{1}{{\tt 00} {\tt b0}} &
+    \bitbox{1}{\emph{D}} & \bitboxes*{1}{{\tt 00} {\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
+      {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} \\
+    \wordbox[lrt]{1}{Details omitted\dots} \\
+    \skippedwords \\
+    \wordbox[lrb]{1}{} \\
+  \end{bytefield}
+  \caption{CDJ status packets (partial)}
+  \label{fig:cdjStatus}
+\end{figure}
+
+This is only a partial diagram, and will be fleshed out as we progress
+with our analysis. The Device Number in \emph{D} (bytes 33 and 36) is
+the Player Number as displayed on the CDJ itself. In the case of this
+capture, the CDJs were assigned Player Numbers 2 and 3.
+
+We do currently know that byte 137 is a bit field
+containing some very useful state flags, detailed in Figure
+\ref{fig:cdjStateFlags}.
+
+\begin{figure}[ht]
+  \begin{bytefield}[endianness=big,bitwidth=4em]{8}
+    \bitheader{0-7} \\
+    \bitbox{1}{\tt 1} & \bitbox{1}{\small{Play}} & \bitbox{1}{\small{Master}} & \bitbox{1}{\small{Sync}}
+    \bitbox{1}{\small{On-Air}} & \bitbox{1}{\tt 1} & \bitbox{1}{\tt 0} & \bitbox{1}{\tt 0} \\
+  \end{bytefield}
+  \caption{CDJ state flag bits}
+  \label{fig:cdjStateFlags}
+\end{figure}
+
+We have not yet seen any other values for bits 0--2 or 7, so are
+unsure if they also carry meaning. If you ever find different values
+for them, please let us know by filing an Issue!
+\url{https://github.com/brunchboy/dysentery/issues}
 
 \end{document}
 
