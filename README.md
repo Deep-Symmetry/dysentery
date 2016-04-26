@@ -25,12 +25,12 @@ When released, it will be usable as a standard Java package on Maven
 Central, but for now if you want to play with it you'll need to learn
 a little bit about Clojure.
 
-The only feature implemented so far is the ability to watch for DJ
-Link traffic on all your network interfaces, and tell you what devices
-have been noticed, and the local and broadcast addresses you will want
-to use when creating a virtual CDJ device to participate in that
-network. Here is an example of trying that out by running Dysentery as
-an executable jar on my network at home:
+It is already able to watch for DJ Link traffic on all your network
+interfaces, and tell you what devices have been noticed, and the local
+and broadcast addresses you will want to use when creating a virtual
+CDJ device to participate in that network. Here is an example of
+trying that out by running Dysentery as an executable jar on my
+network at home:
 
 ```
 > java -jar target/dysentery.jar
@@ -43,6 +43,14 @@ Found:
 To communicate create a virtual CDJ with address /172.16.42.2 and MAC address 3c:15:c2:e7:08:6b
 and use broadcast address /172.16.42.255
 ```
+
+There is also preliminary code which uses that information to set up a
+virtual CDJ that announces itself on the network and starts receiving
+packets from the mixer and other players. That is not yet hooked up to
+the command line, and we are just starting to decipher the information
+we get back, but we are progressing rapidly. You can uncomment a line
+in `core.clj` if you want to turn that on, and watch the packets which
+are gathered by device number in the `state` atom within `vcdj.clj`.
 
 To build it yourself, and play with it interactively, you will need to
 clone this repository and install [Leiningen](http://leiningen.org).
