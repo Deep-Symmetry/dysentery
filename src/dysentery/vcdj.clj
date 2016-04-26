@@ -80,18 +80,19 @@
   [header-type payload]
   (let [packet (byte-array (concat header-bytes [header-type 00] (:device-name @state) payload))
         datagram (DatagramPacket. packet (count packet) (:destination @state) finder/announce-port)]
-    (try
-      (.send (:socket @state) datagram)
-      (catch Exception e
-        (timbre/error e "Unable to send packet to DJ-Link announcement port.")))))
+    (.send (:socket @state) datagram)))
 
 (defn- send-keep-alive
   "Send a packet which keeps us marked as present and active on the DJ
   Link network."
   []
   (let [{:keys [player-number mac-address ip-address]} @state]
-    (send-packet 6 (concat [0x01 0x02 0x00 0x36 player-number 0x01] mac-address ip-address
-                           [0x01 0x00 0x00 0x00 0x01 0x00]))))
+    (try
+      (send-packet 6 (concat [0x01 0x02 0x00 0x36 player-number 0x01] mac-address ip-address
+                             [0x01 0x00 0x00 0x00 0x01 0x00]))
+      (catch Exception e
+        (timbre/error e "Unable to send keep-alive packet to DJ-Link announcement port, shutting down.")
+        (shut-down)))))
 
 (defn start
   "Create a virtual CDJ on the specified address and interface, with
