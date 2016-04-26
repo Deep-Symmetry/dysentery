@@ -132,10 +132,10 @@
     (= (bit-and (address-to-int address-1) prefix-mask)
        (bit-and (address-to-int address-2) prefix-mask))))
 
-(defn find-interface-address-for-device
+(defn find-interface-and-address-for-device
   "Given a device map (as returned by [[current-dj-link-devices]]),
-  figure out the correct network interface address to use to
-  communicate with that device."
+  figure out the correct network interface and interface address to
+  use to communicate with that device."
   [device]
   (loop [interfaces (enumeration-seq (NetworkInterface/getNetworkInterfaces))]
     (when-let [current (first interfaces)]
@@ -145,6 +145,6 @@
                              (same-network? (.getNetworkPrefixLength candidate)
                                             (.getAddress candidate)
                                             (:address device)))
-                    candidate) ; We found the right InterfaceAddress, return it
+                    [current candidate]) ; We found the right NetworkInterface and InterfaceAddress, return them
                   (recur (rest addresses)))))
           (recur (rest interfaces))))))

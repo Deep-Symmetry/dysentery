@@ -40,7 +40,7 @@ Found:
    DJM-2000nexus /172.16.42.3
    CDJ-2000nexus /172.16.42.4
 
-To communicate create a virtual CDJ with address /172.16.42.2
+To communicate create a virtual CDJ with address /172.16.42.2 and MAC address 3c:15:c2:e7:08:6b
 and use broadcast address /172.16.42.255
 ```
 
@@ -70,7 +70,7 @@ At that point, you can evalute Clojure expressions:
 ;; =>   DJM-2000nexus /172.16.42.3
 ;; =>   CDJ-2000nexus /172.16.42.4
 ;; =>
-;; => To communicate create a virtual CDJ with address /172.16.42.2
+;; => To communicate create a virtual CDJ with address /172.16.42.2 and MAC address 3c:15:c2:e7:08:6b
 ;; => and use broadcast address /172.16.42.255
 nil
 ```

@@ -1,7 +1,8 @@
 (ns dysentery.core
   "This is the main class for running Dysentery as a self-contained
   JAR application."
-  (:require [dysentery.finder :as finder])
+  (:require [dysentery.finder :as finder]
+            [dysentery.util :as util])
   (:gen-class))
 
 (defn describe-devices
@@ -12,9 +13,11 @@
   (doseq [device devices]
     (println "  " (:name device) (.toString (:address device))))
   (println)
-  (let [interface-address (finder/find-interface-address-for-device (first devices))]
-    (println "To communicate create a virtual CDJ with address" (.toString (.getAddress interface-address)))
-    (println "and use broadcast address" (.toString (.getBroadcast interface-address)))))
+  (let [[interface address] (finder/find-interface-and-address-for-device (first devices))]
+    (print "To communicate create a virtual CDJ with address" (.toString (.getAddress address)))
+    (println " and MAC address" (clojure.string/join ":" (map (partial format "%02x")
+                                                             (map util/unsign (.getHardwareAddress interface)))))
+    (println "and use broadcast address" (.toString (.getBroadcast address)))))
 
 (defn find-devices
   "Run a loop that waits a few seconds to see if any DJ Link devices
