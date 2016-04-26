@@ -81,8 +81,8 @@
   (remove-stale-devices))
 
 (defn start
-  "Make sure the UDP server socket is open and the packet reception
-  thread is running, starting fresh if need be."
+  "Open UDP server socket and create the packet reception thread,
+  discarding any former ones that might have existed."
   []
   (shut-down)
   (try

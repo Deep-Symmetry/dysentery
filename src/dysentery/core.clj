@@ -2,7 +2,8 @@
   "This is the main class for running Dysentery as a self-contained
   JAR application."
   (:require [dysentery.finder :as finder]
-            [dysentery.util :as util])
+            [dysentery.util :as util]
+            [dysentery.vcdj :as vcdj])
   (:gen-class))
 
 (defn describe-devices
@@ -14,6 +15,7 @@
     (println "  " (:name device) (.toString (:address device))))
   (println)
   (let [[interface address] (finder/find-interface-and-address-for-device (first devices))]
+    #_(vcdj/start interface address)
     (print "To communicate create a virtual CDJ with address" (.toString (.getAddress address)))
     (println " and MAC address" (clojure.string/join ":" (map (partial format "%02x")
                                                              (map util/unsign (.getHardwareAddress interface)))))
