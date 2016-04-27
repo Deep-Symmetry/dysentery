@@ -28,29 +28,39 @@ a little bit about Clojure.
 It is already able to watch for DJ Link traffic on all your network
 interfaces, and tell you what devices have been noticed, and the local
 and broadcast addresses you will want to use when creating a virtual
-CDJ device to participate in that network. Here is an example of
-trying that out by running Dysentery as an executable jar on my
-network at home:
+CDJ device to participate in that network.
+
+Here is an example of trying that out by running Dysentery as an
+executable jar on my network at home:
 
 ```
-> java -jar target/dysentery.jar
+> java -jar dysentery.jar
 Looking for DJ Link devices...
 Found:
-   CDJ-2000nexus /172.16.42.5
-   DJM-2000nexus /172.16.42.3
    CDJ-2000nexus /172.16.42.4
+   DJM-2000nexus /172.16.42.5
+   CDJ-2000nexus /172.16.42.6
 
-To communicate create a virtual CDJ with address /172.16.42.2 and MAC address 3c:15:c2:e7:08:6b
-and use broadcast address /172.16.42.255
+To communicate create a virtual CDJ with address /172.16.42.2,
+MAC address 3c:15:c2:e7:08:6c, and use broadcast address /172.16.42.255
+Type ^C to exit.
 ```
 
-There is also preliminary code which uses that information to set up a
-virtual CDJ that announces itself on the network and starts receiving
-packets from the mixer and other players. That is not yet hooked up to
-the command line, and we are just starting to decipher the information
-we get back, but we are progressing rapidly. You can uncomment a line
-in `core.clj` if you want to turn that on, and watch the packets which
-are gathered by device number in the `state` atom within `vcdj.clj`.
+It also creates a virtual CDJ to ask those devices to send status
+updates, and opens windows tracking the packets it receives from
+those devices. When a packet changes the value of one of the bytes
+displayed, the background of that byte is drawn in blue, which
+gradually fades back to black when the value is not changing. This
+helps to identify what parts of the packet change when you do
+something on the device being analyzed.
+
+<img src="doc/assets/PacketWindow.png" width="800" alt="Packet Window">
+
+
+To try this, download the latest `dysentery.jar` from the
+[releases](https://github.com/brunchboy/dysentery/releases) page, make
+sure you have a recent Java environment installed, and run it as shown
+above.
 
 To build it yourself, and play with it interactively, you will need to
 clone this repository and install [Leiningen](http://leiningen.org).
@@ -71,15 +81,15 @@ dysentery.core=>
 At that point, you can evalute Clojure expressions:
 
 ```clojure
-(find-devices)
+(view/find-devices)
 ;; => Looking for DJ Link devices...
 ;; => Found:
 ;; =>   CDJ-2000nexus /172.16.42.5
 ;; =>   DJM-2000nexus /172.16.42.3
 ;; =>   CDJ-2000nexus /172.16.42.4
 ;; =>
-;; => To communicate create a virtual CDJ with address /172.16.42.2 and MAC address 3c:15:c2:e7:08:6b
-;; => and use broadcast address /172.16.42.255
+;; => To communicate create a virtual CDJ with address /172.16.42.2,
+;; => MAC address 3c:15:c2:e7:08:6b, and use broadcast address /172.16.42.255
 nil
 ```
 
@@ -90,6 +100,8 @@ To build the executable jar:
 Compiling dysentery.core
 Compiling dysentery.finder
 Compiling dysentery.util
+Compiling dysentery.vcdj
+Compiling dysentery.view
 Created /Users/james/git/dysentery/target/dysentery-0.1.0-SNAPSHOT.jar
 Created /Users/james/git/dysentery/target/dysentery.jar
 ```

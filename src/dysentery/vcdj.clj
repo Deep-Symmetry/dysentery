@@ -56,13 +56,41 @@
            (timbre/warn e "Problem reading from DJ Link player socket, shutting down.")
            (shut-down)))))
 
+(defonce ^{:private true
+           :doc "Holds a set of functions to call whenever a packet
+  has been received on the incoming status port. The function will be
+  called with two arguments, the device number found in the packet,
+  and the vector of unsigned byte values corresponding to the packet
+  data."}
+  packet-listeners (atom #{}))
+
 (defn- process-packet
   "React to a packet that was sent to our player port."
   [packet data]
   ;; For now just stash the most recent packet and data into our state.
   (swap! state assoc :packet packet :data data)
   (let [device-number (get data 33)]
-    (swap! state assoc-in [:device-data device-number] data)))
+    (swap! state assoc-in [:device-data device-number] data)
+    (when (seq @packet-listeners)
+      (doseq [listener @packet-listeners]
+        (try
+          (listener device-number data)
+          (catch Throwable t
+            (timbre/warn t "Problem calling device packet listener")))))))
+
+(defn add-packet-listener
+  "Registers a function to be called whenever a packet is sent to the
+  incoming status port. The function will be called with two
+  arguments, the device number found in the packet, and the vector of
+  unsigned byte values corresponding to the packet data."
+  [listener]
+  (swap! packet-listeners conj listener))
+
+(defn remove-packet-listener
+  "Stops calling a packet listener function that was registered with
+  [[add-packet-listener]]."
+  [listener]
+  (swap! packet-listeners disj listener))
 
 (def keep-alive-interval
   "How often, in milliseconds, we should send keep-alive packets to
@@ -112,12 +140,12 @@
              :destination (.getBroadcast address)
              :watcher (future (loop []
                                 (let [packet (receive socket)
-                                      data (.getData packet)]
+                                      data (vec (map util/unsign (take (.getLength packet) (.getData packet))))]
                                   (process-packet packet data))
                                 (recur)))
              :keep-alive (future (loop []
-                                   (send-keep-alive)
                                    (Thread/sleep keep-alive-interval)
+                                   (send-keep-alive)
                                    (recur)))))
 
     (catch Exception e
