@@ -43,7 +43,7 @@ Found:
 
 To communicate create a virtual CDJ with address /172.16.42.2,
 MAC address 3c:15:c2:e7:08:6c, and use broadcast address /172.16.42.255
-Type ^C to exit.
+Close any player window to exit.
 ```
 
 It also creates a virtual CDJ to ask those devices to send status
@@ -54,8 +54,13 @@ gradually fades back to black when the value is not changing. This
 helps to identify what parts of the packet change when you do
 something on the device being analyzed.
 
-<img src="doc/assets/PacketWindow.png" width="800" alt="Packet Window">
+To further help with our analysis, if a byte has a value that we
+expect, it is colored green; if it has an unexpected value, it is
+colored red. If you see any red values, please let us know! Bytes
+which are expected to contain text are rendered as text rather than
+hex, to make them more readable.
 
+<img src="doc/assets/PacketWindow.png" width="800" alt="Packet Window">
 
 To try this, download the latest `dysentery.jar` from the
 [releases](https://github.com/brunchboy/dysentery/releases) page, make

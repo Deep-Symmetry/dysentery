@@ -349,8 +349,9 @@ shown in Figure \ref{fig:mixerStatus}.
     \end{rightwordgroup} \\
     \bitbox{1}{\tt 00} & \bitbox{1}{\emph{D}} & \bitboxes*{1}{{\tt 00} {\tt 14}} &
     \bitbox{1}{\emph{D}} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt d0} {\tt 00} {\tt 10} {\tt 00}
-      {\tt 00} {\tt 80} {\tt 00} {\tt 2e} {\tt e0}} \\
-    \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09} {\tt 00} {\tt 04}}
+      {\tt 00} {\tt 80} {\tt 00}} & \bitbox{2}{\emph{BPM}} \\
+    \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09} {\tt 00}} &
+    \bitbox{1}{\emph{X}} & \bitbox{1}{\emph{B}}
   \end{bytefield}
   \caption{Mixer status packets}
   \label{fig:mixerStatus}
@@ -359,6 +360,24 @@ shown in Figure \ref{fig:mixerStatus}.
 Packets coming from a DJM-2000 nexus connected as the only mixer on
 the network contain a value of 33 ({\tt 0x21}) for their Device Number
 \emph{D} (bytes 33 and 36).
+
+The current tempo in beats-per-minute identified by the mixer can be
+obtained as:
+
+\[ \frac{byte[46] \times 256 + byte[47]}{100} \]
+
+This value is labeled \emph{BPM} in Figure \ref{fig:mixerStatus}.
+
+Mixer status packets are sent on each beat, and the current beat number (1,
+2, 3 or 4) is sent in $byte[55]$, labeled \emph{B}. However, the beat number is
+\emph{not} synchronized with the master player, and so it is not
+useful for much. The beat number should be determined, when needed,
+from packets that are sent by the master player.
+
+The value at $byte[54]$, labeled \emph{X}, has an unknown meaning. It
+seems to start out with the value {\tt 0x00}, and then change when a
+player starts playing to the value {\tt 0xff}, but it may well do
+other things as well.
 
 \subsection{CDJ Status Packets}
 

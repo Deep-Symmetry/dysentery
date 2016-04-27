@@ -6,7 +6,13 @@ This change log follows the conventions of
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- Values in the packet windows are color coded to indicate when they
+  have an expected value, to help identify flaws in our analysis.
+- Bytes which are expected to contain text in the packet windows are
+  rendered as text rather than hex, to aid in reading the packet.
+- More bytes in the mixer status packet have known meanings.
 
 ## 0.1.0 - 2016-04-26
 
