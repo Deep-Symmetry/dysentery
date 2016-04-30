@@ -449,7 +449,7 @@ shown in Figure \ref{fig:cdjStatus}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 160} % 0xa0
-      \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{2}{$Beat$} & \bitbox{2}{$Mem$} & \bitbox{1}{$B_b$} &
+      \bitbox{4}{$Beat$} & \bitbox{2}{$Mem$} & \bitbox{1}{$B_b$} &
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
@@ -585,12 +585,15 @@ found so far:
 \end{description}
 
 The beat counter (which counts each beat from 1 through the end of the
-track) is found in bytes 162--163, labeled $Beat$. (When the player is
+track) is found in bytes 160--163, labeled $Beat$. When the player is
 paused at the start of the track, this seems to hold the value 0, even
-though it is beat 1.) The counter $Bb$ at byte 166 counts out the beat
-within each bar, cycling $1\to2\to3\to4$ repeatedly, and can be used to
-identify the down beat (as is used in the Master Player display on the
-CDJs as a mixing aid).
+though it is beat 1, and when no track it loaded, this holds the value
+{\tt 0xffffffff}.
+
+The counter $B_b$ at byte 166 counts out the beat within each bar,
+cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
+down beat (as is used in the Master Player display on the CDJs as a
+mixing aid). Again, when no track is loaded, this holds the value 0.
 
 A countdown timer to the next saved memory point is available in bytes
 164--165 (labeled $Mem$). If there is no saved memory point after the

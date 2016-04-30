@@ -55,23 +55,111 @@
   colored."
   [0 0 0 0x14 0 0 0 0xd0 0 0x10 0 0 0x80 0 0x2e 0xe0 0 0x10 0 0 0 9 0])
 
+(defn recognized-if
+  "If `recognized` is truthy, returns green, otherwise red."
+  [recognized]
+  (if recognized java.awt.Color/green java.awt.Color/red))
+
 (defn- mixer-byte-format
   "Given a packet which has been identified as coming from a mixer and a byte
   index that refers to one of the bytes not handled by [[byte-format]], see
   if it seems to be one that we expect, or something more surprising."
   [packet index value hex]
   (cond
-    (= index 55)  ; We think this is a beat number ranging from 1 to 4
-    [hex (if (<= 1 value 4) java.awt.Color/green java.awt.Color/red)]
-
-    (= index 54)  ; We don't know what this is, so far we have seen values 00 and FF
-    [hex (if (#{0x00 0xff} value) java.awt.Color/green java.awt.Color/red)]
-
     (#{46 47} index)  ; This is the current BPM
     [hex java.awt.Color/green]
 
+    (= index 54)  ; We don't know what this is, so far we have seen values 00 and FF
+    [hex (recognized-if (#{0x00 0xff} value))]
+
+    (= index 55)  ; We think this is a beat number ranging from 1 to 4
+    [hex (recognized-if (<= 1 value 4))]
+
     :else
-    [hex (if (= value (get mixer-unknown (- index 32))) java.awt.Color/green java.awt.Color/red)]))
+    [hex (recognized-if (= value (get mixer-unknown (- index 32))))]))
+
+(def cdj-unknown
+  "Template for bytes in a CDJ packet which we don't yet have specific
+  interpretations for, so we can at least color them red if they have
+  a different value than we expect. Bytes with known interpretations
+  are still present, but left as zero, to make it easier to index into
+  the vector."
+  [0x03 0x00 0x00 0xb0 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x04 0x04 0x00 0x00 0x00 0x04
+   0x00 0x00 0x00 0x04 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x31 0x2e 0x32 0x34
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0xff 0x7e 0x00 0x00 0x00 0x00
+   0x00 0x00 0x00 0x00 0x7f 0xff 0xff 0xff 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xff
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+   0x00 0x00 0x00 0x00 0x00 0x00 0x10 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x0f 0x00 0x00 0x00
+   0x00 0x00 0x00 0x00])
+
+(defn- cdj-byte-format
+  "Given a packet which has been identified as coming from a CDJ and a byte
+  index that refers to one of the bytes not handled by [[byte-format]], see
+  if it seems to be one that we expect, or something more surprising."
+  [packet index value hex]
+  (cond
+    (= index 39)  ; Seems to be a binary activity flag?
+    [hex (recognized-if (#{0 1} value))]
+
+    (= index 106)  ; Alternates between 4 and 6?
+    [hex (recognized-if (#{4 6} value))]
+
+    (= index 117)  ; Seems to indicate USB media is mounted in any player?
+    [hex (recognized-if (#{0 1} value))]
+
+    (= index 123)  ; Play mode part 1
+    [hex (recognized-if (#{0 3 4 5 6 9} value))]
+
+    (= index 137)  ; State flags
+    [hex (recognized-if (= (bit-and value 2r10000111) 2r10000100))]
+
+    (#{141 153 193 197} index)  ; The first byte of the four pitch copies
+    [hex (recognized-if (< value 0x21))] ; Valid pitces range from 0x000000 to 0x200000
+
+    (#{142 143 154 155 194 195 198 199} index)  ; Later bytes of the four pitch copies
+    [hex (java.awt.Color/green)]  ; All values are valid
+
+    (= 144 index)  ; First byte of some kind of loaded indicator?
+    [hex (recognized-if (or (and (= value 0x7f) (= (get packet (inc index)) 0xff))
+                            (and (= value 0x80) (= (get packet (inc index)) 0x00))))]
+    
+    (= 145 index)  ; Second byte of some kind of loaded indicator?
+    [hex (recognized-if (or (and (= value 0xff) (= (get packet (dec index)) 0x7f))
+                            (and (= value 0x00) (= (get packet (dec index)) 0x80))))]
+    
+    (#{146 147} index)  ; The BPM
+    [hex (java.awt.Color/green)]  ; All values are valid for now
+
+    (= index 157)  ; Play mode part 2?
+    [hex (recognized-if (#{0 1 9 10} value))]
+
+    (= 158 index)  ; A simpler boolean loaded flag?
+    [hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
+                            (and (= 1 value) (pos? (get packet 123)))))]
+
+    (<= 160 index 163)  ; The beat number within the track
+    [hex (java.awt.Color/green)]
+
+    (= index 164)  ; First byte of countdown to next memory point; always 0 or 1
+    [hex (recognized-if (#{0 1} value))]
+
+    (= index 165)  ; Second byte of countdown to next memory point
+    [hex (java.awt.Color/green)]
+
+    (= index 166)  ; We think this is a beat number ranging from 1 to 4, when track loaded.
+    [hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
+                            (and (<= 1 value 4) (pos? (get packet 123)))))]
+
+    (<= 200 index 203)  ; Packet counter
+    [hex (java.awt.Color/green)]
+
+    :else
+    [hex (if (= value (get cdj-unknown (- index 32))) java.awt.Color/green java.awt.Color/red)]))
 
 (defn- byte-format
   "Given a device number, packet, expected packet type, and byte
@@ -98,6 +186,9 @@
 
       (= expected-type 0x29)
       (mixer-byte-format packet index current hex)
+
+      (= expected-type 0x0a)
+      (cdj-byte-format packet index current hex)
 
       :else
       [hex java.awt.Color/white])))
