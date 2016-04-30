@@ -76,7 +76,7 @@ port they are connected to?
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {\emph{N}} {\tt 02}} &
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {$N$} {\tt 02}} &
     \bitbox{6}{MAC address} \\
   \end{bytefield}
   \caption{First-stage Mixer device number assignment packets}
@@ -88,7 +88,7 @@ again sent to UDP port 50000 on the local network broadcast address,
 at roughly 300 millisecond intervals, and have the content shown in
 Figure \ref{fig:mixerStage1}.
 
-The value \emph{N} at byte 36 is 1, 2, or 3, depending on whether this
+The value $N$ at byte 36 is 1, 2, or 3, depending on whether this
 is the first, second, or third time the packet is sent.
 
 After these comes another series of three numbered packets. These
@@ -111,7 +111,7 @@ with the content shown in Figure \ref{fig:mixerStage2}.
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 32}} &
     \bitbox{4}{IP address} & \bitbox{6}{MAC address} &
-    \bitbox{1}{\emph{D}} & \bitbox{1}{\emph{N}} \\
+    \bitbox{1}{$D$} & \bitbox{1}{$N$} \\
     \bitboxes*{1}{{\tt 02} {\tt 01}} \\
   \end{bytefield}
   \caption{Second-stage Mixer device number assignment packets}
@@ -119,12 +119,12 @@ with the content shown in Figure \ref{fig:mixerStage2}.
 \end{figure}
 
 I identify these as claiming/identifying the device number because the
-value \emph{D} at byte 46 is the same as the device number that the
+value $D$ at byte 46 is the same as the device number that the
 mixer uses to identify itself ({\tt 0x21}) and the same is true for the
 corresponding packets seen from the CDJs (they use device numbers 2
 and 3, as they are connected to those ports/channels on the mixer).
 
-As with the previous series of three packets, the value \emph{N} at
+As with the previous series of three packets, the value $N$ at
 byte 47 takes on the values 1, 2, and 3 in the three packets.
 
 These are followed by another three packets, perhaps the last stage of
@@ -144,15 +144,15 @@ content shown in Figure \ref{fig:mixerStage3}.
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 26}} &
-    \bitbox{1}{\emph{D}} & \bitbox{1}{\emph{N}} \\
+    \bitbox{1}{$D$} & \bitbox{1}{$N$} \\
   \end{bytefield}
   \caption{Final-stage Mixer device number assignment packets}
   \label{fig:mixerStage3}
 \end{figure}
 
-As before the value \emph{D} at byte 36 is the same as the device
+As before the value $D$ at byte 36 is the same as the device
 number that the mixer uses to identify itself ({\tt 0x21}) and
-\emph{N} at byte 37 takes on the values 1, 2, and 3 in the three
+$N$ at byte 37 takes on the values 1, 2, and 3 in the three
 packets.
 
 Once those are sent, the mixer seems to settle down and send what
@@ -174,7 +174,7 @@ the content shown in Figure \ref{fig:mixerKeepalive}.
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
-    \bitbox{1}{\emph{D}} & \bitbox{1}{\tt 02} &
+    \bitbox{1}{$D$} & \bitbox{1}{\tt 02} &
     \bitbox{6}{MAC address} & \bitbox{4}{IP address} \\
     \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 02} {\tt 00}} \\
   \end{bytefield}
@@ -211,7 +211,7 @@ for the mixer.
 Similarly, the next series of three packets from the CDJ are nearly
 identical to those from the mixer. The only difference between Figure
 \ref{fig:cdjStage1} and Figure \ref{fig:mixerStage1} is byte 37
-(immediately after the packet counter \emph{N}), which again is {\tt
+(immediately after the packet counter $N$), which again is {\tt
   0x01} for the CDJ, and was {\tt 0x02} for the mixer.
 
 \begin{figure}
@@ -225,7 +225,7 @@ identical to those from the mixer. The only difference between Figure
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {\emph{N}} {\tt 01}} &
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {$N$} {\tt 01}} &
     \bitbox{6}{MAC address} \\
   \end{bytefield}
   \caption{First-stage CDJ device number assignment packets}
@@ -242,7 +242,7 @@ with header byte 10 set to {tt 04} (which identified the three packets
 of the third stage when the mixer was starting up), with content
 identical to Figure \ref{fig:mixerStage3}.
 
-Even though the value of \emph{N} is {\tt 01}, this is the only packet
+Even though the value of $N$ is {\tt 01}, this is the only packet
 in this series that the CDJ sends. It would probably behave
 differently if configured to assign its own device number (behaving
 like we saw the mixer behave in claiming its device number).
@@ -262,7 +262,7 @@ packets with the content shown in Figure \ref{fig:cdjKeepalive}.
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
-    \bitbox{1}{\emph{D}} & \bitbox{1}{\tt 01} &
+    \bitbox{1}{$D$} & \bitbox{1}{\tt 01} &
     \bitbox{6}{MAC address} & \bitbox{4}{IP address} \\
     \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 01} {\tt 00}} \\
   \end{bytefield}
@@ -272,7 +272,7 @@ packets with the content shown in Figure \ref{fig:cdjKeepalive}.
 
 As seems to always be the case when comparing mixer and CDJ packets,
 the difference between this and Figure \ref{fig:mixerKeepalive} is
-that byte 37 (following the device number \emph{D}) has the value {\tt
+that byte 37 (following the device number $D$) has the value {\tt
   01} rather than {\tt 02}, and the same is true of the second-to-last
 byte in each of the packets. (Byte 52 is {\tt 01} in Figure
 \ref{fig:cdjKeepalive} and {\tt 02} in Figure \ref{fig:mixerKeepalive}.
@@ -320,7 +320,7 @@ if you were a CDJ. Follow the structure shown in Figure
 network interface on which you are receiving DJ-Link traffic, so the
 devices can see how to reach you.
 
-You can use a value like 5 for \emph{D} (the device/player number) so
+You can use a value like 5 for $D$ (the device/player number) so
 as not to conflict with any actual players you have on the network,
 and any name you would like. As long as you are sending these packets
 roughly every 1.5 seconds, the other players and mixers will begin
@@ -352,14 +352,14 @@ shown in Figure \ref{fig:mixerStatus}.
     \end{leftwordgroup} \\
     
     \begin{leftwordgroup}{\tiny 32} % 0x20
-      \bitbox{1}{\tt 00} & \bitbox{1}{\emph{D}} & \bitboxes*{1}{{\tt 00} {\tt 14}} &
-      \bitbox{1}{\emph{D}} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt d0} {\tt 00} {\tt 10} {\tt 00}
-        {\tt 00} {\tt 80} {\tt 00}} & \bitbox{2}{\emph{BPM}}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 14}} &
+      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt d0} {\tt 00} {\tt 10} {\tt 00}
+        {\tt 00} {\tt 80} {\tt 00}} & \bitbox{2}{$BPM$}
     \end{leftwordgroup} \\
     
     \begin{leftwordgroup}{\tiny 48} % 0x30
       \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09} {\tt 00}} &
-      \bitbox{1}{\emph{X}} & \bitbox{1}{\emph{B}} & \bitbox[]{7}{}
+      \bitbox{1}{$X$} & \bitbox{1}{$B$} & \bitbox[]{7}{}
     \end{leftwordgroup} \\
   \end{bytefield}
   \caption{Mixer status packets}
@@ -368,22 +368,22 @@ shown in Figure \ref{fig:mixerStatus}.
 
 Packets coming from a DJM-2000 nexus connected as the only mixer on
 the network contain a value of 33 ({\tt 0x21}) for their Device Number
-\emph{D} (bytes 33 and 36).
+$D$ (bytes 33 and 36).
 
 The current tempo in beats-per-minute identified by the mixer can be
 obtained as:
 
 \[ \frac{byte[46] \times 256 + byte[47]}{100} \]
 
-This value is labeled \emph{BPM} in Figure \ref{fig:mixerStatus}.
+This value is labeled $BPM$ in Figure \ref{fig:mixerStatus}.
 
 Mixer status packets are sent on each beat, and the current beat number (1,
-2, 3 or 4) is sent in $byte[55]$, labeled \emph{B}. However, the beat number is
+2, 3 or 4) is sent in $byte[55]$, labeled $B$. However, the beat number is
 \emph{not} synchronized with the master player, and so it is not
 useful for much. The beat number should be determined, when needed,
 from packets that are sent by the master player.
 
-The value at $byte[54]$, labeled \emph{X}, has an unknown meaning. It
+The value at $byte[54]$, labeled $X$, has an unknown meaning. It
 seems to start out with the value {\tt 0x00}, and then change when a
 player starts playing to the value {\tt 0xff}, but it may well do
 other things as well.
