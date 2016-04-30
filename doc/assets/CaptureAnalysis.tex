@@ -566,13 +566,13 @@ Because Rekordbox and the CDJs support tracks with variable BPM, this
 value can and does change while such tracks play. When no track is
 loaded, $BPM$ has the value {\tt 0xffff}.
 
-The meaning of values $l_1$ (bytes 144--145) and
-$l_3$ (byte 158) are not currently known. They may simply reflect
-whether a track is loaded or not: $l_1$ seems to have the value {\tt
-  0x7fff} when no track is loaded, and the value {\tt 0x8000} when a
-track is loaded, while $l_2$ and $l_3$ have the value 0 when no track
-is loaded and 1 when a track is loaded... but there is likely more
-going on here than we have yet figured out.
+The meaning of values $l_1$ (bytes 144--145) and $l_2$ (byte 158) are
+not currently known. They may simply reflect whether a track is loaded
+or not: $l_1$ seems to have the value {\tt 0x7fff} when no track is
+loaded, and the value {\tt 0x8000} when a track is loaded, while $l_2$
+has the value 0 when no track is loaded and 1 when a track is
+loaded... but there is likely more going on here than we have yet
+figured out.
 
 Byte 157 (labeled $P_2$) seems to communicate additional information
 about the current play mode, with the following meanings that we have
