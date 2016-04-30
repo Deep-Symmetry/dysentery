@@ -3,7 +3,7 @@ Exploring ways to participate in a Pioneer Pro DJ Link network.
 
 [![License](https://img.shields.io/badge/License-Eclipse%20Public%20License%201.0-blue.svg)](#license)
 
-## Status
+## Disclaimer
 
 This is in no way a sanctioned implementation of the protocols. It
 should be obvious, but:
@@ -17,6 +17,18 @@ releases of hardware or even firmware updates from Pioneer.
 That said, if you find anything wrong, or discover anything new,
 *please* open an issue or submit a pull request so we can all improve
 our understanding together.
+
+## Analysis
+
+Our analysis so far can be found
+[here](doc/assets/CaptureAnalysis.pdf). Please help us figure out more
+if you can!
+
+The packet capture being used to analyze this protocol can be
+[downloaded](doc/assets/powerup.pcapng) so you can see if you notice
+anything we have not.
+
+## Status
 
 Dysentery is currently being developed as a
 [Clojure](http://clojure.org/) library, because I find that to be the
@@ -113,14 +125,6 @@ Created /Users/james/git/dysentery/target/dysentery.jar
 
 There will soon be much more here, and much more documentation, if all
 goes as planned.
-
-### Analysis
-
-The packet capture being used to implement this protocol can be
-[downloaded](doc/assets/powerup.pcapng) so you can see if you notice
-anything we have not. Our analysis so far can be found
-[here](doc/assets/CaptureAnalysis.pdf). Please help us figure out
-more if you can!
 
 ### History
 
