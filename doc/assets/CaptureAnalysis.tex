@@ -414,7 +414,7 @@ shown in Figure \ref{fig:cdjStatus}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 48} % 0x30
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {$t_1$} {\tt 00} {\tt 00} {$t_2$} {$t_3$}
+      \bitboxes*{1}{{\tt 00} {\tt 00}} \bitbox{2}{$Track$} \bitboxes*{1}{{\tt 00} {\tt 00} {$t_2$} {$t_3$}
         {\tt 00} {\tt 00} {$t_4$} {$t_5$} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
@@ -430,22 +430,23 @@ shown in Figure \ref{fig:cdjStatus}.
 
     \begin{leftwordgroup}{\tiny 96} % 0x60
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
-        {\tt 01} {\tt 00} {$t_8$} {\tt 04} {\tt 00} {\tt 00} {\tt 00} {\tt 04}}
+        {\tt 01} {\tt 00} {$U_a$} {\tt 04} {\tt 00} {\tt 00} {\tt 00} {$U_l$}}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 112} % 0x70
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 04} {\tt 00}} & \bitbox{1}{$U$} & \bitboxes*{1}{{\tt 00} {\tt 00}
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 04} {\tt 00}} & \bitbox{1}{$U_g$} & \bitboxes*{1}{{\tt 00} {\tt 00}
         {\tt 01} {\tt 00} {\tt 00}} & \bitbox{1}{$P_1$} & \bitboxes*{1}{{\tt 31} {\tt 2e} {\tt 32} {\tt 34}}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 128} % 0x80
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 01}
-        {\tt 00}} & \bitbox{1}{$F$} & \bitboxes*{1}{{\tt ff} {\tt 7e} {\tt 00}} & \bitbox{3}{$Pitch_1$}
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox{2}{$Sync_n$} &
+      \bitbox{1}{\tt 00} & \bitbox{1}{$F$} & \bitbox{1}{\tt ff} &
+      \bitbox{1}{$P_2$} & \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_1$}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 144} % 0x90
-      \bitbox{2}{$l_1$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff}
-        {\tt 00}} & \bitbox{3}{$Pitch_2$} & \bitbox{1}{\tt 00} \bitbox{1}{$P_2$} \bitboxes*{1}{{$l_2$} {\tt ff}}
+      \bitbox{2}{$l_1$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff} {\tt 00}} &
+      \bitbox{3}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{$l_2$} & \bitbox{1}{\tt ff}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 160} % 0xa0
@@ -479,17 +480,31 @@ were assigned Player Numbers 2 and 3.
 The activity flag $A$ at byte 39 seems to be 0 when the player is
 idle, and 1 when it is playing, searching, or loading a track.
 
-There are a number of bytes, labeled $t_1$ through $t_7$, whose
-purpose is as yet undetermined. They are all zero when there is no
-track loaded, but take different values when a track is loaded. Byte
-106, labeled $t_8$, seems to tick back and forth between the value 4
-and 6 when a track is loaded, but the rate at which it does this is
-not the same as the BPM, and it is rather mysterious.
+The track number being played (its position within a playlist or other
+scrolling list of tracks, as displayed on the CDJ) can be found at
+bytes 50 and 51, labeled $Track$. (It may be a 4-byte value and also
+include bytes 48 and 49, but that would seem an unmanageable number of
+tracks to search through.)
 
-Byte 117, labeled $U$, appears to have the value 1 whenever USB media
-is present in any player on the network, whether or not the Link
-option is chosen in the other players, and 0 otherwise. I don't know
-if that is true of SD media as well; this needs more investigation.
+There are a number of bytes, labeled $t_2$ through $t_7$, whose
+purpose is as yet undetermined. They are all zero when there is no
+track loaded, but take different values when a track is loaded.
+(Actually, there are many other bytes than these which behave like
+this, so they will probably be removed from the chart in a future
+version of this document.)
+
+Byte 106, labeled $U_a$ (for ``USB activity''), alternates between the
+values 4 and 6 when there is USB activity---it may even alternate in
+time with the flashing USB indicator LED on the player. Byte 111
+($U_l$ for ``USB local'') has the value 4 when there is no USB media
+loaded, 0 when USB is loaded, and 2 when the USB Stop button has been
+pressed and the USB media is being unmounted.
+
+Byte 117, labeled $U_g$ (for ``USB global''), appears to have the
+value 1 whenever USB media is present in any player on the network,
+whether or not the Link option is chosen in the other players, and 0
+otherwise. I don't know if that is true of other linkable SD media as
+well; this needs more investigation.
 
 Byte 123, labeled $P_1$, appears to describe the current play mode.
 The values that have been seen so far, and their apparent meanings,
@@ -502,6 +517,15 @@ are:
 \item[6] The player is paused at the cue point.
 \item[9] The player is searching forwards or backwards.
 \end{description}
+
+The value $Sync_n$ at bytes 134--135 seems to increment whenever the
+player syncs to a new tempo master (another player or the mixer). I am
+assuming it is just a 2-byte value, because I tried syncing 256 times
+and saw the counter expand from byte 135 to include byte 134. It may
+actually be a 4-byte value and also involve bytes 132 and 133, but I
+wasn't going to try changing sync 65,536 times or more to find out.
+Perhaps we could write software to test that someday by forcing tempo
+master changes.
 
 Byte 137, labeled $F$, is a bit field containing some very useful
 state flags, detailed in Figure \ref{fig:cdjStateFlags}.
@@ -522,6 +546,9 @@ state flags, detailed in Figure \ref{fig:cdjStateFlags}.
   different values for them, please let us know by filing an Issue!
   \url{https://github.com/brunchboy/dysentery/issues}
 \end{quotation}
+
+Byte 139, labeled $P_2$ seems to be another play state indicator,
+having the value 126 when stopped and 122 when playing.
 
 There are four different places where pitch information appears in
 these packets: $Pitch_1$ at bytes 141--143, $Pitch_2$ at bytes
@@ -544,11 +571,35 @@ would be calculated:
 
 We don't know why there are so many copies of the pitch information,
 or all circumstances under which they might differ from each other,
-but it seems that $Pitch_4$ always reports the actual location of the
-Pitch fader (unless Tempo Reset is active, effectively locking the
-Pitch fader to 0\% and $Pitch_4$ to {\tt 0x100000}), and the others
-seem to represent the current effective pitch (for example, the pitch
-of the master player when sync is active).
+but it seems that $Pitch_1$ and $Pitch_3$ report the current pitch
+adjustment actually in effect (as reflected on the BPM display),
+whether it is due to the local pitch fader, or a synced tempo master.
+
+$Pitch_2$ and $Pitch_4$ are always tied to the position of the local
+pitch fader, unless Tempo Reset is active, effectively locking the
+pitch fader to 0\% and $Pitch_2$ and $Pitch_4$ to {\tt 0x100000}, or
+the player is paused or the jog wheel is being held down, freezing
+playback and locking the local pitch to $-100\%$, in which case they
+both have the value {\tt 0x000000}.
+
+When playback stops, either due to the play button being pressed or
+the jog wheel held down, the value of $Pitch_4$ drops to {\tt
+  0x000000} instantly, while the value of $Pitch_2$ drops over time,
+reflecting the gradual slowdown of playback which is controlled by the
+player's brake speed setting. When playback starts, again either due
+to the play button being pressed or the jog wheel being released, both
+$Pitch_2$ and $Pitch_4$ gradually rise to the target pitch, at a speed
+controlled by the player's release speed setting.
+
+If the player is \emph{not} synced, but the current pitch is different
+than what the pitch fader would indicate (in other words, the player
+is in the mode where it tells you to move the pitch fader to the
+current BPM in order to change the pitch), moving the pitch fader
+changes the values of $Pitch_2$ and $Pitch_4$ until they match
+$Pitch_1$ and $Pitch_3$ and begin to affect the actual effective
+pitch. From that point on, moving the pitch fader sets the value of
+all of $Pitch_1$, $Pitch_2$, $Pitch_3$, and $Pitch_4$. This all seems
+more complicated than it really needs to be...
 
 The current BPM of the track (the BPM at the point that is currently
 being played, or at the location where the player is currently paused)
@@ -558,37 +609,37 @@ current track BPM value to two decimal places can be calculated as:
 
 \[ \frac{byte[146] \times 256 + byte[147]}{100} \]
 
-In order to obtain the actual playing BPM, this value must be
-multiplied by the current effective pitch, calculated from $Pitch_1$
-as described above.
+In order to obtain the actual playing BPM (the value shown in the BPM
+display), this value must be multiplied by the current effective
+pitch, calculated from $Pitch_1$ as described above.
 
 Because Rekordbox and the CDJs support tracks with variable BPM, this
-value can and does change while such tracks play. When no track is
-loaded, $BPM$ has the value {\tt 0xffff}.
+value can and does change over the course of playing such tracks. When
+no track is loaded, $BPM$ has the value {\tt 0xffff}.
 
 The meaning of values $l_1$ (bytes 144--145) and $l_2$ (byte 158) are
 not currently known. They may simply reflect whether a track is loaded
 or not: $l_1$ seems to have the value {\tt 0x7fff} when no track is
 loaded, and the value {\tt 0x8000} when a track is loaded, while $l_2$
-has the value 0 when no track is loaded and 1 when a track is
-loaded... but there is likely more going on here than we have yet
-figured out.
+has the value 0 when no track is loaded, 1 when a track is loaded, and
+2 when a track is loaded an the player is the sync master... but there
+is likely more going on here than we have yet figured out.
 
-Byte 157 (labeled $P_2$) seems to communicate additional information
+Byte 157 (labeled $P_3$) seems to communicate additional information
 about the current play mode, with the following meanings that we have
 found so far:
 \begin{description}
 \item[0] No track is loaded.
 \item[1] The player is paused or playing in Reverse mode.
 \item[9] The player is playing in Forward mode with jog mode set to Vinyl.
-\item[10] The player is playing in Forward mode with jog mode set to CDJ.
+\item[13] The player is playing in Forward mode with jog mode set to CDJ.
 \end{description}
 
-The beat counter (which counts each beat from 1 through the end of the
-track) is found in bytes 160--163, labeled $Beat$. When the player is
-paused at the start of the track, this seems to hold the value 0, even
-though it is beat 1, and when no track it loaded, this holds the value
-{\tt 0xffffffff}.
+The 4-byte beat counter (which counts each beat from 1 through the end
+of the track) is found in bytes 160--163, labeled $Beat$. When the
+player is paused at the start of the track, this seems to hold the
+value 0, even though it is beat 1, and when no track it loaded, this
+holds the value {\tt 0xffffffff}.
 
 The counter $B_b$ at byte 166 counts out the beat within each bar,
 cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
@@ -598,16 +649,16 @@ mixing aid). Again, when no track is loaded, this holds the value 0.
 A countdown timer to the next saved memory point is available in bytes
 164--165 (labeled $Mem$). If there is no saved memory point after the
 current play location in the track, or if it is further than 64 bars
-ahead, these bytes contain the value {\tt 0x01ff}. As soon as there
-are just 64 bars (256 beats) to go before the next memory point, this
-value becomes {\tt 0x0100}---this is the point at which the CDJ starts
-to display a countdown, which it displays as ``63.4 Bars''. As each
-beat goes by, this value decreases by 1, until the memory point is
-about to be reached, at which point the value is {\tt 0x0001} and the
-CDJ displays ``0.1 Bars''. On the beat on which the memory point was
-saved the value is {\tt 0x0000} and the CDJ displays ``0.0 Bars''. On
-the next beat, the value becomes determined by the next memory point
-(if any) in the track.
+ahead, these bytes contain the value {\tt 0x01ff} and the CDJ displays
+``-\,-.- Bars''. As soon as there are just 64 bars (256 beats) to
+go before the next memory point, this value becomes {\tt 0x0100}. This
+is the point at which the CDJ starts to display a countdown, which it
+displays as ``63.4 Bars''. As each beat goes by, this value decreases
+by 1, until the memory point is about to be reached, at which point
+the value is {\tt 0x0001} and the CDJ displays ``0.1 Bars''. On the
+beat on which the memory point was saved the value is {\tt 0x0000} and
+the CDJ displays ``0.0 Bars''. On the next beat, the value becomes
+determined by the next memory point (if any) in the track.
 
 Bytes 200-203 seem to contain a 4-byte packet counter $Packet$, which
 is incremented for each packet sent by the player. (I am just guessing

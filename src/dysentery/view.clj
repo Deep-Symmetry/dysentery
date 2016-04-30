@@ -136,7 +136,7 @@
     [hex (java.awt.Color/green)]  ; All values are valid for now
 
     (= index 157)  ; Play mode part 2?
-    [hex (recognized-if (#{0 1 9 10} value))]
+    [hex (recognized-if (#{0 1 9 13} value))]
 
     (= 158 index)  ; A simpler boolean loaded flag?
     [hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
