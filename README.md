@@ -15,8 +15,10 @@ gaps in our knowledge, and things could change at any time with new
 releases of hardware or even firmware updates from Pioneer.
 
 That said, if you find anything wrong, or discover anything new,
-*please* open an issue or submit a pull request so we can all improve
-our understanding together.
+*please*
+[open an Issue](https://github.com/brunchboy/dysentery/issues) or
+submit a pull request so we can all improve our understanding
+together.
 
 ## Analysis
 
@@ -24,9 +26,10 @@ Our analysis so far can be found
 [here](doc/assets/CaptureAnalysis.pdf). Please help us figure out more
 if you can!
 
-The packet capture being used to analyze this protocol can be
+The packet capture used to create that document can be
 [downloaded](doc/assets/powerup.pcapng) so you can see if you notice
-anything we have not.
+anything we have not, even if you don&rsquo;t have any Pioneer gear to
+try out.
 
 ## Status
 
@@ -34,8 +37,12 @@ Dysentery is currently being developed as a
 [Clojure](http://clojure.org/) library, because I find that to be the
 most powerful development environment available to me at the moment.
 When released, it will be usable as a standard Java package on Maven
-Central, but for now if you want to play with it you'll need to learn
-a little bit about Clojure.
+Central, but for now if you want to hack on the souce, you'll need to
+learn a little bit about Clojure.
+
+You can run it and look at what it finds on your network by just
+downloading and executing the jar, though, and we hope you will, to
+help us gather more information!
 
 It is already able to watch for DJ Link traffic on all your network
 interfaces, and tell you what devices have been noticed, and the local
@@ -66,11 +73,11 @@ gradually fades back to black when the value is not changing. This
 helps to identify what parts of the packet change when you do
 something on the device being analyzed.
 
-To further help with our analysis, if a byte has a value that we
-expect, it is colored green; if it has an unexpected value, it is
-colored red. If you see any red values, please let us know! Bytes
-which are expected to contain text are rendered as text rather than
-hex, to make them more readable.
+To further focus analysis, if a byte has a value that we expect, it is
+colored green; if it has an unexpected value, it is colored red. If
+you see any red values, they show areas where puzzles remain to be
+solved. Bytes which are expected to contain text are rendered as text
+rather than hex, to make them more readable.
 
 <img src="doc/assets/PacketWindow.png" width="800" alt="Packet Window">
 
