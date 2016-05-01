@@ -162,7 +162,7 @@ packets are 54 bytes long, again sent to port 50000 on the local
 network broadcast address, roughly every second and a half. They have
 the content shown in Figure \ref{fig:mixerKeepalive}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{bytefield}[bitwidth=1.5em]{16}
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
@@ -191,7 +191,7 @@ between Figure \ref{fig:cdjInitial} and Figure \ref{fig:mixerInitial}
 is the final byte, which is {\tt 0x01} for the CDJ, and was {\tt 0x02}
 for the mixer.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{bytefield}[bitwidth=1.5em]{16}
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
@@ -250,7 +250,7 @@ like we saw the mixer behave in claiming its device number).
 The CDJ then moves to the keep-alive stage, sending out 54-byte
 packets with the content shown in Figure \ref{fig:cdjKeepalive}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{bytefield}[bitwidth=1.5em]{16}
     \bitheader{0-15} \\
     \begin{rightwordgroup}{Name}
