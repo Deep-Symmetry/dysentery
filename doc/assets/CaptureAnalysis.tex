@@ -53,7 +53,7 @@ address of the local network.
 These have a data length\footnote{Values within packets are shown in
   hexadecimal, while packet lengths and byte offsets are discussed in
   decimal.} of 37 bytes, appear roughly every 300 milliseconds, and
-have the content shown in Figure \ref{fig:mixerInitial}.
+have the content shown in Figure~\ref{fig:mixerInitial}.
 
 The tenth byte (inside what is labeled the header) is bolded because
 its value changes in the different types of packets which follow.
@@ -86,9 +86,9 @@ port they are connected to?
 In any case, these three packets have a data length of 44 bytes, are
 again sent to UDP port 50000 on the local network broadcast address,
 at roughly 300 millisecond intervals, and have the content shown in
-Figure \ref{fig:mixerStage1}.
+Figure~\ref{fig:mixerStage1}.
 
-The value $N$ at byte 36 is 1, 2, or 3, depending on whether this
+The value $N$ at byte~36 is 1, 2, or 3, depending on whether this
 is the first, second, or third time the packet is sent.
 
 After these comes another series of three numbered packets. These
@@ -96,7 +96,7 @@ appear to be claiming the device number for a particular device, as
 well as announcing the IP address at which it can be found. They have
 a data length of 50 bytes, and are again sent to UDP port 50000 on the
 local network broadcast address, at roughly 300 millisecond intervals,
-with the content shown in Figure \ref{fig:mixerStage2}.
+with the content shown in Figure~\ref{fig:mixerStage2}.
 
 \begin{figure}[ht]
   \begin{bytefield}[bitwidth=1.5em]{16}
@@ -119,18 +119,18 @@ with the content shown in Figure \ref{fig:mixerStage2}.
 \end{figure}
 
 I identify these as claiming/identifying the device number because the
-value $D$ at byte 46 is the same as the device number that the
+value $D$ at byte~46 is the same as the device number that the
 mixer uses to identify itself ({\tt 0x21}) and the same is true for the
 corresponding packets seen from the CDJs (they use device numbers 2
 and 3, as they are connected to those ports/channels on the mixer).
 
 As with the previous series of three packets, the value $N$ at
-byte 47 takes on the values 1, 2, and 3 in the three packets.
+byte~47 takes on the values 1, 2, and 3 in the three packets.
 
 These are followed by another three packets, perhaps the last stage of
 claiming the device number, again at 300 millisecond intervals, to the
 same port 50000. These shorter packets have 38 bytes of data and the
-content shown in Figure \ref{fig:mixerStage3}.
+content shown in Figure~\ref{fig:mixerStage3}.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.5em]{16}
@@ -150,9 +150,9 @@ content shown in Figure \ref{fig:mixerStage3}.
   \label{fig:mixerStage3}
 \end{figure}
 
-As before the value $D$ at byte 36 is the same as the device
+As before the value $D$ at byte~36 is the same as the device
 number that the mixer uses to identify itself ({\tt 0x21}) and
-$N$ at byte 37 takes on the values 1, 2, and 3 in the three
+$N$ at byte~37 takes on the values 1, 2, and 3 in the three
 packets.
 
 Once those are sent, the mixer seems to settle down and send what
@@ -160,7 +160,7 @@ looks like a keep-alive packet to retain presence on the network and
 ownership of its device number, at a less frequent interval. These
 packets are 54 bytes long, again sent to port 50000 on the local
 network broadcast address, roughly every second and a half. They have
-the content shown in Figure \ref{fig:mixerKeepalive}.
+the content shown in Figure~\ref{fig:mixerKeepalive}.
 
 \begin{figure}[ht]
   \begin{bytefield}[bitwidth=1.5em]{16}
@@ -187,7 +187,7 @@ the content shown in Figure \ref{fig:mixerKeepalive}.
 When a CDJ starts up the procedure and packets are nearly identical,
 with groups of three packets sent at 300 millisecond intervals to port
 50000 of the local network broadcast address. The only difference
-between Figure \ref{fig:cdjInitial} and Figure \ref{fig:mixerInitial}
+between Figure~\ref{fig:cdjInitial} and Figure~\ref{fig:mixerInitial}
 is the final byte, which is {\tt 0x01} for the CDJ, and was {\tt 0x02}
 for the mixer.
 
@@ -209,10 +209,10 @@ for the mixer.
 \end{figure}
 
 Similarly, the next series of three packets from the CDJ are nearly
-identical to those from the mixer. The only difference between Figure
-\ref{fig:cdjStage1} and Figure \ref{fig:mixerStage1} is byte 37
-(immediately after the packet counter $N$), which again is {\tt
-  0x01} for the CDJ, and was {\tt 0x02} for the mixer.
+identical to those from the mixer. The only difference between
+Figure~\ref{fig:cdjStage1} and Figure~\ref{fig:mixerStage1} is byte~37
+(immediately after the packet counter $N$), which again is {\tt 0x01}
+for the CDJ, and was {\tt 0x02} for the mixer.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.5em]{16}
@@ -238,9 +238,9 @@ automatically assigned a device number based on the port of the mixer
 to which it is connected, and we cannot see a packet that the mixer
 sent it assigning it that device number. Instead, it jumps right to
 the end of the third and final stage, sending a single 38-byte packet
-with header byte 10 set to {tt 04} (which identified the three packets
+with header byte~10 set to {tt 04} (which identified the three packets
 of the third stage when the mixer was starting up), with content
-identical to Figure \ref{fig:mixerStage3}.
+identical to Figure~\ref{fig:mixerStage3}.
 
 Even though the value of $N$ is {\tt 01}, this is the only packet
 in this series that the CDJ sends. It would probably behave
@@ -248,7 +248,7 @@ differently if configured to assign its own device number (behaving
 like we saw the mixer behave in claiming its device number).
 
 The CDJ then moves to the keep-alive stage, sending out 54-byte
-packets with the content shown in Figure \ref{fig:cdjKeepalive}.
+packets with the content shown in Figure~\ref{fig:cdjKeepalive}.
 
 \begin{figure}[ht]
   \begin{bytefield}[bitwidth=1.5em]{16}
@@ -271,11 +271,12 @@ packets with the content shown in Figure \ref{fig:cdjKeepalive}.
 \end{figure}
 
 As seems to always be the case when comparing mixer and CDJ packets,
-the difference between this and Figure \ref{fig:mixerKeepalive} is
-that byte 37 (following the device number $D$) has the value {\tt
-  01} rather than {\tt 02}, and the same is true of the second-to-last
-byte in each of the packets. (Byte 52 is {\tt 01} in Figure
-\ref{fig:cdjKeepalive} and {\tt 02} in Figure \ref{fig:mixerKeepalive}.
+the difference between this and Figure~\ref{fig:mixerKeepalive} is
+that byte~37 (following the device number $D$) has the value {\tt 01}
+rather than {\tt 02}, and the same is true of the second-to-last byte
+in each of the packets. (Byte~52 is {\tt 01} in
+Figure~\ref{fig:cdjKeepalive} and {\tt 02} in
+Figure~\ref{fig:mixerKeepalive}.
 
 \section{Tracking BPM and Beats}
 
@@ -315,10 +316,10 @@ CDJ''.\footnote{Thanks are due to Diogo Santos for discovering the
 To do this, bind a UDP server socket to port 50002 on the network
 interface on which you are receiving DJ-Link traffic, and start
 sending keep-alive packets to port 50000 on the broadcast address as
-if you were a CDJ. Follow the structure shown in Figure
-\ref{fig:cdjKeepalive}, but use the actual MAC and IP addresses of the
-network interface on which you are receiving DJ-Link traffic, so the
-devices can see how to reach you.
+if you were a CDJ. Follow the structure shown in
+Figure~\ref{fig:cdjKeepalive}, but use the actual MAC and IP addresses
+of the network interface on which you are receiving DJ-Link traffic,
+so the devices can see how to reach you.
 
 You can use a value like 5 for $D$ (the device/player number) so
 as not to conflict with any actual players you have on the network,
@@ -335,7 +336,7 @@ far.\footnote{Examples of packets discussed in this section can be
 \subsection{Mixer Status Packets}
 
 Packets from the mixer will have a length of 56 bytes and the content
-shown in Figure \ref{fig:mixerStatus}.
+shown in Figure~\ref{fig:mixerStatus}.
 
 \begin{figure}[h]
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
@@ -397,7 +398,7 @@ other things as well.
 \subsection{CDJ Status Packets}
 
 Packets from a CDJ will have a length of 212 bytes and the content
-shown in Figure \ref{fig:cdjStatus}.
+shown in Figure~\ref{fig:cdjStatus}.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
@@ -483,7 +484,7 @@ The Device Number in $D$ (bytes 33 and 36) is the Player Number as
 displayed on the CDJ itself. In the case of this capture, the CDJs
 were assigned Player Numbers 2 and 3.
 
-The activity flag $A$ at byte 39 seems to be 0 when the player is
+The activity flag $A$ at byte~39 seems to be 0 when the player is
 idle, and 1 when it is playing, searching, or loading a track.
 
 The track number being played (its position within a playlist or other
@@ -499,20 +500,20 @@ track loaded, but take different values when a track is loaded.
 this, so they will probably be removed from the chart in a future
 version of this document.)
 
-Byte 106, labeled $U_a$ (for ``USB activity''), alternates between the
+Byte~106, labeled $U_a$ (for ``USB activity''), alternates between the
 values 4 and 6 when there is USB activity---it may even alternate in
-time with the flashing USB indicator LED on the player. Byte 111
+time with the flashing USB indicator LED on the player. Byte~111
 ($U_l$ for ``USB local'') has the value 4 when there is no USB media
 loaded, 0 when USB is loaded, and 2 when the USB Stop button has been
 pressed and the USB media is being unmounted.
 
-Byte 117, labeled $U_g$ (for ``USB global''), appears to have the
+Byte~117, labeled $U_g$ (for ``USB global''), appears to have the
 value 1 whenever USB media is present in any player on the network,
 whether or not the Link option is chosen in the other players, and 0
 otherwise. I don't know if that is true of other linkable SD media as
 well; this needs more investigation.
 
-Byte 123, labeled $P_1$, appears to describe the current play mode.
+Byte~123, labeled $P_1$, appears to describe the current play mode.
 The values that have been seen so far, and their apparent meanings,
 are:
 \begin{description}
@@ -528,14 +529,14 @@ are:
 The value $Sync_n$ at bytes 134--135 seems to increment whenever the
 player syncs to a new tempo master (another player or the mixer). I am
 assuming it is just a 2-byte value, because I tried syncing 256 times
-and saw the counter expand from byte 135 to include byte 134. It may
+and saw the counter expand from byte~135 to include byte~134. It may
 actually be a 4-byte value and also involve bytes 132 and 133, but I
 wasn't going to try changing sync 65,536 times or more to find out.
 Perhaps we could write software to test that someday by forcing tempo
 master changes.
 
-Byte 137, labeled $F$, is a bit field containing some very useful
-state flags, detailed in Figure \ref{fig:cdjStateFlags}.
+Byte~137, labeled $F$, is a bit field containing some very useful
+state flags, detailed in Figure~\ref{fig:cdjStateFlags}.
 
 \begin{figure}
   \begin{bytefield}[endianness=big,bitwidth=4em]{8}
@@ -554,7 +555,7 @@ state flags, detailed in Figure \ref{fig:cdjStateFlags}.
   \url{https://github.com/brunchboy/dysentery/issues}
 \end{quotation}
 
-Byte 139, labeled $P_2$ seems to be another play state indicator,
+Byte~139, labeled $P_2$ seems to be another play state indicator,
 having the value 122 when playing and 126 when stopped. When the CDJ
 is trying to play, but is being held in place by the DJ holding down
 on the jog wheel, $P_1$ considers it to be playing (value 3), while
@@ -632,7 +633,7 @@ Because Rekordbox and the CDJs support tracks with variable BPM, this
 value can and does change over the course of playing such tracks. When
 no track is loaded, $BPM$ has the value {\tt 0xffff}.
 
-The meaning of values $l_1$ (bytes 144--145) and $l_2$ (byte 158) are
+The meaning of values $l_1$ (bytes 144--145) and $l_2$ (byte~158) are
 not currently known. They may simply reflect whether a track is loaded
 or not: $l_1$ seems to have the value {\tt 0x7fff} when no track is
 loaded, and the value {\tt 0x8000} when a track is loaded, while $l_2$
@@ -640,7 +641,7 @@ has the value 0 when no track is loaded, 1 when a track is loaded, and
 2 when a track is loaded an the player is the sync master... but there
 is likely more going on here than we have yet figured out.
 
-Byte 157 (labeled $P_3$) seems to communicate additional information
+Byte~157 (labeled $P_3$) seems to communicate additional information
 about the current play mode, with the following meanings that we have
 found so far:
 \begin{description}
@@ -656,7 +657,7 @@ player is paused at the start of the track, this seems to hold the
 value 0, even though it is beat 1, and when no track it loaded, this
 holds the value {\tt 0xffffffff}.
 
-The counter $B_b$ at byte 166 counts out the beat within each bar,
+The counter $B_b$ at byte~166 counts out the beat within each bar,
 cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
 down beat (as is used in the Master Player display on the CDJs as a
 mixing aid). Again, when no track is loaded, this holds the value 0.
