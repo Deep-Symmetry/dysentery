@@ -5,12 +5,14 @@
             [dysentery.util :as util]
             [dysentery.vcdj :as vcdj]
             [clojure.math.numeric-tower :as math]
+            [selmer.parser :as parser]
             [taoensso.timbre :as timbre])
-  (:import [javax.swing JFrame JPanel JLabel SwingConstants]))
+  (:import [javax.swing JFrame JPanel JLabel SwingConstants]
+           [java.awt Color Font]))
 
 (def byte-font
   "The font to use for rendering byte values."
-  (java.awt.Font. "Monospaced" java.awt.Font/PLAIN 14))
+  (Font. "Monospaced" Font/PLAIN 14))
 
 (def fade-steps
   "The number of packets over which the background of a value fades
@@ -58,16 +60,16 @@
 (defn recognized-if
   "If `recognized` is truthy, returns green, otherwise red."
   [recognized]
-  (if recognized java.awt.Color/green java.awt.Color/red))
+  (if recognized Color/green Color/red))
 
-(defn- mixer-byte-format
+(defn- mixer-50002-byte-format
   "Given a packet which has been identified as coming from a mixer and a byte
   index that refers to one of the bytes not handled by [[byte-format]], see
   if it seems to be one that we expect, or something more surprising."
   [packet index value hex]
   (cond
     (#{46 47} index)  ; This is the current BPM
-    [hex java.awt.Color/green]
+    [hex Color/green]
 
     (= index 54)  ; We don't know what this is, so far we have seen values 00 and FF
     [hex (recognized-if (#{0x00 0xff} value))]
@@ -84,18 +86,145 @@
   a different value than we expect. Bytes with known interpretations
   are still present, but left as zero, to make it easier to index into
   the vector."
-  [0x03 0x00 0x00 0xb0 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x04 0x04 0x00 0x00 0x00 0x04
-   0x00 0x00 0x00 0x04 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x31 0x2e 0x32 0x34
-   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0xff 0x7e 0x00 0x00 0x00 0x00
-   0x00 0x00 0x00 0x00 0x7f 0xff 0xff 0xff 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xff
-   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-   0x00 0x00 0x00 0x00 0x00 0x00 0x10 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x0f 0x00 0x00 0x00
-   0x00 0x00 0x00 0x00])
+  [0x03 0x00 0x00 0xb0 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ;  32--47
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ;  48--63
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ;  64--79
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ;  80--95
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x04 0x00 0x00 0x00 0x00  ;  96--111
+   0x00 0x00 0x00 0x04 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x31 0x2e 0x32 0x34  ; 112--127
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0xff 0x7e 0x00 0x00 0x00 0x00  ; 128--143
+   0x00 0x00 0x00 0x00 0x7f 0xff 0xff 0xff 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xff  ; 144--159
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 160--175
+   0x00 0x00 0x00 0x00 0x00 0x00 0x10 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 176--191
+   0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x0f 0x00 0x00 0x00  ; 192--207
+   0x00 0x00 0x00 0x00])                                                            ; 208--211
+
+(def cdj-status-flag-byte
+  "The byte in packets that CDJs send to port 50002 containing a set
+  of status flag bits."
+  137)
+
+(def cdj-status-flag-playing-bit
+  "The bit in the CDJ status flag byte which indicates it is currently
+  in Play mode."
+  2r01000000)
+
+(def cdj-status-flag-master-bit
+  "The bit in the CDJ status flag byte which indicates it is the master player."
+  2r00100000)
+
+(def cdj-status-flag-sync-bit
+  "The bit in the CDJ status flag byte which indicates it is the master player."
+  2r00010000)
+
+(def cdj-status-flag-on-air-bit
+  "The bit in the CDJ status flag byte which indicates it is on the
+  air--that is, the mixer channel it is connected to is live and
+  playing to the master output."
+  2r00001000)
+
+(defn build-int
+  "Given a packet, the index of the first byte of an integer value,
+  and the number of bytes that make it up, calculates the integer that
+  the bytes represent."
+  [packet index size]
+  (loop [i (inc index)
+         left (dec size)
+         result (get packet index)]
+    (if (pos? left)
+      (recur (inc i) (dec left) (+ (* result 256) (get packet i)))
+      result)))
+
+(defn- calculate-pitch
+  "Given a packet and the index of the first byte of a pitch value,
+  calculate the pitch shift percentage that it represents."
+  [packet index]
+  (* 100.0 (/ (- (build-int packet index 3) 0x100000)
+              0x100000)))
+
+(defn format-cue-countdown
+  "Given a number of beats before a cue point, format it the way the
+  CDJ does."
+  [beats]
+  (cond
+    (= beats 0x1ff)
+    "--.-"
+
+    (<= 1 beats 0x100)
+    (format "%02d.%d" (quot (dec beats) 4) (inc (rem (dec beats) 4)))
+
+    (zero? beats)
+    "00.0"
+
+    :else
+    "??.?"))
+
+(defn- update-cdj-50002-details-label
+ "Updates the label that gives a detailed explanation of how we
+  interpret the status of a CDJ given a packet sent to port 50002 and
+  the panel in which that packet is being shown."
+  [packet label]
+  (let [flag-bits (get packet cdj-status-flag-byte)
+        track-bpm (/ (build-int packet 146 2) 100.0)
+        no-track? (zero? (get packet 123))
+        pitches (mapv (partial calculate-pitch packet) [141 153 193 197])
+        cue-distance (build-int packet 164 2)
+        args {:active (get packet 39)
+              :track (build-int packet 50 2)
+              :usb-activity (get packet 106)
+              :usb-local (case (get packet 111)
+                           4 "Unloaded"
+                           2 "Unloading..."
+                           0 "Loaded"
+                           "???")
+              :usb-global (if (pos? (get packet 117)) "Found" "Absent")
+              :p-1 (case (get packet 123)
+                     0 "No Track"
+                     3 "Playing"
+                     4 "Looping"
+                     5 "Stopped"
+                     6 "Cued"
+                     9 "Search"
+                     17 "Ended"
+                     "???")
+              :p-2 (case (get packet 139)
+                     122 "Playing"
+                     126 "Stopped"
+                     "???")
+              :p-3 (case (get packet 157)
+                     0 "No Track"
+                     1 "Stop or Reverse"
+                     9 "Forward Vinyl"
+                     13 "Forward CDJ"
+                     "???")
+
+              :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
+              :master-flag (pos? (bit-and flag-bits cdj-status-flag-master-bit))
+              :sync-flag (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
+              :on-air-flag (pos? (bit-and flag-bits cdj-status-flag-on-air-bit))
+
+              :sync-n (build-int packet 134 2)
+
+              :bpm (if no-track? "---" (format "%.2f" track-bpm))
+              :effective-bpm (if no-track? "---" (format "%.2f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
+              :pitches (mapv (partial format "%+.1f%%") pitches)
+              :beat (build-int packet 160 4)
+              :bar-beat (get packet 166)
+              :mem (format-cue-countdown cue-distance)
+              :near-cue (< cue-distance 17)
+              :packet (build-int packet 200 4)}]
+    (.setText label (parser/render-file "templates/cdj-50002.tmpl" args)))
+  label)
+
+(defn- create-cdj-50002-details-label
+  "Creates labels that give a detailed explanation of how we interpret
+  the status of a CDJ given a packet sent to port 50002 and the panel
+  in which that packet is being shown."
+  [packet panel]
+  (let [label (JLabel. "" SwingConstants/CENTER)]
+    (.setVerticalAlignment label SwingConstants/TOP)
+    (.add panel label)
+    (update-cdj-50002-details-label packet label)))
 
 (defn- cdj-byte-format
   "Given a packet which has been identified as coming from a CDJ and a byte
@@ -106,23 +235,36 @@
     (= index 39)  ; Seems to be a binary activity flag?
     [hex (recognized-if (#{0 1} value))]
 
-    (= index 106)  ; Alternates between 4 and 6?
+    (#{50 51} index)  ; Track index
+    [hex (Color/green)]  ; All values are valid
+
+    (= index 106)  ; USB actvity? Alternates between 4 and 6 when USB in use.
     [hex (recognized-if (#{4 6} value))]
 
+    (= index 111)  ; Seems to indicate USB media status in the current player?
+    [hex (recognized-if (#{0 2 4} value))] ; 4=no USB, 0=USB mounted, 2=unmounting USB
+
     (= index 117)  ; Seems to indicate USB media is mounted in any player?
-    [hex (recognized-if (#{0 1} value))]
+    [hex (recognized-if (or (and (zero? value) (= 4 (get packet 111)))
+                            (pos? value)))]
 
     (= index 123)  ; Play mode part 1
-    [hex (recognized-if (#{0 3 4 5 6 9} value))]
+    [hex (recognized-if (#{0 3 4 5 6 9 0x11} value))]
+
+    (#{134 135} index)  ; Sync counter
+    [hex (Color/green)]  ; All values are valid
 
     (= index 137)  ; State flags
     [hex (recognized-if (= (bit-and value 2r10000111) 2r10000100))]
+
+    (= index 139)  ; Play mode part 2?
+    [hex (recognized-if (#{0x7a 0x7e} value))]
 
     (#{141 153 193 197} index)  ; The first byte of the four pitch copies
     [hex (recognized-if (< value 0x21))] ; Valid pitces range from 0x000000 to 0x200000
 
     (#{142 143 154 155 194 195 198 199} index)  ; Later bytes of the four pitch copies
-    [hex (java.awt.Color/green)]  ; All values are valid
+    [hex (Color/green)]  ; All values are valid
 
     (= 144 index)  ; First byte of some kind of loaded indicator?
     [hex (recognized-if (or (and (= value 0x7f) (= (get packet (inc index)) 0xff))
@@ -133,35 +275,38 @@
                             (and (= value 0x00) (= (get packet (dec index)) 0x80))))]
     
     (#{146 147} index)  ; The BPM
-    [hex (java.awt.Color/green)]  ; All values are valid for now
+    [hex (Color/green)]  ; All values are valid for now
 
-    (= index 157)  ; Play mode part 2?
+    (= index 157)  ; Play mode part 3?
     [hex (recognized-if (#{0 1 9 13} value))]
 
-    (= 158 index)  ; A simpler boolean loaded flag?
+    (= 158 index)  ; A combined loaded/master flag? 0=unloaded, 1=loaded but not master, 2=loaded and master
     [hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
-                            (and (= 1 value) (pos? (get packet 123)))))]
+                            (and (= 1 value) (pos? (get packet 123))
+                                 (zero? (bit-and cdj-status-flag-master-bit (get packet cdj-status-flag-byte))))
+                            (and (= 2 value) (pos? (get packet 123))
+                                 (pos? (bit-and cdj-status-flag-master-bit (get packet cdj-status-flag-byte))))))]
 
     (<= 160 index 163)  ; The beat number within the track
-    [hex (java.awt.Color/green)]
+    [hex (Color/green)]
 
     (= index 164)  ; First byte of countdown to next memory point; always 0 or 1
     [hex (recognized-if (#{0 1} value))]
 
     (= index 165)  ; Second byte of countdown to next memory point
-    [hex (java.awt.Color/green)]
+    [hex (Color/green)]
 
     (= index 166)  ; We think this is a beat number ranging from 1 to 4, when track loaded.
     [hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
                             (and (<= 1 value 4) (pos? (get packet 123)))))]
 
     (<= 200 index 203)  ; Packet counter
-    [hex (java.awt.Color/green)]
+    [hex (Color/green)]
 
     :else
-    [hex (if (= value (get cdj-unknown (- index 32))) java.awt.Color/green java.awt.Color/red)]))
+    [hex (if (= value (get cdj-unknown (- index 32))) Color/green Color/red)]))
 
-(defn- byte-format
+(defn- packet-50002-byte-format
   "Given a device number, packet, expected packet type, and byte
   index, return the text and color that should be used to represent
   that byte in the packet based on our expectations."
@@ -170,57 +315,57 @@
         hex (format "%02x" current)]
     (cond
       (< index 10)  ; The standard header
-      [hex (if (= current (get status-header index)) java.awt.Color/green java.awt.Color/red)]
+      [hex (if (= current (get status-header index)) Color/green Color/red)]
 
       (= index 10)  ; The packet type
-      [hex (if (correct-type-and-length? packet expected-type) java.awt.Color/green java.awt.Color/red)]
+      [hex (if (correct-type-and-length? packet expected-type) Color/green Color/red)]
 
       (< index 31)  ; The device name
-      [(if (pos? current) (str (char current)) "") java.awt.Color/green]
+      [(if (pos? current) (str (char current)) "") Color/green]
 
       (= index 31)  ; We don't know what this byte is but expect it to be 1
-      [hex (if (= current 1) java.awt.Color/green java.awt.Color/red)]
+      [hex (if (= current 1) Color/green Color/red)]
 
       (#{33 36} index)  ; We expect these bytes to match the device number
-      [hex (if (= current device-number) java.awt.Color/green java.awt.Color/red)]
+      [hex (if (= current device-number) Color/green Color/red)]
 
       (= expected-type 0x29)
-      (mixer-byte-format packet index current hex)
+      (mixer-50002-byte-format packet index current hex)
 
       (= expected-type 0x0a)
       (cdj-byte-format packet index current hex)
 
       :else
-      [hex java.awt.Color/white])))
+      [hex Color/white])))
 
-(defn- create-byte-labels
+(defn- create-50002-byte-labels
   "Create a set of labels which will display the content of the
   packet, byte by byte."
   [device-number packet expected-type]
   (vec (for [index (range (count packet))]
-         (let [[value color] (byte-format device-number packet expected-type index)
+         (let [[value color] (packet-50002-byte-format device-number packet expected-type index)
                label (JLabel. value SwingConstants/CENTER)]
            (.setForeground label color)
            label))))
 
-(defn- update-byte-labels
+(defn- update-50002-byte-labels
   "Update the content of the labels analyzing the packet when a new
   packet has been received."
   [device-number packet expected-type byte-labels freshness]
   (dotimes [index (count packet)]  ; We have a packet to update our state with
     (let [label (get byte-labels index)
-          [value color] (byte-format device-number packet expected-type index)
+          [value color] (packet-50002-byte-format device-number packet expected-type index)
           level (aget freshness index)]
       (when label
         (.setForeground label color)
         (if (.equals value (.getText label))
           (when (pos? level) ; Fade out the background, the value has not changed
-            (.setBackground label (java.awt.Color. (int 0) (int 0)
+            (.setBackground label (Color. (int 0) (int 0)
                                                    (int (math/round (* 255 (/ (dec level) fade-steps))))))
             (aset freshness index (dec level)))
           (do ; The value has changed, update the label and set the background bright blue, setting up a fade
             (.setText label value)
-            (.setBackground label (java.awt.Color/blue))
+            (.setBackground label (Color/blue))
             (aset freshness index fade-steps)))))))
 
 (defn- create-address-labels
@@ -231,13 +376,13 @@
   (doseq [x (range 16)]
     (let [label (JLabel. (format "%x" x) SwingConstants/CENTER)]
       (.setFont label byte-font)
-      (.setForeground label java.awt.Color/yellow)
+      (.setForeground label Color/yellow)
       (.add panel label)
       (.setBounds label (* (inc x) 25) 0 20 15)))
   (doseq [y (range (inc (quot (dec packet-length) 16)))]
     (let [label (JLabel. (format "%x" y) SwingConstants/RIGHT)]
       (.setFont label byte-font)
-      (.setForeground label java.awt.Color/yellow)
+      (.setForeground label Color/yellow)
       (.add panel label)
       (.setBounds label 0 (* (inc y) 15) 20 15))))
 
@@ -254,8 +399,8 @@
             left (* x 20)
             top (* y 14)]
         (.setFont label byte-font)
-        (.setForeground label java.awt.Color/white)
-        (.setBackground label java.awt.Color/black)
+        (.setForeground label Color/white)
+        (.setBackground label Color/black)
         (.setOpaque label true)
         (.add panel label)
         (.setBounds label (* (inc x) 25) (* (inc y) 15) 20 15))
@@ -269,28 +414,32 @@
   (let [original-packet-type (get packet 10)
         frame (JFrame. (str "Player " device-number))
         panel (JPanel.)
-        byte-labels (create-byte-labels device-number packet original-packet-type)
-        freshness (int-array (count packet))]
+        byte-labels (create-50002-byte-labels device-number packet original-packet-type)
+        freshness (int-array (count packet))
+        details-label (when (= original-packet-type 0x0a) (create-cdj-50002-details-label packet panel))]
     (.setLayout panel nil)
-    (.setSize frame 440 250)
+    (.setSize frame 440 (if (= original-packet-type 0x0a) 400 200))
     (.setContentPane frame panel)
-    (.setBackground panel java.awt.Color/black)
+    (.setBackground panel Color/black)
     (.setDefaultCloseOperation frame JFrame/EXIT_ON_CLOSE)
 
     (create-address-labels panel (count packet))
     (position-byte-labels byte-labels panel)
+    (when details-label (.setBounds details-label 0 230 440 170))
 
     (let [location (.getLocation frame)
           offset (* 20 (inc (count @packet-frames)))]
       (.translate location offset offset)
-      (.setLocation frame location))
-    (.setVisible frame true)
-    (fn [packet]
-      (if (nil? packet)
-        (do  ; We were told to shut down
-          (.setVisible frame false)
-          (.dispose frame))
-        (update-byte-labels device-number packet original-packet-type byte-labels freshness)))))
+      (.setLocation frame location)
+      (.setVisible frame true)
+      (fn [packet]
+        (if (nil? packet)
+          (do  ; We were told to shut down
+            (.setVisible frame false)
+            (.dispose frame))
+          (do  ; We have an actual packet to display
+            (update-50002-byte-labels device-number packet original-packet-type byte-labels freshness)
+            (when details-label (update-cdj-50002-details-label packet details-label))))))))
 
 (defn- handle-device-packet
   "Find and update or create the frame used to display packets from

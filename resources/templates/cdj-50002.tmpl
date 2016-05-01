@@ -1,0 +1,40 @@
+<html>
+    <font color="white">
+        <em>Track</em>: {{track}};
+        <em>U<sub>a</sub></em>:
+        <b>{% if usb-activity = 6 %}<font color="yellow">6</font>{% else %}4{% endif %}</b>; &nbsp;
+        <em>U<sub>l</sub></em>: USB {{usb-local}}; &nbsp;
+        <em>U<sub>g</sub></em>: Link USB {{usb-global}}
+        <br/>
+
+        <em>P<sub>1</sub></em>: {{p-1}}; &nbsp;
+        <em>P<sub>2</sub></em>: {{p-2}}; &nbsp;
+        <em>P<sub>3</sub></em>: {{p-3}}
+        <br/>
+
+        <em>A</em>:
+        {% if active > 0 %}<font color="yellow">Active</font>{% else %}<font color="gray">Idle</font>{% endif %};
+        &nbsp; <em>F</em>:
+        {% if playing-flag %}<font color="green"><b>Playing</b></font>&nbsp;&nbsp;{% endif %}
+        {% if master-flag %}<font color="orange"><b>Master</b></font>&nbsp;&nbsp;{% endif %}
+        {% if sync-flag %}<b>Sync</b>&nbsp;&nbsp;{% endif %}
+        {% if on-air-flag %}<font color="red"><b>On Air</b></font>&nbsp;&nbsp;{% endif %}
+        <br/>
+        
+        <em>BPM</em> (track): {{bpm}}; &nbsp; effective BPM: {{effective-bpm}}
+        <br/>
+
+        <em>Pitch</em>:
+        {% for pitch in pitches %}{{pitch}}<sub><em>{{forloop.counter}}</em></sub>{% if not forloop.last %}&nbsp;
+        {%endif %}{% endfor %}
+        <br/>
+
+        <em>Beat</em>: {{beat}}; &nbsp; <em>B<sub>b</sub></em>: {{bar-beat}}; &nbsp;
+        <em>Cue</em>:
+        <font color="{% if near-cue %}red{% else %}#00ffff{% endif %}">{{mem}} Bars</font>
+        <br/>
+
+        <em>Sync<sub>n</sub></em>: {{sync-n}}; &nbsp;
+        <em>Packet</em>: {{packet}}
+    </font>
+</html>
