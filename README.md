@@ -74,6 +74,21 @@ hex, to make them more readable.
 
 <img src="doc/assets/PacketWindow.png" width="800" alt="Packet Window">
 
+Underneath the raw byte values, it displays a an interpretation of the
+meaning of the packet, as best we can currently understand it, with
+italic field labels corresponding to the byte fields identified in
+Figure 10 of the
+[Packet Analysis document](doc/assets/CaptureAnalysis.pdf).
+
+> If you have access to any Pioneer Nexus gear, please run Dysentery
+> and see if the results it gives seem to make sense for your
+> equipment. So far it has only been tested with a pair of CDJ-2000
+> nexus players and a DJM-2000 nexus mixer. Even better, if you can
+> help us figure out more of the meanings of the packets, or identify
+> things that we don&rsquo;t yet have right, and thereby improve the
+> analysis for everyone, please
+> [open an Issue](https://github.com/brunchboy/dysentery/issues)!
+
 To try this, download the latest `dysentery.jar` from the
 [releases](https://github.com/brunchboy/dysentery/releases) page, make
 sure you have a recent Java environment installed, and run it as shown

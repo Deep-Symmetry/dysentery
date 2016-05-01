@@ -205,11 +205,12 @@
 
               :sync-n (build-int packet 134 2)
 
-              :bpm (if no-track? "---" (format "%.2f" track-bpm))
-              :effective-bpm (if no-track? "---" (format "%.2f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
-              :pitches (mapv (partial format "%+.1f%%") pitches)
+              :bpm (if no-track? "---" (format "%.1f" track-bpm))
+              :effective-bpm (if no-track? "---" (format "%.1f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
+              :pitches (mapv (partial format "%+.2f%%") pitches)
               :beat (build-int packet 160 4)
               :bar-beat (get packet 166)
+              :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 166) ".png"))
               :mem (format-cue-countdown cue-distance)
               :near-cue (< cue-distance 17)
               :packet (build-int packet 200 4)}]
@@ -418,14 +419,14 @@
         freshness (int-array (count packet))
         details-label (when (= original-packet-type 0x0a) (create-cdj-50002-details-label packet panel))]
     (.setLayout panel nil)
-    (.setSize frame 440 (if (= original-packet-type 0x0a) 400 200))
+    (.setSize frame 440 (if (= original-packet-type 0x0a) 450 200))
     (.setContentPane frame panel)
     (.setBackground panel Color/black)
     (.setDefaultCloseOperation frame JFrame/EXIT_ON_CLOSE)
 
     (create-address-labels panel (count packet))
     (position-byte-labels byte-labels panel)
-    (when details-label (.setBounds details-label 0 230 440 170))
+    (when details-label (.setBounds details-label 0 230 440 200))
 
     (let [location (.getLocation frame)
           offset (* 20 (inc (count @packet-frames)))]
