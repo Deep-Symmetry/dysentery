@@ -285,7 +285,7 @@ Afterglow\footnote{\url{https://github.com/brunchboy/afterglow\#afterglow}}
 has been able to synchronize its light shows with music being played
 on Pioneer equipment by observing packets broadcast by the mixer to
 port 50001. Until recently, however, it was not possible to tell which
-player was the Master, so there was no way to determine the down beat
+player was the master, so there was no way to determine the down beat
 (the start of each measure). This section will be expanded and more
 details provided as Afterglow is updated to take advantage of the
 discoveries described in the next section.
@@ -300,10 +300,14 @@ contain beat and BPM information. The current BPM can be obtained as:
 These packets are sent on each beat, and the current beat number (1,
 2, 3 or 4) is sent in $byte[92]$. However, the beat number is
 \emph{not} synchronized with the master player, and so it is not
-useful for much. We expect to make use of the Virtual CDJ technique to
-determine the actual beat number soon.
+useful for much. Now that it is possible to to determine which CDJ is
+the master player using the packets described in
+Section~\ref{sec:virtualCdj}, these packets become far more useful,
+and Afterglow will soon be using them to track the down beat based on
+the beat number reported by the master player.
 
 \section{Creating a Virtual CDJ}
+\label{sec:virtualCdj}
 
 Although some useful information can be obtained simply by watching
 broadcast traffic on a network containing Pioneer gear, in order to
@@ -376,12 +380,12 @@ obtained as:
 
 \[ \frac{byte[46] \times 256 + byte[47]}{100} \]
 
-This value is labeled $BPM$ in Figure \ref{fig:mixerStatus}.
-Unfortunately, this BPM seems to only be valid when a synced source is
-playing; when the mixer is doing its own beat detection from unsynced
-audio sources, even though it displays the detected BPM on the mixer
-itself, and uses that to drive its beat effects, it does not send that
-value in these packets.
+This value is labeled $BPM$ in Figure~\ref{fig:mixerStatus}.
+Unfortunately, this BPM seems to only be valid when a
+rekordbox-analyzed source is playing; when the mixer is doing its own
+beat detection from unanalyzed audio sources, even though it displays
+the detected BPM on the mixer itself, and uses that to drive its beat
+effects, it does not send that value in these packets.
 
 Mixer status packets are sent on each beat, but seemingly not with as
 much precision as those sent to port 50001, and the current beat
@@ -685,6 +689,15 @@ count to need more than the last three bytes).
   This analysis is incomplete; there are many bytes whose purpose is
   not yet known, not all of which are even mentioned here yet.
 \end{quote}
+
+\subsection{Extra CDJ Packets}
+
+It was just discovered that registering a virtual CDJ also causes the
+other CDJs to start sending unicast packets to that address on port
+50000, in addition to the packets they normally broadcast on that
+port. Dysentery is in the process of being updated to display these
+packets as well, so they can be analyzed to see what other information
+can be used.
 
 \begin{center}
   \includegraphics[width=4cm]{DS-Logo-bw-4k}
