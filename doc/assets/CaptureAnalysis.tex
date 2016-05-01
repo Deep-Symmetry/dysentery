@@ -555,7 +555,10 @@ state flags, detailed in Figure \ref{fig:cdjStateFlags}.
 \end{quotation}
 
 Byte 139, labeled $P_2$ seems to be another play state indicator,
-having the value 126 when stopped and 122 when playing.
+having the value 122 when playing and 126 when stopped. When the CDJ
+is trying to play, but is being held in place by the DJ holding down
+on the jog wheel, $P_1$ considers it to be playing (value 3), while
+$P_2$ considers it to be stopped (value 126).
 
 There are four different places where pitch information appears in
 these packets: $Pitch_1$ at bytes 141--143, $Pitch_2$ at bytes
@@ -567,6 +570,11 @@ percentage, where {\tt 0x100000} represents no adjustment ($0\%$),
 {\tt 0x000000} represents slowing all the way to a complete stop
 ($-100\%$, reachable only in Wide tempo mode), and {\tt 0x200000}
 represents playing at double speed ($+100\%$).
+
+Note that if playback is stopped by pushing the pitch fader all the
+way to $-100\%$ in Wide mode, both $P_1$ and $P_2$ still show it as
+playing, which is different than when the jog wheel is held down,
+since $P_2$ shows a stop in the latter situation.
 
 Here is how the pitch adjustment percentage represented by $Pitch_1$
 would be calculated:
