@@ -376,12 +376,18 @@ obtained as:
 \[ \frac{byte[46] \times 256 + byte[47]}{100} \]
 
 This value is labeled $BPM$ in Figure \ref{fig:mixerStatus}.
+Unfortunately, this BPM seems to only be valid when a synced source is
+playing; when the mixer is doing its own beat detection from unsynced
+audio sources, even though it displays the detected BPM on the mixer
+itself, and uses that to drive its beat effects, it does not send that
+value in these packets.
 
-Mixer status packets are sent on each beat, and the current beat number (1,
-2, 3 or 4) is sent in $byte[55]$, labeled $B$. However, the beat number is
-\emph{not} synchronized with the master player, and so it is not
-useful for much. The beat number should be determined, when needed,
-from packets that are sent by the master player.
+Mixer status packets are sent on each beat, but seemingly not with as
+much precision as those sent to port 50001, and the current beat
+number (1, 2, 3 or 4) is sent in $byte[55]$, labeled $B$. However, the
+beat number is \emph{not} synchronized with the master player, and so
+it is not useful for much. The beat number should be determined, when
+needed, from packets that are sent by the master player.
 
 The value at $byte[54]$, labeled $X$, has an unknown meaning. It
 seems to start out with the value {\tt 0x00}, and then change when a
@@ -531,7 +537,7 @@ master changes.
 Byte 137, labeled $F$, is a bit field containing some very useful
 state flags, detailed in Figure \ref{fig:cdjStateFlags}.
 
-\begin{figure}[ht]
+\begin{figure}
   \begin{bytefield}[endianness=big,bitwidth=4em]{8}
     \bitheader{0-7} \\
     \bitbox{1}{\tt 1} & \bitbox{1}{\small{Play}} & \bitbox{1}{\small{Master}} & \bitbox{1}{\small{Sync}}

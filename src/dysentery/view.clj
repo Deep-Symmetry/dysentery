@@ -227,6 +227,28 @@
     (.add panel label)
     (update-cdj-50002-details-label packet label)))
 
+(defn- update-mixer-50002-details-label
+ "Updates the label that gives a detailed explanation of how we
+  interpret the status of a mixer given a packet sent to port 50002
+  and the panel in which that packet is being shown."
+  [packet label]
+  (.setBounds label 0 100 440 200)
+  (let [args {:bpm (format "%.1f" (/ (build-int packet 46 2) 100.0))
+              :bar-beat (get packet 55)
+              :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 55) ".png"))}]
+    (.setText label (parser/render-file "templates/mixer-50002.tmpl" args)))
+  label)
+
+(defn- create-mixer-50002-details-label
+  "Creates labels that give a detailed explanation of how we interpret
+  the status of a mixer given a packet sent to port 50002 and the panel
+  in which that packet is being shown."
+  [packet panel]
+  (let [label (JLabel. "" SwingConstants/CENTER)]
+    (.setVerticalAlignment label SwingConstants/TOP)
+    (.add panel label)
+    (update-mixer-50002-details-label packet label)))
+
 (defn- cdj-byte-format
   "Given a packet which has been identified as coming from a CDJ and a byte
   index that refers to one of the bytes not handled by [[byte-format]], see
@@ -407,17 +429,20 @@
         (.setBounds label (* (inc x) 25) (* (inc y) 15) 20 15))
       (recur (rest labels) (inc index)))))
 
-(defn- create-player-frame
-  "Creates a frame for displaying packets sent to the specified device
-  number, and returns a function to be called to update the frame when
-  a new packet is received for that device."
+(defn- create-player-50002-frame
+  "Creates a frame for displaying packets sent by the specified device
+  number to port 50002, and returns a function to be called to update
+  the frame when a new packet is received for that device."
   [device-number packet]
   (let [original-packet-type (get packet 10)
-        frame (JFrame. (str "Player " device-number))
+        frame (JFrame. (str "Player " device-number ", port 50002"))
         panel (JPanel.)
         byte-labels (create-50002-byte-labels device-number packet original-packet-type)
         freshness (int-array (count packet))
-        details-label (when (= original-packet-type 0x0a) (create-cdj-50002-details-label packet panel))]
+        details-label (case original-packet-type
+                        0x0a (create-cdj-50002-details-label packet panel)
+                        0x29 (create-mixer-50002-details-label packet panel)
+                        nil)]
     (.setLayout panel nil)
     (.setSize frame 440 (if (= original-packet-type 0x0a) 450 200))
     (.setContentPane frame panel)
@@ -426,7 +451,10 @@
 
     (create-address-labels panel (count packet))
     (position-byte-labels byte-labels panel)
-    (when details-label (.setBounds details-label 0 230 440 200))
+    (when details-label (.setBounds details-label 0 (case original-packet-type
+                                                      0x0a 230
+                                                      0x29 100)
+                                    440 200))
 
     (let [location (.getLocation frame)
           offset (* 20 (inc (count @packet-frames)))]
@@ -440,7 +468,10 @@
             (.dispose frame))
           (do  ; We have an actual packet to display
             (update-50002-byte-labels device-number packet original-packet-type byte-labels freshness)
-            (when details-label (update-cdj-50002-details-label packet details-label))))))))
+            (when details-label
+              (case original-packet-type
+                0x0a (update-cdj-50002-details-label packet details-label)
+                0x29 (update-mixer-50002-details-label packet details-label)))))))))
 
 (defn- handle-device-packet
   "Find and update or create the frame used to display packets from
@@ -448,7 +479,7 @@
   [device-number packet]
   (if-let [frame (get @packet-frames device-number)]
     (frame packet)
-    (swap! packet-frames assoc device-number (create-player-frame device-number packet))))
+    (swap! packet-frames assoc device-number (create-player-50002-frame device-number packet))))
 
 (defn- start-watching-devices
   "Once we have found some DJ-Link devices, set up a virtual CDJ to
