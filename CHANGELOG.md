@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
-## [Unreleased]
+## [Unreleased][unreleased]
+
+Nothing so far.
+
+## [0.1.1] - 2016-05-01
 
 ### Added
 
@@ -16,8 +20,10 @@ This change log follows the conventions of
   rendered as text rather than hex, to aid in reading the packet.
 - A section at the bottom of the packet capture windows now displays
   the known interpretations of packet fields.
+- A packet timestamp.
 - Many more bytes in the CDJ status packets have known meanings.
 - More bytes in the mixer status packet have known meanings.
+- Windows analyzing packets broadcast to port 50001.
 
 ## 0.1.0 - 2016-04-26
 
@@ -26,5 +32,6 @@ This change log follows the conventions of
 - Intial early release.
 
 
-[Unreleased]: https://github.com/your-name/dysentery/compare/0.1.0...HEAD
+[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.1.0...HEAD
+[0.1.1]: https://github.com/brunchboy/dysentery/compare/v0.1.0...v0.1.1
 

@@ -7,8 +7,9 @@
             [clojure.math.numeric-tower :as math]
             [selmer.parser :as parser]
             [taoensso.timbre :as timbre])
-  (:import [javax.swing JFrame JPanel JLabel SwingConstants]
-           [java.awt Color Font]))
+  (:import [java.awt Color Font]
+           [javax.swing JFrame JPanel JLabel SwingConstants]
+           [java.net DatagramPacket DatagramSocket InetAddress]))
 
 (def byte-font
   "The font to use for rendering byte values."
@@ -100,7 +101,7 @@
     [hex (recognized-if (<= 1 value 4))]
 
     :else
-    [hex (recognized-if (= value (get mixer-unknown (- index 32))))]))
+    [hex Color/white]))
 
 (def cdj-unknown
   "Template for bytes in a CDJ packet which we don't yet have specific
@@ -293,10 +294,11 @@
     (.add panel label)
     (update-mixer-50002-details-label packet label)))
 
-(defn- cdj-byte-format
-  "Given a packet which has been identified as coming from a CDJ and a byte
-  index that refers to one of the bytes not handled by [[byte-format]], see
-  if it seems to be one that we expect, or something more surprising."
+(defn- cdj-50002-byte-format
+  "Given a packet to port 50002 which has been identified as coming
+  from a CDJ and a byte index that refers to one of the bytes not
+  handled by [[byte-format]], see if it seems to be one that we
+  expect, or something more surprising."
   [packet index value hex]
   (cond
     (= index 39)  ; Seems to be a binary activity flag?
@@ -347,8 +349,10 @@
     (= index 157)  ; Play mode part 3?
     [hex (recognized-if (#{0 1 9 13} value))]
 
-    (= 158 index)  ; A combined loaded/master flag? 0=unloaded, 1=loaded but not master, 2=loaded and master
-    [hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
+    ;; The logic below turned out to be wrong; we have no idea what byte 158 is yet, but it is clearly up
+    ;; to something.
+    #_(= 158 index)  ; A combined loaded/master flag? 0=unloaded, 1=loaded but not master, 2=loaded and master
+    #_[hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
                             (and (= 1 value) (pos? (get packet 123))
                                  (zero? (bit-and cdj-status-flag-master-bit (get packet cdj-status-flag-byte))))
                             (and (= 2 value) (pos? (get packet 123))
@@ -371,13 +375,13 @@
     [hex (Color/green)]
 
     :else
-    [hex (if (= value (get cdj-unknown (- index 32))) Color/green Color/red)]))
+    [hex Color/white]))
 
 (defn- packet-50002-byte-format
-  "Given a device number, packet, expected packet type, and byte
+  "Given a device number, expected packet type, packet, and byte
   index, return the text and color that should be used to represent
   that byte in the packet based on our expectations."
-  [device-number packet expected-type index]
+  [device-number expected-type packet index]
   (let [current (get packet index)
         hex (format "%02x" current)]
     (cond
@@ -400,28 +404,67 @@
       (mixer-50002-byte-format packet index current hex)
 
       (= expected-type 0x0a)
-      (cdj-byte-format packet index current hex)
+      (cdj-50002-byte-format packet index current hex)
 
       :else
       [hex Color/white])))
 
-(defn- create-50002-byte-labels
+(defn- packet-50001-byte-format
+  "Given a device number, packet, and byte index, return the text and
+  color that should be used to represent that byte in the packet based
+  on our expectations."
+  [device-number packet index]
+  (let [current (get packet index)
+        hex (format "%02x" current)]
+    (cond
+      (< index 10)  ; The standard header
+      [hex (if (= current (get status-header index)) Color/green Color/red)]
+
+      (= index 10)  ; The packet type; seems to always be 28 for these
+      [hex (if (= current 0x28) Color/green Color/red)]
+
+      (< index 31)  ; The device name
+      [(if (pos? current) (str (char current)) "") Color/green]
+
+      (= index 31)  ; We don't know what this byte is but expect it to be 1
+      [hex (if (= current 1) Color/green Color/red)]
+
+      (#{33 95} index)  ; We expect these to match the device number
+      [hex (if (= current device-number) Color/green Color/red)]
+
+      (= index 85)  ; The first byte of the pitch
+      [hex (recognized-if (< current 0x21))] ; Valid pitces range from 0x000000 to 0x200000
+
+      (#{86 87} index)  ; Later bytes of the pitch
+      [hex (Color/green)]  ; All values are valid
+
+      (#{90 91} index)  ; This is the current BPM
+      [hex Color/green]
+
+      (= index 92)  ; We think this is a beat number ranging from 1 to 4
+      [hex (recognized-if (<= 1 current 4))]
+
+      :else
+      [hex Color/white])))
+
+(defn- create-byte-labels
   "Create a set of labels which will display the content of the
-  packet, byte by byte."
-  [device-number packet expected-type]
+  packet, byte by byte, given the packet and a function which knows
+  how to format each packet byte."
+  [packet byte-formatter]
   (vec (for [index (range (count packet))]
-         (let [[value color] (packet-50002-byte-format device-number packet expected-type index)
+         (let [[value color] (byte-formatter packet index)
                label (JLabel. value SwingConstants/CENTER)]
            (.setForeground label color)
            label))))
 
-(defn- update-50002-byte-labels
+(defn- update-byte-labels
   "Update the content of the labels analyzing the packet when a new
   packet has been received."
-  [device-number packet expected-type byte-labels]
+  [packet byte-labels byte-formatter]
   (dotimes [index (count packet)]  ; We have a packet to update our state with
     (let [label (get byte-labels index)
-          [value color] (packet-50002-byte-format device-number packet expected-type index)]
+          [value color] (byte-formatter packet index)]
       (when label
         (.setForeground label color)
         (when-not (.equals value (.getText label))
@@ -476,7 +519,7 @@
   (let [original-packet-type (get packet 10)
         frame (JFrame. (str "Player " device-number ", port 50002"))
         panel (JPanel.)
-        byte-labels (create-50002-byte-labels device-number packet original-packet-type)
+        byte-labels (create-byte-labels packet (partial packet-50002-byte-format device-number original-packet-type))
         timestamp-label (create-timestamp-label panel)
         details-label (case original-packet-type
                         0x0a (create-cdj-50002-details-label packet panel)
@@ -495,7 +538,7 @@
                                     0x29 90)
                 440 18)
     (when details-label (.setBounds details-label 0 (case original-packet-type
-                                                      0x0a 250
+                                                      0x0a 255
                                                       0x29 120)
                                     440 200))
 
@@ -511,28 +554,162 @@
             (.dispose frame))
           (do  ; We have an actual packet to display
             (update-timestamp-label timestamp-label)
-            (update-50002-byte-labels device-number packet original-packet-type byte-labels)
+            (update-byte-labels packet byte-labels
+                                (partial packet-50002-byte-format device-number original-packet-type))
             (when details-label
               (case original-packet-type
                 0x0a (update-cdj-50002-details-label packet details-label)
                 0x29 (update-mixer-50002-details-label packet details-label)))))))))
 
-(defn- handle-device-packet
-  "Find and update or create the frame used to display packets from
-  the device."
+(defn- update-player-50001-details-label
+  "Updates the label that gives a detailed explanation of how we
+  interpret the status of a player given a packet sent to port 50001
+  and the panel in which that packet is being shown."
+  [packet label]
+  (let [pitch (calculate-pitch packet 85)
+        track-bpm (/ (build-int packet 90 2) 100.0)
+        args {:bpm (format "%.1f" track-bpm)
+              :effective-bpm (format "%.1f" (+ track-bpm (* track-bpm 1/100 pitch)))
+              :pitch (format "%+.2f%%" pitch)
+              :bar-beat (get packet 92)
+              :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 92) ".png"))}]
+    (.setText label (parser/render-file "templates/player-50001.tmpl" args)))
+  label)
+
+(defn- create-player-50001-details-label
+  "Creates labels that give a detailed explanation of how we interpret
+  the status of a player given a packet sent to port 50001 and the panel
+  in which that packet is being shown."
+  [packet panel]
+  (let [label (JLabel. "" SwingConstants/CENTER)]
+    (.setVerticalAlignment label SwingConstants/TOP)
+    (.add panel label)
+    (update-player-50001-details-label packet label)))
+
+(defn- create-player-50001-frame
+  "Creates a frame for displaying packets sent by the specified device
+  number to port 50001, and returns a function to be called to update
+  the frame when a new packet is received for that device."
   [device-number packet]
-  (if-let [frame (get @packet-frames device-number)]
+  (let [original-packet-type (get packet 10)
+        frame (JFrame. (str "Player " device-number ", port 50001"))
+        panel (JPanel.)
+        byte-labels (create-byte-labels packet (partial packet-50001-byte-format device-number))
+        timestamp-label (create-timestamp-label panel)
+        details-label (create-player-50001-details-label packet panel)]
+    (.setLayout panel nil)
+    (.setSize frame 440 240)
+    (.setContentPane frame panel)
+    (.setBackground panel Color/black)
+    (.setDefaultCloseOperation frame JFrame/EXIT_ON_CLOSE)
+
+    (create-address-labels panel (count packet))
+    (position-byte-labels byte-labels panel)
+    (.setBounds timestamp-label 0 115 440 18)
+    (.setBounds details-label 0 145 440 200)
+
+    (let [location (.getLocation frame)
+          offset (* 20 (inc (count @packet-frames)))]
+      (.translate location offset offset)
+      (.setLocation frame location)
+      (.setVisible frame true)
+      (fn [packet]
+        (if (nil? packet)
+          (do  ; We were told to shut down
+            (.setVisible frame false)
+            (.dispose frame))
+          (do  ; We have an actual packet to display
+            (update-timestamp-label timestamp-label)
+            (update-byte-labels packet byte-labels
+                                (partial packet-50001-byte-format device-number))
+            (update-player-50001-details-label packet details-label)))))))
+
+(defn- create-player-frame
+  "Creates a frame for displaying packets sent to the specified port
+  by the specified device number, and returns a function to be called
+  to update the frame when a new packet is received on that port for
+  that device."
+  [port device-number packet]
+  (case port
+    50001 (create-player-50001-frame device-number packet)
+    50002 (create-player-50002-frame device-number packet)))
+
+(defn- handle-device-packet
+  "Find and update or create the frame used to display packets on the
+  specified port from the specified device."
+  [port device-number packet]
+  (if-let [frame (get @packet-frames [port device-number])]
     (frame packet)
-    (swap! packet-frames assoc device-number (create-player-50002-frame device-number packet))))
+    (swap! packet-frames assoc [port device-number] (create-player-frame port device-number packet))))
+
+(defonce ^{:private true
+           :doc "Holds the persistent server socket for receiving
+  packets broadcast to port 50001 and the future that processes
+  packets."}
+  watcher-state (atom {:socket nil
+                       :watcher nil}))
+
+(defn stop-watching-devices
+  "Remove the packet listener, close the frames, and shut down the
+  virtual CDJ."
+  []
+  (vcdj/remove-packet-listener handle-device-packet)
+  (vcdj/shut-down)
+  (swap! watcher-state (fn [current]
+                         (-> current
+                             (update-in [:socket] #(when %
+                                                     (try (.close %)
+                                                          (catch Exception e
+                                                            (timbre/warn e "Problem closing port 50001 socket.")))
+                                                     nil))
+                             (update-in [:watcher] #(when %
+                                                      (try (future-cancel %)
+                                                           (catch Exception e
+                                                             (timbre/warn e "Problem stopping port 50001 watcher.")))
+                                                      nil)))))
+  (doseq [frame (vals @packet-frames)]
+    (frame nil))
+  (reset! packet-frames {}))
+
+(defn- receive
+  "Block until a UDP message is received on the given DatagramSocket, and
+  return the payload packet."
+  [^DatagramSocket socket]
+  (let [buffer (byte-array 512)
+        packet (DatagramPacket. buffer 512)]
+    (try (.receive socket packet)
+         packet
+         (catch Exception e
+           (timbre/error e "Problem reading from DJ Link socket, shutting down.")
+           (stop-watching-devices)))))
 
 (defn- start-watching-devices
   "Once we have found some DJ-Link devices, set up a virtual CDJ to
-  receive packets from them, and register a packet listener that will
-  create or update windows to display those packets."
+  receive packets on port 50002 from them, create our own socket to
+  monitor packets broadcast to port 50001, and register packet
+  listeners that will create or update windows to display those
+  packets."
   [devices]
   (let [[interface address] (finder/find-interface-and-address-for-device (first devices))]
     (vcdj/start interface address)
-    (vcdj/add-packet-listener handle-device-packet)))
+    (vcdj/add-packet-listener (partial handle-device-packet 50002)))
+  (try
+    (swap! watcher-state
+           (fn [current]
+             (let [socket (DatagramSocket. 50001 (InetAddress/getByName "0.0.0.0"))]
+               (-> current
+                   (assoc :socket socket)
+                   (assoc :watcher
+                          (future (loop []
+                                    (let [packet (receive socket)
+                                          data (vec (map util/unsign (take (.getLength packet) (.getData packet))))]
+                                      ;; Check packet length; we only want ones with interesting data
+                                      (when (= 96 (.getLength packet))
+                                        (handle-device-packet 50001 (get data 33) data)))
+                                    (recur))))))))
+    (catch Exception e
+      (timbre/warn e "Failed while trying to set up DJ-Link reception.")
+      (stop-watching-devices))))
 
 (defn describe-devices
   "Print a descrption of the DJ Link devices found, and how to
@@ -573,13 +750,3 @@
   (when-let [devices (seq (find-devices))]
     (describe-devices devices)
     (start-watching-devices devices)))
-
-(defn stop-watching-devices
-  "Remove the packet listener, close the frames, and shut down the
-  virtual CDJ."
-  []
-  (vcdj/remove-packet-listener handle-device-packet)
-  (vcdj/shut-down)
-  (doseq [frame (vals @packet-frames)]
-    (frame nil))
-  (reset! packet-frames {}))

@@ -48,7 +48,7 @@
     (try (.receive socket packet)
          packet
          (catch Exception e
-           (timbre/warn e "Problem reading from DJ Link socket, shutting down.")
+           (timbre/error e "Problem reading from DJ Link socket, shutting down.")
            (shut-down)))))
 
 (def max-packet-interval

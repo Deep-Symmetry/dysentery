@@ -74,17 +74,25 @@ helps to identify what parts of the packet change when you do
 something on the device being analyzed.
 
 To further focus analysis, if a byte has a value that we expect, it is
-colored green; if it has an unexpected value, it is colored red. If
-you see any red values, they show areas where puzzles remain to be
-solved. Bytes which are expected to contain text are rendered as text
-rather than hex, to make them more readable.
+colored green; if it has an unexpected value, it is colored red. Bytes
+that we don&rsquo;t yet understand are colored white. If you see any
+white values changing, that is a puzzle that remains to be
+solved&mdash;see if you can identify any pattern, or figure out what
+they might convey. If you do, or if any byte value shows up in red,
+please [open an Issue](https://github.com/brunchboy/dysentery/issues)
+to let us know. Bytes which are expected to contain the device name
+are rendered as text rather than hex, to make them more readable.
 
-<img src="doc/assets/PacketWindow.png" width="800" alt="Packet Window">
+<img src="doc/assets/PacketWindow.png" width="600" alt="Packet Window">
 
-Underneath the raw byte values, it displays a an interpretation of the
-meaning of the packet, as best we can currently understand it, with
-italic field labels corresponding to the byte fields identified in
-Figure 10 of the
+Underneath the raw byte values there is a timestamp which shows when
+the most recent packet was received. As with the byte values, its
+background will flash blue when the timestamp changes, and fade to
+black over the next second, until the next packet is received.
+
+Beneath the timestamp is a an interpretation of the meaning of the
+packet, as best we can currently understand it, with italic field
+labels corresponding to the byte fields identified in Figure 10 of the
 [Packet Analysis document](doc/assets/CaptureAnalysis.pdf).
 
 > If you have access to any Pioneer Nexus gear, please run Dysentery

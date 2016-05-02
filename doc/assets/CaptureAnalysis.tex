@@ -24,6 +24,8 @@
   state. This article documents what has been learned so far about the
   protocol, and how to accomplish these tasks.}
 
+\pagestyle{headings}
+
 \section{Mixer Startup}
 
 When the mixer starts up, after it obtains an IP address (or gives up
@@ -280,6 +282,7 @@ Figure~\ref{fig:cdjKeepalive} and {\tt 02} in
 Figure~\ref{fig:mixerKeepalive}.
 
 \section{Tracking BPM and Beats}
+\label{sec:beatPackets}
 
 For some time now,
 Afterglow\footnote{\url{https://github.com/brunchboy/afterglow\#afterglow}}
@@ -287,25 +290,103 @@ has been able to synchronize its light shows with music being played
 on Pioneer equipment by observing packets broadcast by the mixer to
 port 50001. Until recently, however, it was not possible to tell which
 player was the master, so there was no way to determine the down beat
-(the start of each measure). This section will be expanded and more
-details provided as Afterglow is updated to take advantage of the
-discoveries described in the next section.
+(the start of each measure). Now that it is possible to to determine
+which CDJ is the master player using the packets described in
+Section~\ref{sec:virtualCdj}, these beat packets have become far more
+useful, and Afterglow will soon be using them to track the down beat
+based on the beat number reported by the master player.
 
-Until then, here is a summary of what is currently done. A socket is
-opened and bound to port 50001. Whenever a packet from the mixer is
-received on this socket, if the length is 96 bytes, it is known to
-contain beat and BPM information. The current BPM can be obtained as:
+To track beats, open a socket and bind it to port 50001. The devices
+seem to broadcast two different kinds of packets to this port, a
+shorter packet containing 45 bytes of data, and a longer packet
+containing 96 bytes. The shorter packets seem to all have identical
+content, and do not seem to convey useful information, so we currently
+simply ignore them.
+
+The 96-byte packets are sent on each beat, so even the arrival of the
+packet is interesting information, it means that the player is
+starting a new beat. (CDJs send these packets only when they are
+playing. The mixer sends them all the time, acting as a backup
+metronome when no other device is counting beats.) The content of
+these packets is shown in Figure~\ref{fig:beatPacket}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+      \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+        {\tt 4c} {\tt \textbf{28}}}
+      & \bitbox[lrt]{5}{}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 16} % 0x10
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 32} % 0x20
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 3c} {\tt 00} {\tt 00} {\tt 01} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny 48} % 0x30
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt ff} {\tt ff} {\tt ff} {\tt ff}}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny 64} % 0x40
+      \bitboxes*{1}{{\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff}
+        {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff}}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny 80} % 0x50
+      \bitboxes*{1}{{\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt 00}} & \bitbox{3}{$Pitch$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{2}{$BPM$} & \bitbox{1}{$B_b$} & \bitboxes*{1}{{\tt 00} {\tt 00}} &
+      \bitbox{1}{$D$}
+    \end{leftwordgroup} \\
+
+  \end{bytefield}
+  \caption{Beat packets}
+  \label{fig:beatPacket}
+\end{figure}
+
+The Device Number in $D$ (bytes~33 and 95) is the Player Number as
+displayed on the CDJ itself, or 33 for the mixer, or another value for
+a computer running rekordbox.
+
+The player's current pitch adjustment\footnote{The mixer always
+  reports a pitch of $+0\%$.} can be found in bytes~85--87, labeled
+$Pitch$. It represents a three-byte pitch adjustment percentage, where
+{\tt 0x100000} represents no adjustment ($0\%$), {\tt 0x000000}
+represents slowing all the way to a complete stop ($-100\%$, reachable
+only in Wide tempo mode), and {\tt 0x200000} represents playing at
+double speed ($+100\%$).
+
+The pitch adjustment percentage represented by $Pitch$ is calculated
+as follows:
+
+\begin{displaymath}
+  100 \times
+  \frac{(byte[85] \times 65536 + byte[86]  \times 256 + byte[87]) - 1048576}{1048576}
+\end{displaymath}
+
+The current BPM of the track playing on the device\footnote{The mixer
+  passes along the BPM of the master player.} can be found at bytes~90--91
+(labeled $BPM$). It is a two-byte integer representing one hundred
+times the current track BPM. So, the current track BPM value to two
+decimal places can be calculated as:
 
 \[ \frac{byte[90] \times 256 + byte[91]}{100} \]
 
-These packets are sent on each beat, and the current beat number (1,
-2, 3 or 4) is sent in $byte[92]$. However, the beat number is
-\emph{not} synchronized with the master player, and so it is not
-useful for much. Now that it is possible to to determine which CDJ is
-the master player using the packets described in
-Section~\ref{sec:virtualCdj}, these packets become far more useful,
-and Afterglow will soon be using them to track the down beat based on
-the beat number reported by the master player.
+In order to obtain the actual playing BPM (the value shown in the BPM
+display), this value must be multiplied by the current pitch
+adjustment, calculated from $Pitch$ as described above.\footnote{Since
+  the mixer always reports a pitch adjustment of $+0\%$, its $BPM$
+  value can be used directly without this additional step.}
+
+The counter $B_b$ at byte~92 counts out the beat within each bar,
+cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
+down beat if it is coming from the master player.
 
 \section{Creating a Virtual CDJ}
 \label{sec:virtualCdj}
@@ -331,6 +412,8 @@ as not to conflict with any actual players you have on the network,
 and any name you would like. As long as you are sending these packets
 roughly every 1.5 seconds, the other players and mixers will begin
 sending packets directly to the socket you have opened on port 50002.
+
+Each device seems to send status packets roughly every 200 milliseconds.
 
 We are just beginning to analyze all the information which can be
 gleaned from these packets, but here is what we know so
@@ -365,7 +448,7 @@ shown in Figure~\ref{fig:mixerStatus}.
     
     \begin{leftwordgroup}{\tiny 48} % 0x30
       \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09} {\tt 00}} &
-      \bitbox{1}{$X$} & \bitbox{1}{$B$} & \bitbox[]{7}{}
+      \bitbox{1}{$X$} & \bitbox{1}{$B_b$} & \bitbox[]{7}{}
     \end{leftwordgroup} \\
   \end{bytefield}
   \caption{Mixer status packets}
@@ -374,7 +457,7 @@ shown in Figure~\ref{fig:mixerStatus}.
 
 Packets coming from a DJM-2000 nexus connected as the only mixer on
 the network contain a value of 33 ({\tt 0x21}) for their Device Number
-$D$ (bytes 33 and 36).
+$D$ (bytes~33 and 36).
 
 The current tempo in beats-per-minute identified by the mixer can be
 obtained as:
@@ -388,12 +471,13 @@ beat detection from unanalyzed audio sources, even though it displays
 the detected BPM on the mixer itself, and uses that to drive its beat
 effects, it does not send that value in these packets.
 
-Mixer status packets are sent on each beat, but seemingly not with as
-much precision as those sent to port 50001, and the current beat
-number (1, 2, 3 or 4) is sent in $byte[55]$, labeled $B$. However, the
-beat number is \emph{not} synchronized with the master player, and so
-it is not useful for much. The beat number should be determined, when
-needed, from packets that are sent by the master player.
+The current beat number within a bar (1, 2, 3 or 4) is sent in
+$byte[55]$, labeled $B_b$. However, the beat number is \emph{not}
+synchronized with the master player, and these packets do not arrive
+at the same time as the beat started anyway, so this value is not
+useful for much. The beat number should be determined, when needed,
+from beat packets (described in Section~\ref{sec:beatPackets}) that
+are sent by the master player.
 
 The value at $byte[54]$, labeled $X$, has an unknown meaning. It
 seems to start out with the value {\tt 0x00}, and then change when a
@@ -458,11 +542,11 @@ shown in Figure~\ref{fig:cdjStatus}.
 
     \begin{leftwordgroup}{\tiny 144} % 0x90
       \bitbox{2}{$l_1$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff} {\tt 00}} &
-      \bitbox{3}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{$l_2$} & \bitbox{1}{\tt ff}
+      \bitbox{3}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{\tt 00} & \bitbox{1}{\tt ff}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 160} % 0xa0
-      \bitbox{4}{$Beat$} & \bitbox{2}{$Mem$} & \bitbox{1}{$B_b$} &
+      \bitbox{4}{$Beat$} & \bitbox{2}{$Cue$} & \bitbox{1}{$B_b$} &
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
@@ -485,7 +569,7 @@ shown in Figure~\ref{fig:cdjStatus}.
   \label{fig:cdjStatus}
 \end{figure}
 
-The Device Number in $D$ (bytes 33 and 36) is the Player Number as
+The Device Number in $D$ (bytes~33 and 36) is the Player Number as
 displayed on the CDJ itself. In the case of this capture, the CDJs
 were assigned Player Numbers 2 and 3.
 
@@ -494,8 +578,8 @@ idle, and 1 when it is playing, searching, or loading a track.
 
 The track number being played (its position within a playlist or other
 scrolling list of tracks, as displayed on the CDJ) can be found at
-bytes 50 and 51, labeled $Track$. (It may be a 4-byte value and also
-include bytes 48 and 49, but that would seem an unmanageable number of
+bytes~50 and 51, labeled $Track$. (It may be a 4-byte value and also
+include bytes~48 and 49, but that would seem an unmanageable number of
 tracks to search through.)
 
 There are a number of bytes, labeled $t_2$ through $t_7$, whose
@@ -531,17 +615,22 @@ are:
 \item[17] The player reached the end of the track and stopped.
 \end{description}
 
-The value $Sync_n$ at bytes 134--135 seems to increment whenever the
+The value $Sync_n$ at bytes~134--135 seems to increment whenever the
 player syncs to a new tempo master (another player or the mixer). I am
 assuming it is just a 2-byte value, because I tried syncing 256 times
 and saw the counter expand from byte~135 to include byte~134. It may
-actually be a 4-byte value and also involve bytes 132 and 133, but I
+actually be a 4-byte value and also involve bytes~132 and 133, but I
 wasn't going to try changing sync 65,536 times or more to find out.
 Perhaps we could write software to test that someday by forcing tempo
 master changes.
 
 Byte~137, labeled $F$, is a bit field containing some very useful
-state flags, detailed in Figure~\ref{fig:cdjStateFlags}.
+state flags, detailed in Figure~\ref{fig:cdjStateFlags}.\footnote{We
+  have not yet seen any other values for bits 0, 1, 2, or 7 in $F$, so
+  we're unsure if they also carry meaning. If you ever find different
+  values for them, please let us know by filing an Issue at
+  \url{https://github.com/brunchboy/dysentery/issues}}
+
 
 \begin{figure}
   \begin{bytefield}[endianness=big,bitwidth=4em]{8}
@@ -553,13 +642,6 @@ state flags, detailed in Figure~\ref{fig:cdjStateFlags}.
   \label{fig:cdjStateFlags}
 \end{figure}
 
-\begin{quotation}
-  We have not yet seen any other values for bits 0, 1, 2, or 7 in $F$,
-  so we're unsure if they also carry meaning. If you ever find
-  different values for them, please let us know by filing an Issue!
-  \url{https://github.com/brunchboy/dysentery/issues}
-\end{quotation}
-
 Byte~139, labeled $P_2$ seems to be another play state indicator,
 having the value 122 when playing and 126 when stopped. When the CDJ
 is trying to play, but is being held in place by the DJ holding down
@@ -567,9 +649,9 @@ on the jog wheel, $P_1$ considers it to be playing (value 3), while
 $P_2$ considers it to be stopped (value 126).
 
 There are four different places where pitch information appears in
-these packets: $Pitch_1$ at bytes 141--143, $Pitch_2$ at bytes
-153--155, $Pitch_3$ at bytes 193--195, and $Pitch_4$ at bytes
-197--199.
+these packets: $Pitch_1$ at bytes~141--143, $Pitch_2$ at
+bytes~153--155, $Pitch_3$ at bytes~193--195, and $Pitch_4$ at
+bytes~197--199.
 
 Each of these values represents a three-byte pitch adjustment
 percentage, where {\tt 0x100000} represents no adjustment ($0\%$),
@@ -624,7 +706,7 @@ more complicated than it really needs to be...
 
 The current BPM of the track (the BPM at the point that is currently
 being played, or at the location where the player is currently paused)
-can be found at bytes 146--147 (labeled $BPM$). It is a two-byte
+can be found at bytes~146--147 (labeled $BPM$). It is a two-byte
 integer representing one hundred times the current track BPM. So, the
 current track BPM value to two decimal places can be calculated as:
 
@@ -638,13 +720,10 @@ Because Rekordbox and the CDJs support tracks with variable BPM, this
 value can and does change over the course of playing such tracks. When
 no track is loaded, $BPM$ has the value {\tt 0xffff}.
 
-The meaning of values $l_1$ (bytes 144--145) and $l_2$ (byte~158) are
-not currently known. They may simply reflect whether a track is loaded
-or not: $l_1$ seems to have the value {\tt 0x7fff} when no track is
-loaded, and the value {\tt 0x8000} when a track is loaded, while $l_2$
-has the value 0 when no track is loaded, 1 when a track is loaded, and
-2 when a track is loaded an the player is the sync master... but there
-is likely more going on here than we have yet figured out.
+The meaning of value $l_1$ (bytes~144--145) is not currently known. It
+may simply reflect whether a track is loaded or not: it seems to
+have the value {\tt 0x7fff} when no track is loaded, and the value
+{\tt 0x8000} when a track is loaded.
 
 Byte~157 (labeled $P_3$) seems to communicate additional information
 about the current play mode, with the following meanings that we have
@@ -657,7 +736,7 @@ found so far:
 \end{description}
 
 The 4-byte beat counter (which counts each beat from 1 through the end
-of the track) is found in bytes 160--163, labeled $Beat$. When the
+of the track) is found in bytes~160--163, labeled $Beat$. When the
 player is paused at the start of the track, this seems to hold the
 value 0, even though it is beat 1, and when no track it loaded, this
 holds the value {\tt 0xffffffff}.
@@ -666,25 +745,31 @@ The counter $B_b$ at byte~166 counts out the beat within each bar,
 cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
 down beat (as is used in the Master Player display on the CDJs as a
 mixing aid). Again, when no track is loaded, this holds the value 0.
+If you want to synchronize events to the down beat, use the CDJ status
+packets' $F$ value to identify the master player, but use the beat
+packets sent by that player (described in
+Section~\ref{sec:beatPackets}) to determine when the beats are
+actually happening.
 
-A countdown timer to the next saved memory point is available in bytes
-164--165 (labeled $Mem$). If there is no saved memory point after the
-current play location in the track, or if it is further than 64 bars
-ahead, these bytes contain the value {\tt 0x01ff} and the CDJ displays
-``-\,-.-~bars''. As soon as there are just 64 bars (256 beats) to
-go before the next memory point, this value becomes {\tt 0x0100}. This
-is the point at which the CDJ starts to display a countdown, which it
-displays as ``63.4~bars''. As each beat goes by, this value decreases
-by 1, until the memory point is about to be reached, at which point
-the value is {\tt 0x0001} and the CDJ displays ``0.1~bars''. On the
-beat on which the memory point was saved the value is {\tt 0x0000} and
-the CDJ displays ``0.0~Bars''. On the next beat, the value becomes
-determined by the next memory point (if any) in the track.
+A countdown timer to the next saved cue point is available in
+bytes~164--165 (labeled $Cue$). If there is no saved cue point after
+the current play location in the track, or if it is further than 64
+bars ahead, these bytes contain the value {\tt 0x01ff} and the CDJ
+displays ``-\,-.-~bars''. As soon as there are just 64 bars (256
+beats) to go before the next cue point, this value becomes {\tt
+  0x0100}. This is the point at which the CDJ starts to display a
+countdown, which it displays as ``63.4~bars''. As each beat goes by,
+this value decreases by 1, until the cue point is about to be reached,
+at which point the value is {\tt 0x0001} and the CDJ displays
+``0.1~bars''. On the beat on which the cue point was saved the value
+is {\tt 0x0000} and the CDJ displays ``0.0~Bars''. On the next beat,
+the value becomes determined by the next cue point (if any) in the
+track.
 
-Bytes 200-203 seem to contain a 4-byte packet counter $Packet$, which
-is incremented for each packet sent by the player. (I am just guessing
-it is four bytes long, I have not yet watched long enough for the
-count to need more than the last three bytes).
+Bytes~200-203 seem to contain a 4-byte packet counter labeled
+$Packet$, which is incremented for each packet sent by the player. (I
+am just guessing it is four bytes long, I have not yet watched long
+enough for the count to need more than the last three bytes).
 
 \begin{quote}
   This analysis is incomplete; there are many bytes whose purpose is
@@ -702,10 +787,16 @@ can be used.
 
 \section{What's Missing?}
 
+We know this analysis isn't complete. There are some values we know
+are available and useful (because CDJs and rekordbox itself show
+them), but we have not figured out how to find them yet.
+
+\subsection{Track Metadata}
+
 The biggest piece of information that would be extremely helpful for a
 light show operator to be able to see, and which we have not yet
 figured out how to obtain, is the name and artist of the track playing
-on one of the CDJs.
+on a player.
 
 While it may be that the rekordbox track ID is present in the status
 packets, we very much hope to avoid having to mount the rekordbox
@@ -716,6 +807,13 @@ In the hope we can avoid that, we've ordered an Ethernet switch that
 offers port mirroring, so we can get a look at all the traffic between
 two physical CDJs to see what happens when the Link Info page is
 pulled up on one of them.
+
+\subsection{Dysentery}
+
+If you have access to Pioneer equipment and are willing to help us
+validate this analysis, and perhaps even figure out more details, you
+can find the tool that is being used to perform this research at: \\
+\url{https://github.com/brunchboy/dysentery}
 
 \begin{center}
   \begin{samepage}
