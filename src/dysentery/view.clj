@@ -28,19 +28,10 @@
   changed-labels (atom {}))
 
 (defonce ^{:private true
-           :doc "The future which does the animation of label background colors
-  so they can flash blue when changed and fade back to black."}
-  animator (future (loop [now (System/currentTimeMillis)]
-                     (doseq [[label changed] @changed-labels]
-                       (let [age (- now changed)]
-                         (if (> age fade-time)
-                           (do
-                             (.setBackground label Color/black)
-                             (swap! changed-labels dissoc label))
-                           (.setBackground label (Color. (int 0) (int 0)
-                                                         (int (math/round (* 255 (/ (- fade-time age) fade-time)))))))))
-                     (Thread/sleep 50)
-                     (recur (System/currentTimeMillis)))))
+           :doc "Holds the future which does the animation of label
+  background colors so they can flash blue when changed and fade back
+  to black."}
+  animator (atom nil))
 
 (defonce ^{:private true
            :doc "Holds a map of device numbers to the functions that
@@ -749,4 +740,18 @@
   []
   (when-let [devices (seq (find-devices))]
     (describe-devices devices)
+    (swap! animator (fn [current]
+                      (or current
+                          (future (loop [now (System/currentTimeMillis)]
+                                    (doseq [[label changed] @changed-labels]
+                                      (let [age (- now changed)]
+                                        (if (> age fade-time)
+                                          (do
+                                            (.setBackground label Color/black)
+                                            (swap! changed-labels dissoc label))
+                                          (.setBackground label (Color. (int 0) (int 0)
+                                                                        (int (math/round (* 255 (/ (- fade-time age)
+                                                                                                   fade-time)))))))))
+                                    (Thread/sleep 50)
+                                    (recur (System/currentTimeMillis)))))))
     (start-watching-devices devices)))
