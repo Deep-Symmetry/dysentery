@@ -14,10 +14,32 @@
   "The font to use for rendering byte values."
   (Font. "Monospaced" Font/PLAIN 14))
 
-(def fade-steps
-  "The number of packets over which the background of a value fades
-  from blue back to black after it changes."
-  10)
+(def fade-time
+  "The number of milliseconds over which the background of a label
+  fades from blue to black after it has changed."
+  1000)
+
+(defonce ^{:private true
+           :doc "A map whose keys are labels that have flashed blue
+  because their value changed, and whose values are the time at which
+  the value changed, so they can be faded back to black. Once they go
+  black, they are removed from the map."}
+  changed-labels (atom {}))
+
+(defonce ^{:private true
+           :doc "The future which does the animation of label background colors
+  so they can flash blue when changed and fade back to black."}
+  animator (future (loop [now (System/currentTimeMillis)]
+                     (doseq [[label changed] @changed-labels]
+                       (let [age (- now changed)]
+                         (if (> age fade-time)
+                           (do
+                             (.setBackground label Color/black)
+                             (swap! changed-labels dissoc label))
+                           (.setBackground label (Color. (int 0) (int 0)
+                                                         (int (math/round (* 255 (/ (- fade-time age) fade-time)))))))))
+                     (Thread/sleep 50)
+                     (recur (System/currentTimeMillis)))))
 
 (defonce ^{:private true
            :doc "Holds a map of device numbers to the functions that
@@ -217,6 +239,29 @@
     (.setText label (parser/render-file "templates/cdj-50002.tmpl" args)))
   label)
 
+(def timestamp-formatter
+  "Formats timestamps of incoming packets in the way we want them."
+  (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSS"))
+
+(defn- create-timestamp-label
+  "Creates labels that show when a packet was received."
+  [panel]
+  (let [label (JLabel. (.format timestamp-formatter (java.util.Date.)) SwingConstants/CENTER)]
+    (.setFont label byte-font)
+    (.setForeground label Color/yellow)
+    (.setBackground label Color/black)
+    (.setOpaque label true)
+    (.add panel label)))
+
+(defn- update-timestamp-label
+  "Sets the label to show the current time and flashes its background
+  blue."
+  [label]
+  (let [now (System/currentTimeMillis)]
+    (.setText label (.format timestamp-formatter now))
+    (.setBackground label Color/blue)
+    (swap! changed-labels assoc label now)))
+
 (defn- create-cdj-50002-details-label
   "Creates labels that give a detailed explanation of how we interpret
   the status of a CDJ given a packet sent to port 50002 and the panel
@@ -232,7 +277,6 @@
   interpret the status of a mixer given a packet sent to port 50002
   and the panel in which that packet is being shown."
   [packet label]
-  (.setBounds label 0 100 440 200)
   (let [args {:bpm (format "%.1f" (/ (build-int packet 46 2) 100.0))
               :bar-beat (get packet 55)
               :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 55) ".png"))}]
@@ -374,22 +418,17 @@
 (defn- update-50002-byte-labels
   "Update the content of the labels analyzing the packet when a new
   packet has been received."
-  [device-number packet expected-type byte-labels freshness]
+  [device-number packet expected-type byte-labels]
   (dotimes [index (count packet)]  ; We have a packet to update our state with
     (let [label (get byte-labels index)
-          [value color] (packet-50002-byte-format device-number packet expected-type index)
-          level (aget freshness index)]
+          [value color] (packet-50002-byte-format device-number packet expected-type index)]
       (when label
         (.setForeground label color)
-        (if (.equals value (.getText label))
-          (when (pos? level) ; Fade out the background, the value has not changed
-            (.setBackground label (Color. (int 0) (int 0)
-                                                   (int (math/round (* 255 (/ (dec level) fade-steps))))))
-            (aset freshness index (dec level)))
-          (do ; The value has changed, update the label and set the background bright blue, setting up a fade
-            (.setText label value)
-            (.setBackground label (Color/blue))
-            (aset freshness index fade-steps)))))))
+        (when-not (.equals value (.getText label))
+          ;; The value has changed, update the label and set the background bright blue, setting up a fade
+          (.setText label value)
+          (.setBackground label (Color/blue))
+          (swap! changed-labels assoc label (System/currentTimeMillis)))))))
 
 (defn- create-address-labels
   "Create a set of fixed labels which identify the addresses of the
@@ -438,22 +477,26 @@
         frame (JFrame. (str "Player " device-number ", port 50002"))
         panel (JPanel.)
         byte-labels (create-50002-byte-labels device-number packet original-packet-type)
-        freshness (int-array (count packet))
+        timestamp-label (create-timestamp-label panel)
         details-label (case original-packet-type
                         0x0a (create-cdj-50002-details-label packet panel)
                         0x29 (create-mixer-50002-details-label packet panel)
                         nil)]
     (.setLayout panel nil)
-    (.setSize frame 440 (if (= original-packet-type 0x0a) 450 200))
+    (.setSize frame 440 (if (= original-packet-type 0x0a) 470 220))
     (.setContentPane frame panel)
     (.setBackground panel Color/black)
     (.setDefaultCloseOperation frame JFrame/EXIT_ON_CLOSE)
 
     (create-address-labels panel (count packet))
     (position-byte-labels byte-labels panel)
+    (.setBounds timestamp-label 0 (case original-packet-type
+                                    0x0a 226
+                                    0x29 90)
+                440 18)
     (when details-label (.setBounds details-label 0 (case original-packet-type
-                                                      0x0a 230
-                                                      0x29 100)
+                                                      0x0a 250
+                                                      0x29 120)
                                     440 200))
 
     (let [location (.getLocation frame)
@@ -467,7 +510,8 @@
             (.setVisible frame false)
             (.dispose frame))
           (do  ; We have an actual packet to display
-            (update-50002-byte-labels device-number packet original-packet-type byte-labels freshness)
+            (update-timestamp-label timestamp-label)
+            (update-50002-byte-labels device-number packet original-packet-type byte-labels)
             (when details-label
               (case original-packet-type
                 0x0a (update-cdj-50002-details-label packet details-label)
