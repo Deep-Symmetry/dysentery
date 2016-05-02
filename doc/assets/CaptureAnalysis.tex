@@ -671,14 +671,14 @@ A countdown timer to the next saved memory point is available in bytes
 164--165 (labeled $Mem$). If there is no saved memory point after the
 current play location in the track, or if it is further than 64 bars
 ahead, these bytes contain the value {\tt 0x01ff} and the CDJ displays
-``-\,-.- Bars''. As soon as there are just 64 bars (256 beats) to
+``-\,-.-~bars''. As soon as there are just 64 bars (256 beats) to
 go before the next memory point, this value becomes {\tt 0x0100}. This
 is the point at which the CDJ starts to display a countdown, which it
-displays as ``63.4 Bars''. As each beat goes by, this value decreases
+displays as ``63.4~bars''. As each beat goes by, this value decreases
 by 1, until the memory point is about to be reached, at which point
-the value is {\tt 0x0001} and the CDJ displays ``0.1 Bars''. On the
+the value is {\tt 0x0001} and the CDJ displays ``0.1~bars''. On the
 beat on which the memory point was saved the value is {\tt 0x0000} and
-the CDJ displays ``0.0 Bars''. On the next beat, the value becomes
+the CDJ displays ``0.0~Bars''. On the next beat, the value becomes
 determined by the next memory point (if any) in the track.
 
 Bytes 200-203 seem to contain a 4-byte packet counter $Packet$, which
@@ -700,8 +700,30 @@ port. Dysentery is in the process of being updated to display these
 packets as well, so they can be analyzed to see what other information
 can be used.
 
+\section{What's Missing?}
+
+The biggest piece of information that would be extremely helpful for a
+light show operator to be able to see, and which we have not yet
+figured out how to obtain, is the name and artist of the track playing
+on one of the CDJs.
+
+While it may be that the rekordbox track ID is present in the status
+packets, we very much hope to avoid having to mount the rekordbox
+database over NFS and figure out how to read it. That is probably a
+few steps too far in complexity and risk.
+
+In the hope we can avoid that, we've ordered an Ethernet switch that
+offers port mirroring, so we can get a look at all the traffic between
+two physical CDJs to see what happens when the Link Info page is
+pulled up on one of them.
+
 \begin{center}
-  \includegraphics[width=4cm]{DS-Logo-bw-4k}
+  \begin{samepage}
+    \includegraphics[width=4cm]{DS-Logo-bw-4k}
+
+    \vspace{0.25cm}
+    \url{http://deepsymmetry.org}
+  \end{samepage}
 \end{center}
 
 \end{document}
