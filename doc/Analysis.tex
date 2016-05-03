@@ -776,15 +776,6 @@ enough for the count to need more than the last three bytes).
   not yet known, not all of which are even mentioned here yet.
 \end{quote}
 
-\subsection{Extra CDJ Packets}
-
-It was just discovered that registering a virtual CDJ also causes the
-other CDJs to start sending unicast packets to that address on port
-50000, in addition to the packets they normally broadcast on that
-port. Dysentery is in the process of being updated to display these
-packets as well, so they can be analyzed to see what other information
-can be used.
-
 \section{What's Missing?}
 
 We know this analysis isn't complete. There are some values we know
@@ -807,6 +798,15 @@ In the hope we can avoid that, we've ordered an Ethernet switch that
 offers port mirroring, so we can get a look at all the traffic between
 two physical CDJs to see what happens when the Link Info page is
 pulled up on one of them.
+
+\subsection{CDJ Packets to Rekordbox}
+
+Performing a packet capture while rekordbox is running reveals that
+the CDJs send unicast packets to rekordbox address on port 50000, in
+addition to the packets they normally broadcast on that port. Figuring
+out how to pose as rekordbox might be useful in order to see what
+additional data these can offer, although that may be much more work
+than posing as a CDJ.
 
 \subsection{Dysentery}
 
