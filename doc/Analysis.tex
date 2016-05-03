@@ -811,6 +811,20 @@ offers port mirroring, so we can get a look at all the traffic between
 two physical CDJs to see what happens when the Link Info page is
 pulled up on one of them.
 
+If the data can't be obtained without reading the database, that is
+looking like bad news. The database format is called
+DeviceSQL,\footnote{\url{https://www.quora.com/What-database-system-did-Greg-Kemnitz-develop}}
+and there used to be a free quick start suite for working with
+it\footnote{\url{http://java.sys-con.com/node/328557}} but that site
+no longer exists because the original (California) company
+Encirq\footnote{\url{https://www.crunchbase.com/organization/encirq-corporation}}
+was acquired by the Japanese Ubiquitous Corporation in
+2008.\footnote{\url{http://www.ubiquitous.co.jp/en/news/press/pdf/p1730_01.pdf}}
+It seems to still be
+available,\footnote{\url{http://www.ubiquitous.co.jp/en/products/db/md/devicesql/}}
+but I'd be surprised if they wanted to help out an open source effort
+like this one.
+
 \subsection{CDJ Packets to Rekordbox}
 
 Performing a packet capture while rekordbox is running reveals that
