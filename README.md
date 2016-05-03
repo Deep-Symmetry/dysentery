@@ -39,10 +39,11 @@ anyone who wants to write code to interact with DJ Link networks.
 Check out what we have learned so far, and please help us figure out
 more if you can!
 
-The packet capture used to create that document can be
-[downloaded](doc/assets/powerup.pcapng) so you can see if you notice
-anything we have not, even if you don&rsquo;t have any Pioneer gear to
-try out.
+The packet captures used to create that document can be downloaded
+([Sections 1 and 2](doc/assets/powerup.pcapng),
+[Sections 3 and 4](doc/assets/to-virtual.pcapng)) so you can see if
+you notice anything we have not, even if you don&rsquo;t have any
+Pioneer gear to try out.
 
 ## Status
 
@@ -106,8 +107,8 @@ black over the next second, until the next packet is received.
 
 Beneath the timestamp is a an interpretation of the meaning of the
 packet, as best we can currently understand it, with italic field
-labels corresponding to the byte fields identified in Figure 10 of the
-[Packet Analysis document](doc/Analysis.pdf).
+labels corresponding to the byte fields identified in Figures
+9&ndash;12 of the [Packet Analysis document](doc/Analysis.pdf).
 
 > If you have access to any Pioneer Nexus gear, please run Dysentery
 > and see if the results it gives seem to make sense for your
