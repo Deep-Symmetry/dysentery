@@ -8,6 +8,7 @@
             [selmer.parser :as parser]
             [taoensso.timbre :as timbre])
   (:import [java.awt Color Font]
+           [java.awt.event WindowAdapter]
            [javax.swing JFrame JPanel JLabel SwingConstants]
            [java.net DatagramPacket DatagramSocket InetAddress]))
 
@@ -19,6 +20,17 @@
   "The number of milliseconds over which the background of a label
   fades from blue to black after it has changed."
   1000)
+
+(defonce ^{:doc "Set this atom to `true` if you want the program to exit
+  when a packet window is closed."}
+  exit-on-close-flag
+  (atom false))
+
+(defn exit-when-window-closed
+  "Cause the program to exit when any packet capture window is
+  closed."
+  []
+  (reset! exit-on-close-flag true))
 
 (defonce ^{:private true
            :doc "A map whose keys are labels that have flashed blue
@@ -64,7 +76,7 @@
         (timbre/warn "Received packet with unrecognized type:" current-type))
       (timbre/warn "Expecting packet of type" expected-type "but received type" current-type))))
 
-(def mixer-unknown
+(def ^:private mixer-unknown
   "The bytes which we think come at the end of a mixer status packet,
   so we can make them red if we find something unexpected. The device
   number bytes are left as zero because they have already been
@@ -94,7 +106,7 @@
     :else
     [hex Color/white]))
 
-(def cdj-unknown
+(def ^:private cdj-unknown
   "Template for bytes in a CDJ packet which we don't yet have specific
   interpretations for, so we can at least color them red if they have
   a different value than we expect. Bytes with known interpretations
@@ -149,7 +161,7 @@
       (recur (inc i) (dec left) (+ (* result 256) (get packet i)))
       result)))
 
-(defn- calculate-pitch
+(defn calculate-pitch
   "Given a packet and the index of the first byte of a pitch value,
   calculate the pitch shift percentage that it represents."
   [packet index]
@@ -482,7 +494,7 @@
       (.add panel label)
       (.setBounds label 0 (* (inc y) 15) 20 15))))
 
-(defn position-byte-labels
+(defn- position-byte-labels
   "Place the labels which will display individual packet bytes at the
   proper locations within the panel that will hold them."
   [byte-labels panel]
@@ -520,7 +532,12 @@
     (.setSize frame 440 (if (= original-packet-type 0x0a) 470 220))
     (.setContentPane frame panel)
     (.setBackground panel Color/black)
-    (.setDefaultCloseOperation frame JFrame/EXIT_ON_CLOSE)
+    (.setDefaultCloseOperation frame JFrame/DISPOSE_ON_CLOSE)
+    (.addWindowListener frame (proxy [WindowAdapter] []
+                                (windowClosed [_]
+                                  (swap! packet-frames dissoc [50002 device-number])
+                                  (when @exit-on-close-flag
+                                    (System/exit 0)))))
 
     (create-address-labels panel (count packet))
     (position-byte-labels byte-labels panel)
@@ -592,7 +609,12 @@
     (.setSize frame 440 240)
     (.setContentPane frame panel)
     (.setBackground panel Color/black)
-    (.setDefaultCloseOperation frame JFrame/EXIT_ON_CLOSE)
+    (.setDefaultCloseOperation frame JFrame/DISPOSE_ON_CLOSE)
+    (.addWindowListener frame (proxy [WindowAdapter] []
+                                (windowClosed [_]
+                                  (swap! packet-frames dissoc [50001  device-number])
+                                  (when @exit-on-close-flag
+                                    (System/exit 0)))))
 
     (create-address-labels panel (count packet))
     (position-byte-labels byte-labels panel)

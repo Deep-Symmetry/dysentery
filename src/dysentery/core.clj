@@ -12,6 +12,7 @@
   eventually parse command line options, but for now bring up the
   device packet analysis interface."
   [& args]
+  (view/exit-when-window-closed)
   (view/watch-devices)
   (if (seq (finder/current-dj-link-devices))
     (println "Close any Player window to exit.")

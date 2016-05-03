@@ -11,6 +11,12 @@ This change log follows the conventions of
 - A hang when AoT-compiling the project to build the uberjar caused by
   starting a future at compile time.
 
+### Added
+
+- Closing windows only shuts down the application when it was run as
+  an executable jar.
+
+
 ## [0.1.1] - 2016-05-01
 
 ### Added
