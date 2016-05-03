@@ -380,9 +380,15 @@ decimal places can be calculated as:
 
 In order to obtain the actual playing BPM (the value shown in the BPM
 display), this value must be multiplied by the current pitch
-adjustment, calculated from $Pitch$ as described above.\footnote{Since
-  the mixer always reports a pitch adjustment of $+0\%$, its $BPM$
-  value can be used directly without this additional step.}
+adjustment. Since calculating the effective BPM reported by a CDJ is a
+common operation, here a simplified equation that results in the
+effective BPM to two decimal places, by combinining the $BPM$ and
+$Pitch$ values:\footnote{Since the mixer always reports a pitch
+  adjustment of $+0\%$, its $BPM$ value can be used directly without
+  this additional step.}
+
+\[ \frac{(byte[90] \times 256 + byte[91]) \times (byte[85] \times 65536 + byte[86]  \times 256 + byte[87])}
+   {104857600} \]
 
 The counter $B_b$ at byte~92 counts out the beat within each bar,
 cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
@@ -714,7 +720,13 @@ current track BPM value to two decimal places can be calculated as:
 
 In order to obtain the actual playing BPM (the value shown in the BPM
 display), this value must be multiplied by the current effective
-pitch, calculated from $Pitch_1$ as described above.
+pitch, calculated from $Pitch_1$ as described above. Since calculating
+the effective BPM reported by a CDJ is a common operation, here a
+simplified equation that results in the effective BPM to two decimal
+places, by combinining the $BPM$ and $Pitch1$ values:
+
+\[ \frac{(b[146] \times 256 + b[147]) \times (b[141] \times 65536 + b[142]  \times 256 + b[143])}
+     {104857600} \]
 
 Because Rekordbox and the CDJs support tracks with variable BPM, this
 value can and does change over the course of playing such tracks. When
@@ -744,7 +756,7 @@ holds the value {\tt 0xffffffff}.
 The counter $B_b$ at byte~166 counts out the beat within each bar,
 cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
 down beat (as is used in the Master Player display on the CDJs as a
-mixing aid). Again, when no track is loaded, this holds the value 0.
+mixing aid). Again, when no track is loaded, this holds the value~0.
 If you want to synchronize events to the down beat, use the CDJ status
 packets' $F$ value to identify the master player, but use the beat
 packets sent by that player (described in
