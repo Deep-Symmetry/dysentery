@@ -62,6 +62,7 @@ Found:
 
 To communicate create a virtual CDJ with address /172.16.42.2,
 MAC address 3c:15:c2:e7:08:6c, and use broadcast address /172.16.42.255
+
 Close any player window to exit.
 ```
 
