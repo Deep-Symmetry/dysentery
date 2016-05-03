@@ -8,9 +8,11 @@ Exploring ways to participate in a Pioneer Pro DJ Link network.
 To watch and analyze the packets being sent between your Pioneer gear,
 download and run the latest `dysentery.jar` file from the
 [releases](https://github.com/brunchboy/dysentery/releases) page. You
-will need a Java runtime envirnonment; once you have a recent one
-installed, you can probably run dysentery by simply double-clicking
-the jar file. See the [Status](#status) section for more details.
+will need a
+[Java runtime envirnonment](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+Once you have a recent one installed, you can probably run dysentery
+by just double-clicking the jar file. See the [Status](#status)
+section for more details, explanation, and a screen shot.
 
 ## Disclaimer
 
@@ -31,8 +33,11 @@ together.
 
 ## Analysis
 
-Our analysis so far can be found [here](doc/Analysis.pdf). Please help
-us figure out more if you can!
+A major goal of this project is the
+[Packet Analysis](doc/Analysis.pdf), which is intended to be useful to
+anyone who wants to write code to interact with DJ Link networks.
+Check out what we have learned so far, and please help us figure out
+more if you can!
 
 The packet capture used to create that document can be
 [downloaded](doc/assets/powerup.pcapng) so you can see if you notice
@@ -75,12 +80,12 @@ Close any player window to exit.
 ```
 
 It also creates a virtual CDJ to ask those devices to send status
-updates, and opens windows tracking the packets it receives from
-those devices. When a packet changes the value of one of the bytes
-displayed, the background of that byte is drawn in blue, which
-gradually fades back to black when the value is not changing. This
-helps to identify what parts of the packet change when you do
-something on the device being analyzed.
+updates, and opens windows tracking the packets it receives from them.
+When a packet changes the value of one of the bytes displayed, the
+background of that byte is drawn in blue, which gradually fades back
+to black when the value is not changing. This helps to identify what
+parts of the packet change when you do something on the device being
+analyzed.
 
 To further focus analysis, if a byte has a value that we expect, it is
 colored green; if it has an unexpected value, it is colored red. Bytes
@@ -161,9 +166,6 @@ Compiling dysentery.view
 Created /Users/james/git/dysentery/target/dysentery-0.1.0-SNAPSHOT.jar
 Created /Users/james/git/dysentery/target/dysentery.jar
 ```
-
-There will soon be much more here, and much more documentation, if all
-goes as planned.
 
 ### History
 
