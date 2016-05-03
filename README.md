@@ -3,6 +3,15 @@ Exploring ways to participate in a Pioneer Pro DJ Link network.
 
 [![License](https://img.shields.io/badge/License-Eclipse%20Public%20License%201.0-blue.svg)](#license)
 
+## Quick Start
+
+To watch and analyze the packets being sent between your Pioneer gear,
+download and run the latest `dysentery.jar` file from the
+[releases](https://github.com/brunchboy/dysentery/releases) page. You
+will need a Java runtime envirnonment; once you have a recent one
+installed, you can probably run dysentery by simply double-clicking
+the jar file. See the [Status](#status) section for more details.
+
 ## Disclaimer
 
 This is in no way a sanctioned implementation of the protocols. It
