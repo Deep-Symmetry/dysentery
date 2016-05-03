@@ -14,7 +14,7 @@
   [& args]
   (view/exit-when-window-closed)
   (view/watch-devices)
+  (println)
   (if (seq (finder/current-dj-link-devices))
-    (println)
     (println "Close any Player window to exit.")
     (System/exit 0)))
