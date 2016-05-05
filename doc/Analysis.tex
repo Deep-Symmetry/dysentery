@@ -825,6 +825,33 @@ available,\footnote{\url{http://www.ubiquitous.co.jp/en/products/db/md/devicesql
 but I'd be surprised if they wanted to help out an open source effort
 like this one.
 
+{\bf Update}: It doesn't look as bad as that. Using an Ethernet switch
+with port mirroring was, as we hoped, very helpful. As can be seen in
+the capture at
+\url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/LinkInfo.pcapng},
+which shows a CDJ with IP address 169.254.192.112 booting, the new CDJ
+opens two TCP connections to the other CDJ at 169.254.119.181.
+
+The first session, which begins at packet 206, connecting to port
+12523, looks like it may be connecting to the rekordbox database on
+the USB in the first CDJ, but since the Link button was not pressed
+during the capture, that session was not used beyond its initial
+setup. That is another potential area for study someday.
+
+The second TCP connection, beginning at packet 206 and connecting to
+port 1051, shows the track information used by the Link Info display
+passing between the CDJs. You can see packets reflecting the initial
+display of a track that was already loaded, then new information as
+the linked CDJ loaded three other tracks. It looks like the track
+names are probably sent in a UTF-16 encoding? And presumably nearby
+there is is information about the key, BPM, star rating, and so on.
+
+So hopefully somebody will dive in, try opening a TCP connection to
+this port on one of their CDJs which has a rekordbox track loaded, and
+seeing if replaying some of the bytes seen in this capture can get
+this kind of information to come back, and how to reliably obtain and
+decode the responses.
+
 \subsection{CDJ Packets to Rekordbox}
 
 Performing a packet capture while rekordbox is running reveals that
