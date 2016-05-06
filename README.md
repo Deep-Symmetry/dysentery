@@ -14,6 +14,10 @@ Once you have a recent one installed, you can probably run dysentery
 by just double-clicking the jar file. See the [Status](#status)
 section for more details, explanation, and a screen shot.
 
+If you are looking for a library that you can easily use in your own
+projects, [beat-link](https://github.com/brunchboy/beat-link) is
+being developed for precisely that purpose.
+
 ## Disclaimer
 
 This is in no way a sanctioned implementation of the protocols. It
