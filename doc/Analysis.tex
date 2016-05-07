@@ -465,8 +465,10 @@ Packets coming from a DJM-2000 nexus connected as the only mixer on
 the network contain a value of 33 ({\tt 0x21}) for their Device Number
 $D$ (bytes~33 and 36).
 
-The current tempo in beats-per-minute identified by the mixer can be
-obtained as:
+There are two places that might contain pitch values, bytes~41--43 and
+bytes~50--51, but since they always {\tt 0x100000} (or $+0\%$), we
+can't be sure. The current tempo in beats-per-minute identified by the
+mixer can be obtained as:
 
 \[ \frac{byte[46] \times 256 + byte[47]}{100} \]
 
