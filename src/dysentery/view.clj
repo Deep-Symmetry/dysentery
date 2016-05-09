@@ -125,6 +125,11 @@
    0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x0f 0x00 0x00 0x00  ; 192--207
    0x00 0x00 0x00 0x00])                                                            ; 208--211
 
+(def mixer-status-flag-byte
+  "The byte in packets that mixers send to port 50002 containing a set
+  of status flag bits."
+  39)
+
 (def cdj-status-flag-byte
   "The byte in packets that CDJs send to port 50002 containing a set
   of status flag bits."
@@ -281,7 +286,11 @@
   interpret the status of a mixer given a packet sent to port 50002
   and the panel in which that packet is being shown."
   [packet label]
-  (let [args {:bpm (format "%.1f" (/ (build-int packet 46 2) 100.0))
+  (let [flag-bits (get packet mixer-status-flag-byte)
+        args {:bpm (format "%.1f" (/ (build-int packet 46 2) 100.0))
+              :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
+              :master-flag (pos? (bit-and flag-bits cdj-status-flag-master-bit))
+              :sync-flag (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
               :bar-beat (get packet 55)
               :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 55) ".png"))}]
     (.setText label (parser/render-file "templates/mixer-50002.tmpl" args)))
