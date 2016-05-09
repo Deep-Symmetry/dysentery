@@ -448,13 +448,13 @@ shown in Figure~\ref{fig:mixerStatus}.
     
     \begin{leftwordgroup}{\tiny 32} % 0x20
       \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 14}} &
-      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt d0} {\tt 00} {\tt 10} {\tt 00}
-        {\tt 00} {\tt 80} {\tt 00}} & \bitbox{2}{$BPM$}
+      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{1}{$F$} &
+      \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 80} {\tt 00}} & \bitbox{2}{$BPM$}
     \end{leftwordgroup} \\
     
     \begin{leftwordgroup}{\tiny 48} % 0x30
-      \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09} {\tt 00}} &
-      \bitbox{1}{$X$} & \bitbox{1}{$B_b$} & \bitbox[]{7}{}
+      \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09}} &
+      \bitbox{1}{$X$} & \bitbox{1}{$B_b$} & \bitbox[]{8}{}
     \end{leftwordgroup} \\
   \end{bytefield}
   \caption{Mixer status packets}
@@ -464,6 +464,12 @@ shown in Figure~\ref{fig:mixerStatus}.
 Packets coming from a DJM-2000 nexus connected as the only mixer on
 the network contain a value of 33 ({\tt 0x21}) for their Device Number
 $D$ (bytes~33 and 36).
+
+The value marked $F$ at byte~39 is evidently a status flag equivalent
+to the one shown in Figure~\ref{fig:cdjStateFlags}, although on a
+mixer the only two values seen so far are {\tt 0xf0} when it is the
+tempo master, and {\tt 0xd0} when it is not. So evidently the mixer
+always considers itself to be playing and synced, but never on-air.
 
 There are two places that might contain pitch values, bytes~41--43 and
 bytes~50--51, but since they always {\tt 0x100000} (or $+0\%$), we
