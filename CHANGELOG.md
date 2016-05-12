@@ -13,9 +13,12 @@ This change log follows the conventions of
 
 ### Added
 
+- The mixer's status flag has been located.
 - Closing windows only shuts down the application when it was run as
   an executable jar.
-
+- Notes about the rekordbox database format.
+- A capture of and discussion of Link Info TCP communication between
+  CDJs.
 
 ## [0.1.1] - 2016-05-01
 
