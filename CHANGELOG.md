@@ -6,6 +6,10 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
+Nothing so far.
+
+## [0.1.2] - 2016-05-12
+
 ### Fixed
 
 - A hang when AoT-compiling the project to build the uberjar caused by
@@ -44,6 +48,7 @@ This change log follows the conventions of
 - Intial early release.
 
 
-[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.1.1...HEAD
+[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/brunchboy/dysentery/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/brunchboy/dysentery/compare/v0.1.0...v0.1.1
 
