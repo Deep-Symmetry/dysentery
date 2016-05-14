@@ -9,7 +9,7 @@ To watch and analyze the packets being sent between your Pioneer gear,
 download and run the latest `dysentery.jar` file from the
 [releases](https://github.com/brunchboy/dysentery/releases) page. You
 will need a
-[Java runtime envirnonment](https://java.com/inc/BrowserRedirect1.jsp?locale=en)
+[Java runtime envirnonment](https://java.com/inc/BrowserRedirect1.jsp)
 Once you have a recent one installed, you can probably run dysentery
 by just double-clicking the jar file. See the [Status](#status)
 section for more details, explanation, and a screen shot.
