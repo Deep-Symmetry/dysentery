@@ -306,9 +306,10 @@ simply ignore them.
 The 96-byte packets are sent on each beat, so even the arrival of the
 packet is interesting information, it means that the player is
 starting a new beat. (CDJs send these packets only when they are
-playing. The mixer sends them all the time, acting as a backup
-metronome when no other device is counting beats.) The content of
-these packets is shown in Figure~\ref{fig:beatPacket}.
+playing \emph{and only for rekordbox-analyzed tracks}. The mixer sends
+them all the time, acting as a backup metronome when no other device
+is counting beats.) The content of these packets is shown in
+Figure~\ref{fig:beatPacket}.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
@@ -501,7 +502,8 @@ other things as well.
 \subsection{CDJ Status Packets}
 
 Packets from a CDJ will have a length of 212 bytes and the content
-shown in Figure~\ref{fig:cdjStatus}.
+shown in Figure~\ref{fig:cdjStatus} for nexus players. Older players
+send 208-byte packets with slightly less information.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
@@ -545,7 +547,7 @@ shown in Figure~\ref{fig:cdjStatus}.
 
     \begin{leftwordgroup}{\tiny 112} % 0x70
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 04} {\tt 00}} & \bitbox{1}{$U_g$} & \bitboxes*{1}{{\tt 00} {\tt 00}
-        {\tt 01} {\tt 00} {\tt 00}} & \bitbox{1}{$P_1$} & \bitboxes*{1}{{\tt 31} {\tt 2e} {\tt 32} {\tt 34}}
+        {\tt 01} {\tt 00} {\tt 00}} & \bitbox{1}{$P_1$} & \bitbox{4}{$Firmware$}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 128} % 0x80
@@ -571,7 +573,7 @@ shown in Figure~\ref{fig:cdjStatus}.
 
     \begin{leftwordgroup}{\tiny 192} % 0xc0
       \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_3$} & \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_4$} & 
-      \bitbox{4}{$Packet$} & \bitboxes*{1}{{\tt 0f} {\tt 00} {\tt 00} {\tt 00}}
+      \bitbox{4}{$Packet$} & \bitbox{1}{$nx$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 208} % 0xd0
@@ -629,6 +631,9 @@ are:
 \item[17] The player reached the end of the track and stopped.
 \end{description}
 
+The $Firmware$ value at bytes~124--127 is an ASCII represenation of the
+firmware version running in the player.
+
 The value $Sync_n$ at bytes~134--135 seems to increment whenever the
 player syncs to a new tempo master (another player or the mixer). I am
 assuming it is just a 2-byte value, because I tried syncing 256 times
@@ -643,8 +648,9 @@ state flags, detailed in Figure~\ref{fig:cdjStateFlags}.\footnote{We
   have not yet seen any other values for bits 0, 1, 2, or 7 in $F$, so
   we're unsure if they also carry meaning. If you ever find different
   values for them, please let us know by filing an Issue at
-  \url{https://github.com/brunchboy/dysentery/issues}}
-
+  \url{https://github.com/brunchboy/dysentery/issues}} It seems to
+only be available on nexus players, and others always send 0 for this
+byte?
 
 \begin{figure}
   \begin{bytefield}[endianness=big,bitwidth=4em]{8}
@@ -660,7 +666,9 @@ Byte~139, labeled $P_2$ seems to be another play state indicator,
 having the value 122 when playing and 126 when stopped. When the CDJ
 is trying to play, but is being held in place by the DJ holding down
 on the jog wheel, $P_1$ considers it to be playing (value 3), while
-$P_2$ considers it to be stopped (value 126).
+$P_2$ considers it to be stopped (value 126). Non-nexus players seem
+to use the value 106 when playing and 110 when stopped, so this may be
+another bit field like $F$.
 
 There are four different places where pitch information appears in
 these packets: $Pitch_1$ at bytes~141--143, $Pitch_2$ at
@@ -741,9 +749,10 @@ value can and does change over the course of playing such tracks. When
 no track is loaded, $BPM$ has the value {\tt 0xffff}.
 
 The meaning of value $l_1$ (bytes~144--145) is not currently known. It
-may simply reflect whether a track is loaded or not: it seems to
-have the value {\tt 0x7fff} when no track is loaded, and the value
-{\tt 0x8000} when a track is loaded.
+may simply reflect whether a track is loaded or not: it seems to have
+the value {\tt 0x7fff} when no track is loaded, {\tt 0x8000} when a
+rekordbox track is loaded, and {\tt 0x0000} when a non-rekordbox track
+(like from a physical CD) is loaded.
 
 Byte~157 (labeled $P_3$) seems to communicate additional information
 about the current play mode, with the following meanings that we have
@@ -758,16 +767,17 @@ found so far:
 The 4-byte beat counter (which counts each beat from 1 through the end
 of the track) is found in bytes~160--163, labeled $Beat$. When the
 player is paused at the start of the track, this seems to hold the
-value 0, even though it is beat 1, and when no track it loaded, this
+value 0, even though it is beat 1, and when no rekordbox-analyzed
+track is loaded, \emph{and in packets from non-nexus players}, this
 holds the value {\tt 0xffffffff}.
 
 The counter $B_b$ at byte~166 counts out the beat within each bar,
 cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
 down beat (as is used in the Master Player display on the CDJs as a
-mixing aid). Again, when no track is loaded, this holds the value~0.
-If you want to synchronize events to the down beat, use the CDJ status
-packets' $F$ value to identify the master player, but use the beat
-packets sent by that player (described in
+mixing aid). Again, when no reckordbox-analyzed track is loaded, this
+holds the value~0. If you want to synchronize events to the down beat,
+use the CDJ status packets' $F$ value to identify the master player,
+but use the beat packets sent by that player (described in
 Section~\ref{sec:beatPackets}) to determine when the beats are
 actually happening.
 
@@ -790,6 +800,9 @@ Bytes~200-203 seem to contain a 4-byte packet counter labeled
 $Packet$, which is incremented for each packet sent by the player. (I
 am just guessing it is four bytes long, I have not yet watched long
 enough for the count to need more than the last three bytes).
+
+Byte~204, labeled $nx$, seems to have the value {\tt 0x0f} for nexus
+players, and {\tt 0x05} for older players.
 
 \begin{quote}
   This analysis is incomplete; there are many bytes whose purpose is

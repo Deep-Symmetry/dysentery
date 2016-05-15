@@ -6,7 +6,23 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
-Nothing so far.
+### Fixed
+
+- Accept shorter, 208-byte CDJ status packets sent by non-nexus
+  players.
+- The value of *F* seems to always be zero for non-nexus players.
+- The value of *l<sub>1</sub>* can be zero when non-rekordbox tracks
+  are loaded.
+- The value of *b<sub>b</sub>* is zero when non-rekordbox tracks are
+  loaded or the packet is from a non-nexus player.
+- The values of *P<sub>2</sub>* are different for non-nexus players.
+
+### Added
+
+- The firmware version number has been found in CDJ status packets.
+- Display **n/a** for *Beat* when not available.
+- Recognize values for byte 204 that seem to distinguish nexus and
+  non-nexus players.
 
 ## [0.1.2] - 2016-05-12
 

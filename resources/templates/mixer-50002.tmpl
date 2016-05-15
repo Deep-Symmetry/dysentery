@@ -2,6 +2,7 @@
     <font color="white">
         <em>BPM</em>: {{bpm}}; &nbsp; <em>B<sub>b</sub></em>: {{bar-beat}}
         &nbsp; <em>F</em>:
+        {% if empty-f %}<font color="gray"><b>Not Available</b></font>&nbsp;&nbsp;{% endif %}
         {% if playing-flag %}<font color="green"><b>Playing</b></font>&nbsp;&nbsp;{% endif %}
         {% if master-flag %}<font color="orange"><b>Master</b></font>&nbsp;&nbsp;{% endif %}
         {% if sync-flag %}<b>Sync</b>&nbsp;&nbsp;{% endif %}

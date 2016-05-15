@@ -15,6 +15,7 @@
         <em>A</em>:
         {% if active > 0 %}<font color="yellow">Active</font>{% else %}<font color="gray">Idle</font>{% endif %};
         &nbsp; <em>F</em>:
+        {% if empty-f %}<font color="gray"><b>Not Available</b></font>&nbsp;&nbsp;{% endif %}
         {% if playing-flag %}<font color="green"><b>Playing</b></font>&nbsp;&nbsp;{% endif %}
         {% if master-flag %}<font color="orange"><b>Master</b></font>&nbsp;&nbsp;{% endif %}
         {% if sync-flag %}<b>Sync</b>&nbsp;&nbsp;{% endif %}

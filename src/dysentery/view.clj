@@ -59,9 +59,9 @@
 (defn- correct-length?
   "Tests whether a packet has the length we are expecting. Logs a
   warning and returns nil otherwise."
-  [packet expected-length]
-  (or (= (count packet) expected-length)
-      (timbre/warn "Expecting packet of length" expected-length "but it has length" (count packet))))
+  [packet expected-lengths]
+  (or (expected-lengths (count packet))
+      (timbre/warn "Expecting packet of length" expected-lengths "but it has length" (count packet))))
 
 (defn- correct-type-and-length?
   "Tests whether a packet has the type value we are expecting, and the
@@ -71,8 +71,8 @@
   (let [current-type (get packet 10)]
     (if (= current-type expected-type)
       (case expected-type
-        0x0a (correct-length? packet 212)
-        0x29 (correct-length? packet 56)
+        0x0a (correct-length? packet #{208 212})
+        0x29 (correct-length? packet #{56})
         (timbre/warn "Received packet with unrecognized type:" current-type))
       (timbre/warn "Expecting packet of type" expected-type "but received type" current-type))))
 
@@ -117,7 +117,7 @@
    0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ;  64--79
    0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ;  80--95
    0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x04 0x00 0x00 0x00 0x00  ;  96--111
-   0x00 0x00 0x00 0x04 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x31 0x2e 0x32 0x34  ; 112--127
+   0x00 0x00 0x00 0x04 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 112--127
    0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0xff 0x7e 0x00 0x00 0x00 0x00  ; 128--143
    0x00 0x00 0x00 0x00 0x7f 0xff 0xff 0xff 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xff  ; 144--159
    0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 160--175
@@ -200,6 +200,8 @@
         no-track? (zero? (get packet 123))
         pitches (mapv (partial calculate-pitch packet) [141 153 193 197])
         cue-distance (build-int packet 164 2)
+        raw-beat (build-int packet 160 4)
+        beat (if (= raw-beat 0xffffffff) "n/a" raw-beat)
         args {:active (get packet 39)
               :track (build-int packet 50 2)
               :usb-activity (get packet 106)
@@ -219,8 +221,10 @@
                      17 "Ended"
                      "???")
               :p-2 (case (get packet 139)
-                     122 "Playing"
-                     126 "Stopped"
+                     106 "Play"
+                     110 "Stop"
+                     122 "nxs Play"
+                     126 "nxs Stop"
                      "???")
               :p-3 (case (get packet 157)
                      0 "No Track"
@@ -229,6 +233,7 @@
                      13 "Forward CDJ"
                      "???")
 
+              :empty-f (zero? flag-bits)
               :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
               :master-flag (pos? (bit-and flag-bits cdj-status-flag-master-bit))
               :sync-flag (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
@@ -239,7 +244,7 @@
               :bpm (if no-track? "---" (format "%.1f" track-bpm))
               :effective-bpm (if no-track? "---" (format "%.1f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
               :pitches (mapv (partial format "%+.2f%%") pitches)
-              :beat (build-int packet 160 4)
+              :beat beat
               :bar-beat (get packet 166)
               :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 166) ".png"))
               :mem (format-cue-countdown cue-distance)
@@ -288,6 +293,7 @@
   [packet label]
   (let [flag-bits (get packet mixer-status-flag-byte)
         args {:bpm (format "%.1f" (/ (build-int packet 46 2) 100.0))
+              :empty-f (zero? flag-bits)
               :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
               :master-flag (pos? (bit-and flag-bits cdj-status-flag-master-bit))
               :sync-flag (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
@@ -332,6 +338,9 @@
     (= index 123)  ; Play mode part 1
     [hex (recognized-if (#{0 3 4 5 6 9 0x11} value))]
 
+    (<= 124 index 127)  ; Firmware version, in ascii
+    [(if (pos? value) (str (char value)) "") Color/green]
+
     (#{134 135} index)  ; Sync counter
     [hex (Color/green)]  ; All values are valid
 
@@ -339,7 +348,8 @@
     [hex (recognized-if (= (bit-and value 2r10000111) 2r10000100))]
 
     (= index 139)  ; Play mode part 2?
-    [hex (recognized-if (#{0x7a 0x7e} value))]
+    [hex (recognized-if (or (#{0x6a 0x7a 0x6e 0x7e} value)
+                            (and (zero? value) (= 208 (count packet)))))]
 
     (#{141 153 193 197} index)  ; The first byte of the four pitch copies
     [hex (recognized-if (< value 0x21))] ; Valid pitces range from 0x000000 to 0x200000
@@ -349,11 +359,11 @@
 
     (= 144 index)  ; First byte of some kind of loaded indicator?
     [hex (recognized-if (or (and (= value 0x7f) (= (get packet (inc index)) 0xff))
-                            (and (= value 0x80) (= (get packet (inc index)) 0x00))))]
+                            (and (#{0x00 0x80} value) (= (get packet (inc index)) 0x00))))]
     
     (= 145 index)  ; Second byte of some kind of loaded indicator?
     [hex (recognized-if (or (and (= value 0xff) (= (get packet (dec index)) 0x7f))
-                            (and (= value 0x00) (= (get packet (dec index)) 0x80))))]
+                            (and (= value 0x00) (#{0x00 0x80} (get packet (dec index))))))]
     
     (#{146 147} index)  ; The BPM
     [hex (Color/green)]  ; All values are valid for now
@@ -379,12 +389,16 @@
     (= index 165)  ; Second byte of countdown to next memory point
     [hex (Color/green)]
 
-    (= index 166)  ; We think this is a beat number ranging from 1 to 4, when track loaded.
-    [hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
-                            (and (<= 1 value 4) (pos? (get packet 123)))))]
+    (= index 166)  ; We think this is a beat number ranging from 1 to 4, when analyzed track loaded.
+    [hex (recognized-if (or (and (zero? value) (or (every? #(= 0xff %) (subvec packet 160 164))))
+                            (and (<= 1 value 4) (some? #(not= 0xff %) (subvec packet 160 164)))))]
 
     (<= 200 index 203)  ; Packet counter
     [hex (Color/green)]
+
+    (= index 204)  ; Seems to be 0x0f for nexus players, 0x05 for others?
+    [hex (recognized-if (or (and (= value 0x0f) (= 212 (count packet)))
+                            (and (= value 0x05) (= 208 (count packet)))))]
 
     :else
     [hex Color/white]))
