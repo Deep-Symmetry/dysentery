@@ -345,11 +345,11 @@
     [hex (Color/green)]  ; All values are valid
 
     (= index 137)  ; State flags
-    [hex (recognized-if (= (bit-and value 2r10000111) 2r10000100))]
+    [hex (recognized-if (or (= (bit-and value 2r10000111) 2r10000100)
+                            (and (zero? value) (= 208 (count packet)))))]
 
     (= index 139)  ; Play mode part 2?
-    [hex (recognized-if (or (#{0x6a 0x7a 0x6e 0x7e} value)
-                            (and (zero? value) (= 208 (count packet)))))]
+    [hex (recognized-if (#{0x6a 0x7a 0x6e 0x7e} value))]
 
     (#{141 153 193 197} index)  ; The first byte of the four pitch copies
     [hex (recognized-if (< value 0x21))] ; Valid pitces range from 0x000000 to 0x200000
