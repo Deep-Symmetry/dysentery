@@ -23,7 +23,9 @@ was developed for.
 This is in no way a sanctioned implementation of the protocols. It
 should be obvious, but:
 
-> Use at your own risk!
+> :warning: Use at your own risk! For example, there are reports that
+> the XDJ-RX crashes when dysentery starts, so don't use it with one
+> on your network unless we can figure that out.
 
 While these techniques appear to work for us so far, there are many
 gaps in our knowledge, and things could change at any time with new
