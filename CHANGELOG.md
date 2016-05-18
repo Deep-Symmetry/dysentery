@@ -6,6 +6,10 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
+Nothing yet.
+
+## [0.1.3] - 2016-05-17
+
 ### Fixed
 
 - Accept shorter, 208-byte CDJ status packets sent by non-nexus
@@ -64,7 +68,8 @@ This change log follows the conventions of
 - Intial early release.
 
 
-[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.1.2...HEAD
+[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/brunchboy/dysentery/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/brunchboy/dysentery/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/brunchboy/dysentery/compare/v0.1.0...v0.1.1
 
