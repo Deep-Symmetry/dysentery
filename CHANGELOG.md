@@ -23,8 +23,6 @@ This change log follows the conventions of
 - The value of *b<sub>b</sub>* is zero when non-rekordbox tracks are
   loaded or the packet is from a non-nexus player.
 - The values of *P<sub>2</sub>* are different for non-nexus players.
-- Crash in trying to interpret beat number which blocked opening of
-  status windows.
 
 ### Added
 
