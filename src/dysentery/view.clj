@@ -391,7 +391,7 @@
 
     (= index 166)  ; We think this is a beat number ranging from 1 to 4, when analyzed track loaded.
     [hex (recognized-if (or (and (zero? value) (or (every? #(= 0xff %) (subvec packet 160 164))))
-                            (and (<= 1 value 4) (some? #(not= 0xff %) (subvec packet 160 164)))))]
+                            (and (<= 1 value 4) (some #(not= 0xff %) (subvec packet 160 164)))))]
 
     (<= 200 index 203)  ; Packet counter
     [hex (Color/green)]
