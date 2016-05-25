@@ -6,7 +6,10 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
-Nothing yet.
+### Fixed
+
+- Crash in trying to interpret beat number which blocked opening of
+  status windows.
 
 ## [0.1.3] - 2016-05-17
 
