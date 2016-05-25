@@ -1,4 +1,4 @@
-(defproject dysentery "0.1.3"
+(defproject dysentery "0.1.4-SNAPSHOT"
   :description "Exploring ways to participate in a Pioneer Pro DJ Link network"
   :url "http://github.com/brunchboy/dysentery"
   :license {:name "Eclipse Public License"
