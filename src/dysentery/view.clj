@@ -359,11 +359,11 @@
 
     (= 144 index)  ; First byte of some kind of loaded indicator?
     [hex (recognized-if (or (and (= value 0x7f) (= (get packet (inc index)) 0xff))
-                            (and (#{0x00 0x80} value) (= (get packet (inc index)) 0x00))))]
+                            (and (#{0x00 0x80} value) (zero? (get packet (inc index))))))]
     
     (= 145 index)  ; Second byte of some kind of loaded indicator?
     [hex (recognized-if (or (and (= value 0xff) (= (get packet (dec index)) 0x7f))
-                            (and (= value 0x00) (#{0x00 0x80} (get packet (dec index))))))]
+                            (and (zero? value) (#{0x00 0x80} (get packet (dec index))))))]
     
     (#{146 147} index)  ; The BPM
     [hex (Color/green)]  ; All values are valid for now
@@ -753,13 +753,13 @@
   [devices]
   (println "Found:")
   (doseq [device devices]
-    (println "  " (:name device) (.toString (:address device))))
+    (println "  " (:name device) (str (:address device))))
   (println)
   (let [[interface address] (finder/find-interface-and-address-for-device (first devices))]
-    (println "To communicate create a virtual CDJ with address" (str (.toString (.getAddress address)) ","))
+    (println "To communicate create a virtual CDJ with address" (str (.getAddress address) ","))
     (print "MAC address" (clojure.string/join ":" (map (partial format "%02x")
                                                        (map util/unsign (.getHardwareAddress interface)))))
-    (println ", and use broadcast address" (.toString (.getBroadcast address)))))
+    (println ", and use broadcast address" (str (.getBroadcast address)))))
 
 (defn find-devices
   "Run a loop that waits a few seconds to see if any DJ Link devices
