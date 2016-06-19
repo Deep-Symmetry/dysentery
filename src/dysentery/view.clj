@@ -753,7 +753,7 @@
   [devices]
   (println "Found:")
   (doseq [device devices]
-    (println "  " (:name device) (str (:address device))))
+    (println "  " (:name device) (:player device) (str (:address device))))
   (println)
   (let [[interface address] (finder/find-interface-and-address-for-device (first devices))]
     (println "To communicate create a virtual CDJ with address" (str (.getAddress address) ","))
