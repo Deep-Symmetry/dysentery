@@ -118,6 +118,12 @@
   (remove-stale-devices)
   (set (for [[k v] (:devices-seen @state)] (:device v))))
 
+(defn device-given-number
+  "Returns what we know about the DJ Link device with the specified
+  player number, if anything."
+  [player]
+  (first (filter #(= (:player %) player) (current-dj-link-devices))))
+
 (defn address-to-int
   "Converts an Inet4Address to its integer equivalent."
   [address]

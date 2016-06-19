@@ -198,11 +198,25 @@
   (let [flag-bits (get packet cdj-status-flag-byte)
         track-bpm (/ (build-int packet 146 2) 100.0)
         no-track? (zero? (get packet 123))
+        rekordbox-id (build-int packet 44 4)
         pitches (mapv (partial calculate-pitch packet) [141 153 193 197])
         cue-distance (build-int packet 164 2)
         raw-beat (build-int packet 160 4)
         beat (if (= raw-beat 0xffffffff) "n/a" raw-beat)
         args {:active (get packet 39)
+              :rekordbox-device (get packet 40)
+              :rekordbox-slot (case (get packet 41)
+                                0 "n/a"
+                                1 "CD"
+                                2 "SD"
+                                3 "USB"
+                                "???")
+              :rekordbox-type (case (get packet 42)
+                                0 "n/a"
+                                1 "rekordbox"
+                                5 "CD-DA"
+                                "???")
+              :rekordbox-id (if (= (get packet 42) 1) rekordbox-id "n/a")
               :track (build-int packet 50 2)
               :usb-activity (get packet 106)
               :usb-local (case (get packet 111)
@@ -321,6 +335,18 @@
   (cond
     (= index 39)  ; Seems to be a binary activity flag?
     [hex (recognized-if (#{0 1} value))]
+
+    (= index 40)  ; Player from which track was loaded
+    [hex (recognized-if (#{0 1 2 3 4 17 18 33} value))]
+
+    (= index 41)  ; Slot from which track was loaded
+    [hex (recognized-if (#{0 1 2 3} value))]
+
+    (= index 42)  ; Track type? 1 = rekordbox, 5 = audio CD
+    [hex (recognized-if (#{0 1 5} value))]
+
+    (<= 44 index 47)  ; Rekordbox ID of the track
+    [hex (Color/green)]
 
     (#{50 51} index)  ; Track index
     [hex (Color/green)]  ; All values are valid
@@ -552,7 +578,7 @@
                         0x29 (create-mixer-50002-details-label packet panel)
                         nil)]
     (.setLayout panel nil)
-    (.setSize frame 440 (if (= original-packet-type 0x0a) 470 220))
+    (.setSize frame 440 (if (= original-packet-type 0x0a) 500 220))
     (.setContentPane frame panel)
     (.setBackground panel Color/black)
     (.setDefaultCloseOperation frame JFrame/DISPOSE_ON_CLOSE)
@@ -571,7 +597,7 @@
     (when details-label (.setBounds details-label 0 (case original-packet-type
                                                       0x0a 255
                                                       0x29 120)
-                                    440 200))
+                                    440 230))
 
     (let [location (.getLocation frame)
           offset (* 20 (inc (count @packet-frames)))]

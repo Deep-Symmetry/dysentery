@@ -593,16 +593,20 @@ were assigned Player Numbers 2 and 3.
 The activity flag $A$ at byte~39 seems to be 0 when the player is
 idle, and 1 when it is playing, searching, or loading a track.
 
-When a rekordbox track is being played, the device holding the
-rekordbox database from which the track was loaded is reported in
-$D_r$ (if the track was loaded from the local device, this will be the
-same as $D$; if it was loaded over the Link, it will be the number of
-a different device). Similarly, $S_r$ reports the slot from which the
-track was loaded: The value {\tt 01} means the CD drive, {\tt 02}
-means the SD slot, and {\tt 03} means the USB slot. $t_r$ may be an
-indicator of whether the track came from rekordbox: It seems to have
-the value {\tt 01} when a rekordbox track is loaded, and {\tt 05} when
-a regular audio CD is loaded.
+When a rekordbox track is loaded, the device holding the rekordbox
+database from which the track was loaded is reported in $D_r$ at
+byte~40 (if the track was loaded from the local device, this will be
+the same as $D$; if it was loaded over the Link, it will be the number
+of a different device) When no track is loaded, $D_r$ has the value
+{\tt 00}.
+
+Similarly, $S_r$ at byte~41 reports the slot from which the track was
+loaded: The value {\tt 00} means no track is loaded, {\tt 01} means
+the CD drive, {\tt 02} means the SD slot, and {\tt 03} means the USB
+slot. $t_r$ may be an indicator of whether the track came from
+rekordbox: It seems to have the value {\tt 00} when no track is
+loaded, {\tt 01} when a rekordbox track is loaded, and {\tt 05} when a
+regular audio CD is loaded.
 
 The field $rekordbox$ contains the rekordbox database ID of the loaded
 track when a rekordbox track is being played. Combined with the player
