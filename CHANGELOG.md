@@ -6,7 +6,12 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
-Nothing so far.
+### Added
+
+- Discovered how to find rekordbox track IDs and database location
+  information in the CDJ status packets.
+- Discovered how to ask a CDJ for track metadata given a database
+  location and rekordbox ID.
 
 ## [0.1.4] - 2016-05-25
 

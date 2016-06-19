@@ -521,8 +521,9 @@ send 208-byte packets with slightly less information.
     
     \begin{leftwordgroup}{\tiny 32} % 0x20
       \bitbox{1}{\tt 03} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt b0}} &
-      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 01}} & \bitbox{1}{$A$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 01}} & \bitbox{1}{$A$} &
+      \bitbox{1}{$D_r$} & \bitbox{1}{$S_r$} & \bitbox{1}{$t_r$} & \bitbox{1}{\tt 00} &
+      \bitbox{4}{$rekordbox$}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny 48} % 0x30
@@ -591,6 +592,23 @@ were assigned Player Numbers 2 and 3.
 
 The activity flag $A$ at byte~39 seems to be 0 when the player is
 idle, and 1 when it is playing, searching, or loading a track.
+
+When a rekordbox track is being played, the device holding the
+rekordbox database from which the track was loaded is reported in
+$D_r$ (if the track was loaded from the local device, this will be the
+same as $D$; if it was loaded over the Link, it will be the number of
+a different device). Similarly, $S_r$ reports the slot from which the
+track was loaded: The value {\tt 01} means the CD drive, {\tt 02}
+means the SD slot, and {\tt 03} means the USB slot. $t_r$ may be an
+indicator of whether the track came from rekordbox: It seems to have
+the value {\tt 01} when a rekordbox track is loaded, and {\tt 05} when
+a regular audio CD is loaded.
+
+The field $rekordbox$ contains the rekordbox database ID of the loaded
+track when a rekordbox track is being played. Combined with the player
+number and slot information, this can be used to request the track
+metadata as described in Section~\ref{sec:metadata}. When an audio CD
+is loaded, this just contains the track index on the disc.
 
 The track number being played (its position within a playlist or other
 scrolling list of tracks, as displayed on the CDJ) can be found at
@@ -804,10 +822,47 @@ enough for the count to need more than the last three bytes).
 Byte~204, labeled $nx$, seems to have the value {\tt 0x0f} for nexus
 players, and {\tt 0x05} for older players.
 
-\begin{quote}
-  This analysis is incomplete; there are many bytes whose purpose is
-  not yet known, not all of which are even mentioned here yet.
-\end{quote}
+\section{Track Metadata}
+\label{sec:metadata}
+
+By setting up a managed switch to mirror traffic sent directly between
+CDJs, we have been able to see how the Link Info operation is
+implemented: The players open a direct TCP connection between each
+other, and send queries to obtain the metadata about tracks with
+particular rekordbox ID values.
+
+Using an Ethernet switch
+with port mirroring was, as we hoped, very helpful. As can be seen in
+the capture at
+\url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/LinkInfo.pcapng},
+which shows a CDJ with IP address 169.254.192.112 booting, the new CDJ
+opens two TCP connections to the other CDJ at 169.254.119.181.
+
+The first session (given id 0 by Wireshark), which begins at packet
+206, connecting to port 12523, looks like it may be connecting to the
+rekordbox database on the USB in the first CDJ, but since the Link
+button was not pressed during the capture, that session was not used
+beyond its initial setup. That is another potential area for study
+someday.
+
+The second TCP connection (Wireshark display filter {\tt tcp.stream eq
+  1}), beginning at packet 212 and connecting to port 1051, shows the
+track information used by the Link Info display passing between the
+CDJs. You can see packets reflecting the initial display of a track
+that was already loaded, then new information as the linked CDJ loaded
+three other tracks. It looks like the track names are probably sent in
+a UTF-16 encoding? And presumably nearby there is is information about
+the key, BPM, star rating, and so on.
+
+There is another capture at
+\url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/LinkInfo2.pcapng},
+with more Link Info streams to be studied (all of the odd numbered
+{\tt tcp.stream} values in Wireshark are the relevant ones).
+
+Although we don't know all the details yet, this is enough to start
+adding metadata support to dysentery and beat-link; please dive in and
+help us figure out more details, how to look up metadata for tracks
+loaded from rekordbox on a laptop, and so on!
 
 \section{What's Missing?}
 
@@ -815,25 +870,15 @@ We know this analysis isn't complete. There are some values we know
 are available and useful (because CDJs and rekordbox itself show
 them), but we have not figured out how to find them yet.
 
-\subsection{Track Metadata}
+\subsection{Album Art}
 
-The biggest piece of information that would be extremely helpful for a
-light show operator to be able to see, and which we have not yet
-figured out how to obtain, is the name and artist of the track playing
-on a player.
+Now that we've discovered how to get track metadata, it looks like a
+very similar query can be used to obtain the album art; the second
+capture discussed in Section~\ref{sec:metadata} has some examples.
 
-While it may be that the rekordbox track ID is present in the status
-packets, we very much hope to avoid having to mount the rekordbox
-database over NFS and figure out how to read it. That is probably a
-few steps too far in complexity and risk.
-
-In the hope we can avoid that, we've ordered an Ethernet switch that
-offers port mirroring, so we can get a look at all the traffic between
-two physical CDJs to see what happens when the Link Info page is
-pulled up on one of them.
-
-If the data can't be obtained without reading the database, that is
-looking like bad news. The database format is called
+Before we discovered the way to ask players for metadata about
+particular tracks, we did some research into the underlying rexordbox
+database. The database format is called
 DeviceSQL,\footnote{\url{https://www.quora.com/What-database-system-did-Greg-Kemnitz-develop}}
 and there used to be a free quick start suite for working with
 it\footnote{\url{http://java.sys-con.com/node/328557}} but that site
@@ -845,33 +890,6 @@ It seems to still be
 available,\footnote{\url{http://www.ubiquitous.co.jp/en/products/db/md/devicesql/}}
 but I'd be surprised if they wanted to help out an open source effort
 like this one.
-
-{\bf Update}: It doesn't look as bad as that. Using an Ethernet switch
-with port mirroring was, as we hoped, very helpful. As can be seen in
-the capture at
-\url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/LinkInfo.pcapng},
-which shows a CDJ with IP address 169.254.192.112 booting, the new CDJ
-opens two TCP connections to the other CDJ at 169.254.119.181.
-
-The first session, which begins at packet 206, connecting to port
-12523, looks like it may be connecting to the rekordbox database on
-the USB in the first CDJ, but since the Link button was not pressed
-during the capture, that session was not used beyond its initial
-setup. That is another potential area for study someday.
-
-The second TCP connection, beginning at packet 212 and connecting to
-port 1051, shows the track information used by the Link Info display
-passing between the CDJs. You can see packets reflecting the initial
-display of a track that was already loaded, then new information as
-the linked CDJ loaded three other tracks. It looks like the track
-names are probably sent in a UTF-16 encoding? And presumably nearby
-there is is information about the key, BPM, star rating, and so on.
-
-So hopefully somebody will dive in, try opening a TCP connection to
-this port on one of their CDJs which has a rekordbox track loaded, and
-seeing if replaying some of the bytes seen in this capture can get
-this kind of information to come back, and how to reliably obtain and
-decode the responses.
 
 \subsection{CDJ Packets to Rekordbox}
 
