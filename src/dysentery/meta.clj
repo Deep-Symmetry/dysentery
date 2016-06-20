@@ -183,6 +183,9 @@
   "Try to make sense of the track metadata in last-bytes."
   []
   (let [[packet-len arr] @last-bytes 
-        title-len (build-int arr 90 4)]
+        title-len (build-int arr 90 4)
+        artist-len (build-int arr (+ 184 (* 2 title-len)) 4)]
     (println "Title length:" title-len)
-    (println "Title:" (String. arr 94 (* (dec title-len) 2) "UTF-16"))))
+    (println "Title:" (String. arr 94 (* (dec title-len) 2) "UTF-16"))
+    (println "Artist length:" artist-len)
+    (println "Artist:" (String. arr (+ 188 (* 2 title-len)) (* (dec artist-len) 2) "UTF-16"))))
