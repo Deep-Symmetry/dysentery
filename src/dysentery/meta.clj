@@ -143,8 +143,7 @@
   "Ask a player for metadata about a particular track."
   [player slot rekordbox-id]
   (when-let [device (finder/device-given-number player)]
-    (let [other-player (if (= player 4) 1 (inc player))
-          templates (case slot
+    (let [templates (case slot
                       :usb (get usb-packet-templates (dec player))
                       :sd (get sd-packet-templates (dec player)))]
       (with-open [sock (java.net.Socket. (:address device) 1051)
