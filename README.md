@@ -16,12 +16,12 @@ section for more details, explanation, and a screen shot.
 
 > :wrench: If you&rsquo;re looking for a library to use in your own
 > projects, that&rsquo;s what
-> [beat-link](https://github.com/brunchboy/beat-link) was developed
+> [beat-link](https://github.com/brunchboy/beat-link#beat-link) was developed
 > for.
 >
 > :star2: And if you want to synchronize shows without having to
 > write your own software, check out
-> [beat-link-trigger](https://github.com/brunchboy/beat-link-trigger).
+> [beat-link-trigger](https://github.com/brunchboy/beat-link-trigger#beat-link-trigger).
 
 ## Disclaimer
 
@@ -61,11 +61,11 @@ Pioneer gear to try out.
 Dysentery is currently being developed as a
 [Clojure](http://clojure.org/) library, because I find that to be the
 most powerful development environment available to me at the moment.
-[beat-link](https://github.com/brunchboy/beat-link), which is intended
-to be useful in other projects, is a standard Java package on Maven
-Central. If you want to hack on the dysentery source, you'll need to
-learn a little bit about Clojure. Finally,
-[beat-link-trigger](https://github.com/brunchboy/beat-link-trigger)
+[beat-link](https://github.com/brunchboy/beat-link#beat-link), which
+is intended to be useful in other projects, is a standard Java package
+on Maven Central. If you want to hack on the dysentery source, you'll
+need to learn a little bit about Clojure. Finally,
+[beat-link-trigger](https://github.com/brunchboy/beat-link-trigger#beat-link-trigger)
 builds a friendly graphical interface on top of beat-link, making it
 easy to synchronize light shows, videos, and Ableton Live to tracks
 played on CDJs.
