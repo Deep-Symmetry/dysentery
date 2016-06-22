@@ -56,13 +56,18 @@ Pioneer gear to try out.
 Dysentery is currently being developed as a
 [Clojure](http://clojure.org/) library, because I find that to be the
 most powerful development environment available to me at the moment.
-When released, it will be usable as a standard Java package on Maven
-Central, but for now if you want to hack on the souce, you'll need to
-learn a little bit about Clojure.
+[beat-link](https://github.com/brunchboy/beat-link), which is intended
+to be useful in other projects, is a standard Java package on Maven
+Central. If you want to hack on the dysentery source, you'll need to
+learn a little bit about Clojure. Finally,
+[beat-link-trigger](https://github.com/brunchboy/beat-link-trigger)
+builds a friendly graphical interface on top of beat-link, making it
+easy to synchronize light shows, videos, and Ableton Live to tracks
+played on CDJs.
 
-You can run it and look at what it finds on your network by just
-downloading and executing the jar, though, and we hope you will, to
-help us gather more information!
+You can run dysentery and look at what it finds on your network by
+just downloading and executing the jar, though, and we hope you will,
+to help us gather more information!
 
 It is already able to watch for DJ Link traffic on all your network
 interfaces, and tell you what devices have been noticed, and the local
