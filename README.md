@@ -14,9 +14,12 @@ Once you have a recent one installed, you can probably run dysentery
 by just double-clicking the jar file. See the [Status](#status)
 section for more details, explanation, and a screen shot.
 
-If you&rsquo;re looking for a library to use in your own projects,
-that&rsquo;s what [beat-link](https://github.com/brunchboy/beat-link)
-was developed for.
+> :x: If you&rsquo;re looking for a library to use in your own
+> projects, that&rsquo;s what
+> [beat-link](https://github.com/brunchboy/beat-link) was developed
+> for. :star2: And if you want to synchronize shows without having to
+> write your own software, check out
+> [beat-link-trigger](https://github.com/brunchboy/beat-link-trigger).
 
 ## Disclaimer
 
