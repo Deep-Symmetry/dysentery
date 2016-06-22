@@ -17,7 +17,9 @@ section for more details, explanation, and a screen shot.
 > :wrench: If you&rsquo;re looking for a library to use in your own
 > projects, that&rsquo;s what
 > [beat-link](https://github.com/brunchboy/beat-link) was developed
-> for. :star2: And if you want to synchronize shows without having to
+> for.
+>
+> :star2: And if you want to synchronize shows without having to
 > write your own software, check out
 > [beat-link-trigger](https://github.com/brunchboy/beat-link-trigger).
 
