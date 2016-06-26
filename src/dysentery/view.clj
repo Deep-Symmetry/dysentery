@@ -423,7 +423,7 @@
     [hex (Color/green)]
 
     (= index 204)  ; Seems to be 0x0f for nexus players, 0x05 for others?
-    [hex (recognized-if (or (and (= value 0x0f) (= 212 (count packet)))
+    [hex (recognized-if (or (and (= value 0x0f) (#{212 284} (count packet)))
                             (and (= value 0x05) (= 208 (count packet)))))]
 
     :else
@@ -553,14 +553,14 @@
       (let [label (first labels)
             x (rem index 16)
             y (quot index 16)
-            left (* x 20)
-            top (* y 14)]
+            left (* (inc x) 25)
+            top (* (inc y) 15)]
         (.setFont label byte-font)
         (.setForeground label Color/white)
         (.setBackground label Color/black)
         (.setOpaque label true)
         (.add panel label)
-        (.setBounds label (* (inc x) 25) (* (inc y) 15) 20 15))
+        (.setBounds label left top 20 15))
       (recur (rest labels) (inc index)))))
 
 (defn- create-player-50002-frame
@@ -571,14 +571,17 @@
   (let [original-packet-type (get packet 10)
         frame (JFrame. (str "Player " device-number ", port 50002"))
         panel (JPanel.)
+        num-byte-rows (inc (quot (dec (count packet)) 16))
         byte-labels (create-byte-labels packet (partial packet-50002-byte-format device-number original-packet-type))
         timestamp-label (create-timestamp-label panel)
+        timestamp-top (* (inc num-byte-rows) 15)
         details-label (case original-packet-type
                         0x0a (create-cdj-50002-details-label packet panel)
                         0x29 (create-mixer-50002-details-label packet panel)
-                        nil)]
+                        nil)
+        details-height (if details-label 230 0)]
     (.setLayout panel nil)
-    (.setSize frame 440 (if (= original-packet-type 0x0a) 500 220))
+    (.setSize frame 440 (+ timestamp-top 20 details-height))
     (.setContentPane frame panel)
     (.setBackground panel Color/black)
     (.setDefaultCloseOperation frame JFrame/DISPOSE_ON_CLOSE)
@@ -590,14 +593,8 @@
 
     (create-address-labels panel (count packet))
     (position-byte-labels byte-labels panel)
-    (.setBounds timestamp-label 0 (case original-packet-type
-                                    0x0a 226
-                                    0x29 90)
-                440 18)
-    (when details-label (.setBounds details-label 0 (case original-packet-type
-                                                      0x0a 255
-                                                      0x29 120)
-                                    440 230))
+    (.setBounds timestamp-label 0 timestamp-top 440 18)
+    (when details-label (.setBounds details-label 0 (+ timestamp-top 20) 440 details-height))
 
     (let [location (.getLocation frame)
           offset (* 20 (inc (count @packet-frames)))]
