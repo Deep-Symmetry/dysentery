@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [com.taoensso/timbre "4.4.0"]
-                 [selmer "1.0.6"]]
+                 [selmer "1.0.7"]]
   :main dysentery.core
   :uberjar-name "dysentery.jar"
 
