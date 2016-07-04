@@ -112,7 +112,8 @@ solved&mdash;see if you can identify any pattern, or figure out what
 they might convey. If you do, or if any byte value shows up in red,
 please [open an Issue](https://github.com/brunchboy/dysentery/issues)
 to let us know. Bytes which are expected to contain the device name
-are rendered as text rather than hex, to make them more readable.
+and firmware version are rendered as text rather than hex, to make
+them more readable.
 
 <img src="doc/assets/PacketWindow.png" width="600" alt="Packet Window">
 
