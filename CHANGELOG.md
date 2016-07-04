@@ -12,6 +12,7 @@ This change log follows the conventions of
   information in the CDJ status packets.
 - Discovered how to ask a CDJ for track metadata given a database
   location and rekordbox ID.
+- Analysis of status packets from rekordbox.
 
 ## [0.1.4] - 2016-05-25
 
