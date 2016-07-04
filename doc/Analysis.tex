@@ -687,11 +687,13 @@ byte?
 \end{figure}
 
 Byte~139, labeled $P_2$ seems to be another play state indicator,
-having the value 122 when playing and 126 when stopped. When the CDJ
-is trying to play, but is being held in place by the DJ holding down
-on the jog wheel, $P_1$ considers it to be playing (value 3), while
-$P_2$ considers it to be stopped (value 126). Non-nexus players seem
-to use the value 106 when playing and 110 when stopped, so this may be
+having the value 122 ({\tt 0x7a}) when playing and 126 ({\tt 0x7e})
+when stopped. When the CDJ is trying to play, but is being held in
+place by the DJ holding down on the jog wheel, $P_1$ considers it to
+be playing (value 3), while $P_2$ considers it to be stopped (value
+126). Non-nexus players seem to use the value 106 ({\tt 0x6a}) when
+playing and 110 ({\tt 0x6e}) when stopped, while nxs2 players use the
+values 250 and 254 ({\tt 0xfa} and {\tt 0xfe}) so this seems to be
 another bit field like $F$.
 
 There are four different places where pitch information appears in

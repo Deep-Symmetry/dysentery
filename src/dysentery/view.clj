@@ -71,7 +71,7 @@
   (let [current-type (get packet 10)]
     (if (= current-type expected-type)
       (case expected-type
-        0x0a (correct-length? packet #{208 212})
+        0x0a (correct-length? packet #{208 212 284})
         0x29 (correct-length? packet #{56})
         (timbre/warn "Received packet with unrecognized type:" current-type))
       (timbre/warn "Expecting packet of type" expected-type "but received type" current-type))))
@@ -236,10 +236,12 @@
                      17 "Ended"
                      "???")
               :p-2 (case (get packet 139)
-                     106 "Play"
-                     110 "Stop"
-                     122 "nxs Play"
-                     126 "nxs Stop"
+                     0x6a "Play"
+                     0x6e "Stop"
+                     0x7a "nxs Play"
+                     0x7e "nxs Stop"
+                     0xfa "nxs2 Play"
+                     0xfe "nxs2 Stop"
                      "???")
               :p-3 (case (get packet 157)
                      0 "No Track"

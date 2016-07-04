@@ -6,8 +6,16 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
+Nothing so far.
+
+## [0.1.5] - 2016-07-04
+
 ### Added
 
+- Initial support for nxs2 players, thanks to captures and screen
+  shots from @drummerclint and Markus Krooked. Existing fields seem to
+  work again, but we have not yet learned how to read any of the new
+  features that might be found in the larger status packets.
 - Discovered how to find rekordbox track IDs and database location
   information in the CDJ status packets.
 - Discovered how to ask a CDJ for track metadata given a database
@@ -81,7 +89,8 @@ This change log follows the conventions of
 - Intial early release.
 
 
-[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.1.4...HEAD
+[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/brunchboy/dysentery/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/brunchboy/dysentery/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/brunchboy/dysentery/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/brunchboy/dysentery/compare/v0.1.1...v0.1.2
