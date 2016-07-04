@@ -210,6 +210,7 @@
                                 1 "CD"
                                 2 "SD"
                                 3 "USB"
+                                4 "collection"
                                 "???")
               :rekordbox-type (case (get packet 42)
                                 0 "n/a"
@@ -337,10 +338,10 @@
     [hex (recognized-if (#{0 1} value))]
 
     (= index 40)  ; Player from which track was loaded
-    [hex (recognized-if (#{0 1 2 3 4 17 18 33} value))]
+    [hex (recognized-if (#{0 1 2 3 4 17 18 33 41} value))]
 
     (= index 41)  ; Slot from which track was loaded
-    [hex (recognized-if (#{0 1 2 3} value))]
+    [hex (recognized-if (#{0 1 2 3 4} value))]
 
     (= index 42)  ; Track type? 1 = rekordbox, 5 = audio CD
     [hex (recognized-if (#{0 1 5} value))]

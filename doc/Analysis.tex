@@ -603,10 +603,11 @@ of a different device) When no track is loaded, $D_r$ has the value
 Similarly, $S_r$ at byte~41 reports the slot from which the track was
 loaded: The value {\tt 00} means no track is loaded, {\tt 01} means
 the CD drive, {\tt 02} means the SD slot, and {\tt 03} means the USB
-slot. $t_r$ at byte~42 may be an indicator of whether the track came
-from rekordbox: It seems to have the value {\tt 00} when no track is
-loaded, {\tt 01} when a rekordbox track is loaded, and {\tt 05} when a
-regular audio CD is loaded.
+slot. When a track is loaded from a rekordbox collection on a laptop,
+$S_r$ has the value {\tt 04}. $t_r$ at byte~42 may be an indicator of
+whether the track came from rekordbox: It seems to have the value {\tt
+  00} when no track is loaded, {\tt 01} when a rekordbox track is
+loaded, and {\tt 05} when a regular audio CD is loaded.
 
 The field $rekordbox$ at bytes~44--47 contains the rekordbox database
 ID of the loaded track when a rekordbox track is being played.
@@ -826,6 +827,21 @@ enough for the count to need more than the last three bytes).
 
 Byte~204, labeled $nx$, seems to have the value {\tt 0x0f} for nexus
 players, and {\tt 0x05} for older players.
+
+\subsection{Rekordbox Status Packets}
+
+Rekordbox sends status packets which appear to be essentially
+identical to those sent by a mixer, as shown in
+Figure~\ref{fig:mixerStatus}, sending ``rekordbox'' as its device
+name. The device number $D$ (bytes~33 and 36) seems to be 41 ({\tt
+  0x29}), although it will probably use conflict resolution to pick an
+unused number if multiple copies are running. The $F$ value we have
+seen remains consistent as a status flag, showing {\tt 0xc0} which
+would indicate that it is always ``playing'' but not synced, tempo
+master, nor on the air. The $BPM$ value seems to track that of the
+master player, and the same potential pitch values (fixed at {\tt
+  0x100000}, or +0\%) are present, as is $X$. $B_b$ always seems to be
+zero.
 
 \section{Track Metadata}
 \label{sec:metadata}
