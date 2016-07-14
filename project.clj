@@ -1,11 +1,11 @@
-(defproject dysentery "0.1.5"
+(defproject dysentery "0.1.6-SNAPSHOT"
   :description "Exploring ways to participate in a Pioneer Pro DJ Link network"
   :url "http://github.com/brunchboy/dysentery"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/math.numeric-tower "0.0.4"]
-                 [com.taoensso/timbre "4.5.1"]
+                 [com.taoensso/timbre "4.6.0"]
                  [selmer "1.0.7"]]
   :main dysentery.core
   :uberjar-name "dysentery.jar"
