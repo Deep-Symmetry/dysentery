@@ -16,8 +16,10 @@ section for more details, explanation, and a screen shot.
 
 > :wrench: If you&rsquo;re looking for a library to use in your own
 > projects, that&rsquo;s what
-> [beat-link](https://github.com/brunchboy/beat-link#beat-link) was developed
-> for.
+> [beat-link](https://github.com/brunchboy/beat-link#beat-link) was
+> developed for, and Evan Purkhiser is now also developing
+> [prolink-go](https://github.com/EvanPurkhiser/prolink-go) if you'd
+> like a Go language version.
 >
 > :star2: And if you want to synchronize shows without having to
 > write your own software, check out
@@ -209,6 +211,11 @@ ways. He was kind enough to share his code, and that was the impetus
 behind starting this project, to consolidate what people are learning
 about this protocol, and make it available for other projects to
 benefit from.
+
+In December, 2016 I heard from
+[Evan Purkhiser](https://github.com/EvanPurkhiser), who had found this
+project and went on to make important breakthroughs in obtaining track
+metadata.
 
 ### Why Dysentery?
 

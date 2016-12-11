@@ -6,7 +6,7 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
-Nothing so far.
+- Initial work on obtaining metadata.
 
 ## [0.1.5] - 2016-07-04
 

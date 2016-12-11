@@ -848,6 +848,247 @@ zero.
 \section{Track Metadata}
 \label{sec:metadata}
 
+Thanks to
+@EvanPurkhiser\footnote{\url{https://github.com/EvanPurkhiser}}, we
+are finally making progress in retrieving metadata from CDJs!
+
+To be polite about it, the first step is to determine the port on
+which the player is offering its remote database server. That can be
+determined by opening a TCP connection to port 12,523 on the player
+and sending it sending a packet with the content shown in
+Figure~\ref{fig:dbServerQueryPacket}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0f} {\tt R} {\tt e} {\tt m} {\tt o}
+        {\tt t} {\tt e} {\tt D} {\tt B} {\tt S} {\tt e} {\tt r} {\tt v}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 16} % 0x10
+      \bitboxes*{1}{{\tt e} {\tt r} {\tt 00}} & \bitbox[]{13}{}
+    \end{leftwordgroup} \\
+    
+  \end{bytefield}
+  \caption{DB Server query packet}
+  \label{fig:dbServerQueryPacket}
+\end{figure}
+
+The player will send back a two-byte response, containing the high
+byte of the port number followed by the low byte. So far, the response
+from a CDJ has always indicated a port number of 1051, but using this
+query to determine the port to use will protect you against any future
+changes. The same query can also be sent to a laptop running rekordbox
+to find the rekordbox database server port, which can also be queried
+for metadata in the exact same way described below.
+
+To find the metadata associated with a particular track, given its
+rekordbox ID number, as well as the player and slot from which it was
+loaded (all of which can be determined from a CDJ status packet
+received by a virtual CDJ as described in
+Section~\ref{sec:virtualCdj}), open a TCP connection to the device
+from which the track was loaded, using the port that it gave you in
+response to the DB Server query packet, then send the following four
+packets.
+
+The first packet sent to the database server contains the five bytes
+{\tt 11 00 00 00 01}, and results in the same five bytes being sent
+back.
+
+All further packets have a shared structure. They start with a
+six-byte pattern which serves as a message separator: {\tt 11 87 23 49
+  ae 11}. This is followed by a four-byte message sequence number,
+which is increased for each message sent (but which remains constant
+when multple responses are being sent in response to the same message,
+for example when the CDJ is sending back all the metadata fields that
+have been requested for a track, each field will be introduced by the
+message separator, followed by the sequence number of the final
+message that was used to request the metadata, followed by the field
+itself).
+
+The next packet seems to be necessary for establishing the context for
+queries, and contains the values shown in
+Figure~\ref{fig:querySetupPacket}. Note that in this packet, the
+message sequence number is always {\tt fffffffe}; that may be part of the
+process of setting up the query context.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+      
+      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitboxes*{1}{{\tt ff} {\tt ff}
+        {\tt ff} {\tt fe}} & \bitboxes*{1}{{\tt 10} {\tt 00} {\tt 00} {\tt 0f} {\tt 01} {\tt 14}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 16} % 0x10
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 00} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 32} % 0x20
+      \bitboxes*{1}{{\tt 11} {\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D$} & \bitbox[]{11}{}
+    \end{leftwordgroup} \\
+    
+  \end{bytefield}
+  \caption{Query context setup packet}
+  \label{fig:querySetupPacket}
+\end{figure}
+
+The value $D$ is, like in the other packets, a player device number.
+In this case it is the device that is asking for metadata information.
+It must be a valid player number between 1 and 4, and that player must
+actually be present on the network, must not be the same player that
+you are contacting to request metadata from, and must not be a player
+that has connected to that player via Link and loaded a track from it.
+So the safest device number to use is the device number you are using
+for your virtual CDJ, but since it must be between 1 and 4, you can
+only do that if there are fewer than four actual CDJs on the network.
+
+The player responds with a 42 byte packet that starts with the message
+separator and the message sequence number you sent. We have not yet
+found any other meaningful information in this response.
+
+At this point, the player is ready to accept queries. To ask for
+metadata about a particular track, send a packet like the one shown in
+Figure~\ref{fig:trackSetupPacket}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+      
+      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
+      \bitboxes*{1}{{\tt 10} {\tt 20} {\tt 02} {\tt 0f} {\tt 02} {\tt 14}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 16} % 0x10
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 00} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 32} % 0x20
+      \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 01} & \bitbox{1}{$S_r$} & \bitboxes*{1}{{\tt 01} {\tt 11}} &
+      \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
+    \end{leftwordgroup} \\
+    
+  \end{bytefield}
+  \caption{Track metadata query setup packet}
+  \label{fig:trackSetupPacket}
+\end{figure}
+
+As described above, $seq$ should be 1 for the first query packet you
+send, 2 for the next, and so on. $D$ should have the same value you
+used in your initial query context setup packet, identifying the
+device that is asking the question. $S_r$ is the slot in which the
+track being asked about can be found, and has the same values used in
+CDJ status packets, as shown in Figure~\ref{fig:cdjStatus}. Similarly,
+$rekordbox$ identifies the local rekordbox database ID of the track
+being asked about, as found in the CDJ status packet.
+
+Once again the player responds with a 42 byte packet that starts with
+the message separator and the message sequence number you sent, and
+which contains no known useful information. But at this point there is
+only one more message you need to send in order to get the metadata
+response. That has the content shown in
+Figure~\ref{fig:trackMetadataPacket}.
+
+The value of $seq$ should be one higher than the one you sent in your
+previous packet, while the values of $D$ and $S_r$ should be identical
+to what you sent in it.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+      
+      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
+      \bitboxes*{1}{{\tt 10} {\tt 30} {\tt 00} {\tt 0f} {\tt 06} {\tt 14}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 16} % 0x10
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 06} {\tt 06} {\tt 06}
+        {\tt 06} {\tt 06} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 32} % 0x20
+      \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 01} & \bitbox{1}{$S_r$} &
+      \bitboxes*{1}{{\tt 01} {\tt 11} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 11} {\tt 00} {\tt 00} {\tt 00} {\tt 0b} {\tt 11}}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny 48} % 0x30
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 11} {\tt 00} {\tt 00} {\tt 00}
+        {\tt 0b} {\tt 11} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{2}{}
+    \end{leftwordgroup} \\
+    
+  \end{bytefield}
+  \caption{Track metadata query final packet}
+  \label{fig:trackMetadataPacket}
+\end{figure}
+
+This will cause the player to send back a series of messages
+containing the metadata fields describing the track you requested.
+Each field will begin with the six-byte message separator sequence,
+followed by the value of $seq$ you sent in the final metadata query
+packet. Because this may be split across multiple packets, you should
+keep reading until you see the final response field, which will have
+the content shown in Figure~\ref{fig:finalMetadataField}.
+
+The first two metadata response fields don't contain any values we
+have yet figured out. Several contain string values. These are stored
+as UTF-16 big-endian strings whose length is stored at bytes~42-45,
+and where the string itself begins at byte~46. (The byte indices here
+are counted from the start of the four-byte message sequence number
+that follows the message separator, so the sequence number is found at
+bytes~0-3.)
+
+The string-containing fields are the third (track title), fourth
+(artist), fifth (album), eighth (comment), ninth (musical key),
+twelfth (genre), and thirteenth (label), although that has always been
+blank so far. It may represent the color label assigned to a track,
+and I just don't have tracks with that set.
+
+The fifth field contains the track length in seconds, stored as a
+four-byte integer at bytes~32-35.
+
+In addition to containing the track title, the third field also
+contains the track's artwork ID. More details about that will be
+written once I have implemented artwork loading. In the mean time, you
+can take a look at Evan's
+implementation.\footnote{\url{https://github.com/EvanPurkhiser/prolink-go/blob/master/remotedb.go}}
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    ~\\
+    ~\\
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+      
+      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
+      \bitboxes*{1}{{\tt 10} {\tt 42} {\tt 01} {\tt 0f} {\tt 00} {\tt 14}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 16} % 0x10
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00}{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+    
+  \end{bytefield}
+  \caption{Final track metadata response field}
+  \label{fig:finalMetadataField}
+\end{figure}
+
+\subsection{Background Research}
+
+Prior to Evan's breakthrough, here is all we knew:
+
 By setting up a managed switch to mirror traffic sent directly between
 CDJs, we have been able to see how the Link Info operation is
 implemented: The players open a direct TCP connection between each
@@ -881,11 +1122,6 @@ There is another capture at
 \url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/LinkInfo2.pcapng},
 with more Link Info streams to be studied (all of the odd numbered
 {\tt tcp.stream} values in Wireshark are the relevant ones).
-
-Although we don't know all the details yet, this is enough to start
-adding metadata support to dysentery and beat-link; please dive in and
-help us figure out more details, how to look up metadata for tracks
-loaded from rekordbox on a laptop, and so on!
 
 \section{What's Missing?}
 
