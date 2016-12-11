@@ -213,9 +213,9 @@ behind starting this project, to consolidate what people are learning
 about this protocol, and make it available for other projects to
 benefit from.
 
-In December, 2016 I heard from
+In December 2016 I heard from
 [@EvanPurkhiser](https://github.com/EvanPurkhiser), who had found this
-project and went on to make important breakthroughs in obtaining track
+project, and went on to make important breakthroughs in obtaining track
 metadata.
 
 ### Why Dysentery?
