@@ -1058,10 +1058,8 @@ The fifth field contains the track length in seconds, stored as a
 four-byte integer at bytes~32-35.
 
 In addition to containing the track title, the third field also
-contains the track's artwork ID. More details about that will be
-written once I have implemented artwork loading. In the mean time, you
-can take a look at Evan's
-implementation.\footnote{\url{https://github.com/EvanPurkhiser/prolink-go/blob/master/remotedb.go}}
+contains the track's artwork ID, as a 4-byte big-endian integer
+starting 19~bytes before the end of the field.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
@@ -1085,6 +1083,52 @@ implementation.\footnote{\url{https://github.com/EvanPurkhiser/prolink-go/blob/m
   \label{fig:finalMetadataField}
 \end{figure}
 
+To request the artwork image corresponding to that ID, send a packet
+like the one shown in Figure~\ref{fig:artworkRequestPacket}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+      
+      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
+      \bitboxes*{1}{{\tt 10} {\tt 20} {\tt 03} {\tt 0f} {\tt 02} {\tt 14}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 16} % 0x10
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 06} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 32} % 0x20
+      \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 08} & \bitbox{1}{$S_r$} & \bitboxes*{1}{{\tt 01} {\tt 11}} &
+      \bitbox{4}{$artwork$} & \bitbox[]{6}{}
+    \end{leftwordgroup} \\
+    
+  \end{bytefield}
+  \caption{Artwork query packet}
+  \label{fig:artworkRequestPacket}
+\end{figure}
+
+As usual, $seq$ should be incremented each time you send a query, and
+will be used to identify the response messages. $D$ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. $S_r$ is the slot
+in which the track being asked about can be found, and has the same
+values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}. Finally, $artwork$ identifies the specific
+artwork image you are requesting, as it was specified in the track
+medatata response.
+
+The response will be a single field, starting with the six-byte
+message separator sequence followed by the sequence number you sent as
+$seq$. The length in bytes of the image will be specified by a
+four-byte big-endian integer starting at byte~48 of the response
+field, and the image itself will be sent as the indicated number of
+bytes immediately following the length (so starting at byte~52 of the
+response).
+
 \subsection{Background Research}
 
 Prior to Evan's breakthrough, here is all we knew:
@@ -1103,20 +1147,15 @@ which shows a CDJ with IP address 169.254.192.112 booting, the new CDJ
 opens two TCP connections to the other CDJ at 169.254.119.181.
 
 The first session (given id 0 by Wireshark), which begins at packet
-206, connecting to port 12523, looks like it may be connecting to the
-rekordbox database on the USB in the first CDJ, but since the Link
-button was not pressed during the capture, that session was not used
-beyond its initial setup. That is another potential area for study
-someday.
+206, connecting to port 12523, determines the port to use for metadata
+queries.
 
 The second TCP connection (Wireshark display filter {\tt tcp.stream eq
   1}), beginning at packet 212 and connecting to port 1051, shows the
 track information used by the Link Info display passing between the
 CDJs. You can see packets reflecting the initial display of a track
 that was already loaded, then new information as the linked CDJ loaded
-three other tracks. It looks like the track names are probably sent in
-a UTF-16 encoding? And presumably nearby there is is information about
-the key, BPM, star rating, and so on.
+three other tracks.
 
 There is another capture at
 \url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/LinkInfo2.pcapng},
@@ -1129,13 +1168,7 @@ We know this analysis isn't complete. There are some values we know
 are available and useful (because CDJs and rekordbox itself show
 them), but we have not figured out how to find them yet.
 
-\subsection{Album Art}
-
-Now that we've discovered how to get track metadata, it looks like a
-very similar query can be used to obtain the album art; the second
-capture discussed in Section~\ref{sec:metadata} has some examples.
-
-Before we discovered the way to ask players for metadata about
+Before we discovered how to ask players for metadata about
 particular tracks, we did some research into the underlying rexordbox
 database. The database format is called
 DeviceSQL,\footnote{\url{https://www.quora.com/What-database-system-did-Greg-Kemnitz-develop}}
