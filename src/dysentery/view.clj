@@ -378,7 +378,7 @@
                             (and (zero? value) (= 208 (count packet)))))]
 
     (= index 139)  ; Play mode part 2?
-    [hex (recognized-if (#{0x6a 0x7a 0x6e 0x7e} value))]
+    [hex (recognized-if (#{0x6a 0x7a 0x6e 0x7e 0xfa 0xfe} value))]
 
     (#{141 153 193 197} index)  ; The first byte of the four pitch copies
     [hex (recognized-if (< value 0x21))] ; Valid pitces range from 0x000000 to 0x200000
