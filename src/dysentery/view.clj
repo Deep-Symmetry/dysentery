@@ -71,7 +71,7 @@
   (let [current-type (get packet 10)]
     (if (= current-type expected-type)
       (case expected-type
-        0x0a (correct-length? packet #{208 212 284})
+        0x0a (correct-length? packet #{208 212 284 292})
         0x29 (correct-length? packet #{56})
         (timbre/warn "Received packet with unrecognized type:" current-type))
       (timbre/warn "Expecting packet of type" expected-type "but received type" current-type))))

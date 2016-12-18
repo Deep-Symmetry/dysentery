@@ -6,7 +6,11 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
+### Added
+
 - Initial work on obtaining metadata.
+- Support for 292-byte CDJ status updates sent by newer Pioneer
+  firmware.
 
 ## [0.1.5] - 2016-07-04
 
