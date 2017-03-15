@@ -5,8 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/math.numeric-tower "0.0.4"]
-                 [com.taoensso/timbre "4.7.4"]
-                 [selmer "1.10.1"]]
+                 [com.taoensso/timbre "4.8.0"]
+                 [selmer "1.10.6"]]
   :main dysentery.core
   :uberjar-name "dysentery.jar"
 
