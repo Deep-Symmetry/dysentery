@@ -487,6 +487,9 @@
       (#{33 95} index)  ; We expect these to match the device number
       [hex (if (= current device-number) Color/green Color/red)]
 
+      (<= 0x24 index 0x3b)  ; Next beat / bar timings
+      [hex (Color/green)]
+
       (= index 85)  ; The first byte of the pitch
       [hex (recognized-if (< current 0x21))] ; Valid pitces range from 0x000000 to 0x200000
 
@@ -618,6 +621,15 @@
                 0x0a (update-cdj-50002-details-label packet details-label)
                 0x29 (update-mixer-50002-details-label packet details-label)))))))))
 
+(defn- format-upcoming-beat-time
+  "Interprets 4 bytes at the specified packet offset as an integer,
+  but returns an indication when no beat is forthcoming."
+  [packet offset]
+  (let [result (build-int packet offset 4)]
+    (if (= result 0xffffffff)
+      "---"
+      result)))
+
 (defn- update-player-50001-details-label
   "Updates the label that gives a detailed explanation of how we
   interpret the status of a player given a packet sent to port 50001
@@ -629,6 +641,12 @@
               :effective-bpm (format "%.1f" (+ track-bpm (* track-bpm 1/100 pitch)))
               :pitch (format "%+.2f%%" pitch)
               :bar-beat (get packet 92)
+              :next-beat (format-upcoming-beat-time packet 0x24)
+              :2nd-beat (format-upcoming-beat-time packet 0x28)
+              :next-bar (format-upcoming-beat-time packet 0x2c)
+              :4th-beat (format-upcoming-beat-time packet 0x30)
+              :2nd-bar (format-upcoming-beat-time packet 0x34)
+              :8th-beat (format-upcoming-beat-time packet 0x38)
               :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 92) ".png"))}]
     (.setText label (parser/render-file "templates/player-50001.tmpl" args)))
   label)
@@ -655,7 +673,7 @@
         timestamp-label (create-timestamp-label panel)
         details-label (create-player-50001-details-label packet panel)]
     (.setLayout panel nil)
-    (.setSize frame 440 240)
+    (.setSize frame 440 300)
     (.setContentPane frame panel)
     (.setBackground panel Color/black)
     (.setDefaultCloseOperation frame JFrame/DISPOSE_ON_CLOSE)

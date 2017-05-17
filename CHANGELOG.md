@@ -11,6 +11,9 @@ This change log follows the conventions of
 - Initial work on obtaining metadata.
 - Support for 292-byte CDJ status updates sent by newer Pioneer
   firmware.
+- New beat packet interpretations, the first of many things to come
+  thanks to [code shared](https://bitbucket.org/awwright/libpdjl/src]
+  by Austin Wright, [@awwright](https://github.com/awwright)!
 
 ## [0.1.5] - 2016-07-04
 
