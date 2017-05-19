@@ -15,16 +15,30 @@
     (.flush os)))
 
 (defn recv-bytes
-  "Receive a buffer of bytes from an input stream, returning a vector
-  of the number read and the buffer."
-  [is]
-  (let [ibuf (byte-array 4096)
-        len (.read is ibuf)]
-    (print "recv[" len "]: ")
-    (doseq [i (range len)]
-      (print (format "%02x " (util/unsign (aget ibuf i)))))
-    (println)
-    [len ibuf]))
+  "Receive the specified number of bytes from an input stream,
+  returning a vector of bytes read when successful, or nil if the
+  socket was closed or the read timed out."
+  [is size]
+  (let [ibuf (byte-array size)]
+    (try
+      (loop [offset 0
+             len    (.read is ibuf offset (- size offset))]
+        (let [offset (+ offset len)]
+          (cond (neg? len)
+                (timbre/warn "Socket closed trying to read" size "bytes from dbserver port.")
+
+                (= offset size)
+                (let [result (vec ibuf)]
+                  (print "recv[" size "]: ")
+                  (doseq [b result]
+                    (print (format "%02x " (util/unsign b))))
+                  (println)
+                  result)
+
+                :else
+                (recur offset (.read is ibuf offset (- size offset))))))
+      (catch java.net.SocketTimeoutException e
+        (timbre/warn "Timed out trying to read" size "bytes from dbserver port.")))))
 
 (defn number->bytes
   "Splits a number with the specified byte size into its individual
@@ -40,15 +54,13 @@
              (dec remaining)))))
 
 (defn bytes->number
-  "Given a byte array buffer, the index of the first byte of a number
-  value, the number of bytes that make it up, calculates the integer
-  that the bytes represent."
-  [buffer index size]
-  (loop [i (inc index)
-         left (dec size)
-         result (util/unsign (aget buffer index))]
-    (if (pos? left)
-      (recur (inc i) (dec left) (+ (* result 256) (util/unsign (aget buffer i))))
+  "Given a byte vector, calculates the integer that the bytes
+  represent."
+  [bytes]
+  (loop [left (rest bytes)
+         result (util/unsign (first bytes))]
+    (if (seq left)
+      (recur (rest left) (+ (* result 256) (util/unsign (first left))))
       result)))
 
 (defn number-field
@@ -60,7 +72,7 @@
     :arg-list-tag 0x06
     :bytes        (into [0x11] (number->bytes n 4))})
   ([byte-1 byte-2 byte-3 byte-4]
-   (number-field (bytes->number (byte-array [byte-1 byte-2 byte-3 byte-4]) 0 4))))
+   (number-field (bytes->number [byte-1 byte-2 byte-3 byte-4]))))
 
 (defn message-type-field
   "Creates a 4-byte field which, as the third field in a message,
@@ -81,6 +93,15 @@
    :data (vec data)
    :bytes (into [0x14] (concat (number->bytes (count data) 4) data))})
 
+(defn string-field
+  "Creates a variable sized field containing a string, prefixed
+  by a 4-byte size."
+  [text]
+  (let [bytes (.getBytes text "UTF-16BE")]
+    {:type   :string
+     :string text
+     :bytes  (into [0x26] (concat (number->bytes (count bytes) 4) bytes))}))
+
 ;; TODO: Add string-field and a read-field implementation for it
 
 ;; TODO: These have to take the player object as well, so they can
@@ -88,43 +109,50 @@
 ;; reading of the next field should begin.
 
 (defmulti read-field
-  "Read a tagged field value from the incoming network buffer. If
-  there is a parsing problem, an explanatory error is logged, and
-  `nil` is returned."
-  (fn [buffer index]
-    (when (< index (count buffer))
-      (aget buffer index))))
+  "Read a tagged field value from the input stream. If there is a
+  communication or parsing problem, an explanatory error is logged,
+  and `nil` is returned. The multimethod dispatches on the first byte
+  read, which is the tag that identifies the type of the field."
+  (fn [is]
+    (when-let [tag (recv-bytes is 1)]
+      (util/unsign (first tag)))))
 
 (defmethod read-field nil  ; No data available
-  [buffer index]
-  (timbre/error "Cannot read field at end of buffer."))
+  [is]
+  (timbre/error "Attempt to read field failed."))
 
 (defmethod read-field 0x11  ; A number field
-  [buffer index]
-  (if (< (count buffer) (+ index 5))
-    (timbre/error "Buffer does not have enough remaining data to contain a number field.")
-    (number-field (bytes->number buffer (inc index) 4))))
+  [is]
+  (if-let [bytes (recv-bytes is 4)]
+    (number-field (bytes->number bytes))
+    (timbre/error "Attempt to read number field failed.")))
 
 (defmethod read-field 0x10  ; A message type field
-  [buffer index]
-  (cond
-     (< (count buffer) (+ index 5))
-     (timbre/error "Buffer does not have enough remaining data to contain a message type field.")
-
-     (not= (aget buffer (+ index 3)) 0x0f)
-     (timbre/error "Message type field does not have value 15 following message type, found" (aget buffer (+ index 2)))
-
-     :else
-     (message-type-field (bytes->number buffer (inc index) 2) (aget buffer (+ index 4)))))
+  [is]
+  (if-let [bytes (recv-bytes is 4)]
+    (if (not= (get bytes 2) 0x0f)
+      (timbre/error "Message type field does not have value 15 following message type, found" (get bytes 2))
+      (message-type-field (bytes->number (take 2 bytes)) (util/unsign (get bytes 3))))
+    (timbre/error "Attempt to read message type field failed.")))
 
 (defmethod read-field 0x14  ; A blob field
-  [buffer index]
-  (if (< (count buffer) (+ index 5))
-    (timbre/error "Buffer does not have enough remaining data to contain a blob field.")
-    (let [size (bytes->number buffer (inc index) 4)]
-      (if (< (count buffer) (+ index 5 size))
-        (timbre/error "Buffer does not have enough remaining data for blob of size" size)
-        (blob-field (take size (drop 5 buffer)))))))
+  [is]
+  (if-let [bytes (recv-bytes is 4)]
+    (let [size (bytes->number bytes)]
+      (if-let [body (recv-bytes is size)]
+        (blob-field body)
+        (timbre/error "Failed to read" size "bytes of blob field.")))
+    (timbre/error "Attempt to read size of blob field failed.")))
+
+(defmethod read-field 0x26  ; A string field
+  [is]
+  (if-let [bytes (recv-bytes is 4)]
+    (let [size (bytes->number bytes)]
+      (if-let [body (recv-bytes is size)]
+        (string-field (String. (byte-array body) "UTF-16BE"))
+        (timbre/error "Failed to read" size "bytes of string field.")))
+    (timbre/error "Attempt to read size of string field failed.")))
+
 
 (defmethod read-field :default  ; An unrecognized field
   [buffer index]
@@ -153,6 +181,16 @@
   (.close output-stream)
   (.close socket))
 
+(def connect-timeout
+  "The number of milliseconds after which we should give up attempting
+  to connect to the dbserver socket."
+  5000)
+
+(def read-timeout
+  "The numbe of milliseconds after which we should give up waiting for
+  a response while communicating with a connected dbserver."
+  2000)
+
 (defn connect-to-player
   "Opens a database server connection to the specified player number,
   posing as the specified player number, which must be unused on the
@@ -168,13 +206,15 @@
   Returns `nil` if the target player could not be found."
   [target-player-number pose-as-player-number]
   (when-let [device (finder/device-given-number target-player-number)]
-    (let [sock     (java.net.Socket. (:address device) 1051)
+    (let [sock     (java.net.Socket.)
+          _        (.connect sock (java.net.InetSocketAddress  (:address device) 1051) connect-timeout)
           is       (.getInputStream sock)
           os       (.getOutputStream sock)
           player   {:socket        sock
                     :input-stream  is
                     :output-stream os}
           greeting (number-field 1)]  ; The greeting packet is a number field representing the number 1.
+      (.setReadTimeout sock read-timeout)
       (send-bytes os (:bytes greeting))
       (let [[_ response] (recv-bytes is)]
         (if (not= (read-field (byte-array response) 0) greeting)
