@@ -437,7 +437,8 @@
             (let [metadata (read-menu-responses player menu-field item-count)]
               ;; TODO build and return more compact structure.
               )
-            (timbre/error "No metadata available for player" (:number player) "slot" slot "track" track)))))))
+            (timbre/error "No metadata available from player" (:target player) "slot" slot "track" track
+                          "(are you using a valid, unused player number?)")))))))
 
 (defn disconnect
   "Closes a connection to a player. You can not use it after this
