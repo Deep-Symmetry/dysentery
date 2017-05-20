@@ -79,11 +79,11 @@
   identifies the type of the message, as well as the number of
   argument fields that it includes. The type is stored in the first
   two bytes of this field, followed by 0x0f, and the argument count."
-  [message-type arg-count]
-  {:type         :message-type
-   :message-type message-type
-   :arg-count    arg-count
-   :bytes        (into [0x10] (concat (number->bytes message-type 2) [0x0f (bit-and arg-count 0xff)]))})
+  [message-type argument-count]
+  {:type           :message-type
+   :message-type   message-type
+   :argument-count argument-count
+   :bytes          (into [0x10] (concat (number->bytes message-type 2) [0x0f (bit-and argument-count 0xff)]))})
 
 (defn blob-field
   "Creates a variable sized field containing bytes of data, prefixed
@@ -91,6 +91,7 @@
   [data]
   {:type :blob
    :data (vec data)
+   :arg-list-tag 0x03
    :bytes (into [0x14] (concat (number->bytes (count data) 4) data))})
 
 (defn string-field
@@ -100,6 +101,7 @@
   (let [bytes (.getBytes text "UTF-16BE")]
     {:type   :string
      :string text
+     :arg-list-tag 0x02
      :bytes  (into [0x26] (concat (number->bytes (count bytes) 4) bytes))}))
 
 ;; TODO: Add string-field and a read-field implementation for it
@@ -165,13 +167,94 @@
 
 (defn build-message
   "Puts together the fields that make up a message, with the specified
-  transaction number, message type, and argument fields."
+  transaction number, message type, and argument fields, as a map with
+  the same structure returned by `read-message`."
   [transaction-number message-type & args]
-  (let [fields (concat [message-start-marker (number-field transaction-number)
-                        (message-type-field message-type (count args))
-                        (blob-field (take 12 (concat (map :arg-list-tag args) (repeat 0))))]
-                       args)]
-    (vec (apply concat (map :bytes fields)))))
+  {:start          message-start-marker
+   :transaction    (number-field transaction-number)
+   :message-type   (message-type-field message-type (count args))
+   :argument-types (blob-field (take 12 (concat (map :arg-list-tag args) (repeat 0))))
+   :arguments      args})
+
+(defn build-setup-message
+  "Creates a message that can be used to set up communication with a
+  player, given the player number we are pretending to be. This is a
+  message with transaction ID `0xfffffffe` and a message type of 0,
+  whose sole argument is a number field containing our player number."
+  [player-number]
+  (build-message 0xfffffffe 0 (number-field player-number)))
+
+(defn send-message
+  "Sends the bytes that make up a message to the specified player."
+  [player message]
+  (let [fields (concat (reduce #(conj %1 (message %2)) [] [:start :transaction :message-type :argument-types])
+                       (:arguments message))]
+    (send-bytes (:output-stream player) (vec (apply concat (map :bytes fields))))))
+
+(defn- read-arguments
+  "Reads the argument fields which end a message, validating that
+  their types match what was decleared in the argument-types field,
+  returning the completed message map on success, or `nil` on
+  failure."
+  [is message]
+  (let [expected (get-in message [:message-type :argument-count])]
+    (if (> expected 12)
+      (timbre/error "Can't read a message with more than twelve arguments.")
+      (if (= (count (:arguments message)) expected)
+        message
+        (if-let [arg (read-field is)]
+          (let [next-tag (util/unsign (get-in message [:argument-types :data (count (:arguments message))]))]
+            (if (= (:arg-list-tag arg) next-tag)
+              (recur is (update message :arguments conj arg))
+              (timbre/error "Found argument of wrong type when trying to read a message. Expected tag:"
+                            next-tag "and found:" (:arg-list-tag arg))))
+          (timbre/error "Unable to read an argument field when trying to read a message."))))))
+
+(defn- read-argument-types
+  "Reads the fourth field of a message, which should be a blob listing
+  the argument types, and continues building the message map if
+  successful, or returns `nil` on failure."
+  [is message]
+  (if-let [argument-types (read-field is)]
+    (if (= :blob (:type argument-types))
+      (read-arguments is (assoc message :argument-types argument-types))
+      (timbre/error "Did not find argument-type blob field when trying to read a message."))
+    (timbre/error "Unable to read argument-type blob field when trying to read a message.")))
+
+(defn- read-message-type
+  "Reads the third field of a message, which should be a special
+  message-type field, and continues building the message map if
+  successful, or returns `nil` on failure."
+  [is message]
+  (if-let [message-type (read-field is)]
+    (if (= :message-type (:type message-type))
+      (read-argument-types is (assoc message :message-type message-type))
+      (timbre/error "Did not find message-type field when trying to read a message."))
+    (timbre/error "Unable to read message-type field when trying to read a message.")))
+
+(defn- read-transaction-id
+  "Reads the second field of a message, which should be a number, and
+  continues building the message map if successful, or returns `nil`
+  on failure."
+  [is message]
+  (if-let [tx-id (read-field is)]
+    (if (= :number (:type tx-id))
+      (read-message-type is (assoc message :transaction tx-id))
+      (timbre/error "Did not find numeric transaction ID field when trying to read a message."))
+    (timbre/error "Unable to read transaction ID field when trying to read a message.")))
+
+(defn read-message
+  "Attempts to read a message from the specified player. Returns
+  a map breaking down the fields that make up the message, or `nil` if
+  a problem was encountered."
+  [player]
+  (let [is (:input-stream player)]
+    (if-let [start (read-field is)]
+      (if (= start message-start-marker)
+        (read-transaction-id is {:start start
+                                 :arguments []})
+        (timbre/error "Did not find message start marker when trying to read a message."))
+      (timbre/error "Unable to read first field of message."))))
 
 (defn disconnect
   "Closes a connection to a player. You can not use it after this
@@ -207,22 +290,20 @@
   [target-player-number pose-as-player-number]
   (when-let [device (finder/device-given-number target-player-number)]
     (let [sock     (java.net.Socket.)
-          _        (.connect sock (java.net.InetSocketAddress  (:address device) 1051) connect-timeout)
+          _        (.connect sock (java.net.InetSocketAddress. (:address device) 1051) connect-timeout)
           is       (.getInputStream sock)
           os       (.getOutputStream sock)
           player   {:socket        sock
                     :input-stream  is
                     :output-stream os}
           greeting (number-field 1)]  ; The greeting packet is a number field representing the number 1.
-      (.setReadTimeout sock read-timeout)
+      (.setSoTimeout sock read-timeout)
       (send-bytes os (:bytes greeting))
-      (let [[_ response] (recv-bytes is)]
-        (if (not= (read-field (byte-array response) 0) greeting)
-          (do (disconnect player)
-              (timbre/error "Did not receive expected greeting response from player, closed."))
-          (do
-            ;; Send the setup message for our player number
-            (send-bytes os (build-message 0xfffffffe 0 (number-field pose-as-player-number)))
-            (recv-bytes is)
-            player))))))
+      (if (not= (read-field is) greeting)
+        (do (disconnect player)
+            (timbre/error "Did not receive expected greeting response from player, closed."))
+        (do
+          (send-message player (build-setup-message pose-as-player-number))
+          (clojure.pprint/pprint (read-message player))
+          player)))))
 
