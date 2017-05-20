@@ -4,7 +4,8 @@
   (:require [dysentery.finder :as finder]
             [dysentery.util :as util]
             [dysentery.vcdj :as vcdj]
-            [dysentery.view :as view])
+            [dysentery.view :as view]
+            [dysentery.dbserver :as db])
   (:gen-class))
 
 (defn -main

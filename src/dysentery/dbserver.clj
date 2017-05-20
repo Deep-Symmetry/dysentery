@@ -9,7 +9,7 @@
 (defn send-bytes
   "Send a vector of byte values to an output stream."
   [os v]
-  (println "Sending " (vec (map #(format "%02x" (util/unsign %)) v)))
+  #_(println "Sending " (vec (map #(format "%02x" (util/unsign %)) v)))
   (let [obuf (byte-array (map util/make-byte v))]
     (.write os obuf 0 (count obuf))
     (.flush os)))
@@ -29,10 +29,10 @@
 
                 (= offset size)
                 (let [result (vec ibuf)]
-                  (print "recv[" size "]: ")
-                  (doseq [b result]
+                  #_(print "recv[" size "]: ")
+                  #_(doseq [b result]
                     (print (format "%02x " (util/unsign b))))
-                  (println)
+                  #_(println)
                   result)
 
                 :else
@@ -150,15 +150,15 @@
   [is]
   (if-let [bytes (recv-bytes is 4)]
     (let [size (bytes->number bytes)]
-      (if-let [body (recv-bytes is size)]
-        (string-field (String. (byte-array body) "UTF-16BE"))
-        (timbre/error "Failed to read" size "bytes of string field.")))
+      (if-let [body (recv-bytes is (* 2 size))]
+        (string-field (String. (byte-array body) 0 (* 2 (dec size)) "UTF-16BE"))
+        (timbre/error "Failed to read" (* 2 size) "bytes of string field.")))
     (timbre/error "Attempt to read size of string field failed.")))
 
 
 (defmethod read-field :default  ; An unrecognized field
-  [buffer index]
-  (timbre/error "Do not know what kind of field corresponds to type tag" (aget buffer index)))
+  [is]
+  (timbre/error "Unknown tag for field."))
 
 (def message-start-marker
   "The number field which is always used to identify the start of a new
@@ -256,6 +256,184 @@
         (timbre/error "Did not find message start marker when trying to read a message."))
       (timbre/error "Unable to read first field of message."))))
 
+(def item-type-labels
+  "The map from a menu item type value to the corresponding label."
+  {0x01 "Folder"
+   0x02 "Album Title"
+   0x03 "Disc"
+   0x04 "Track Title"
+   0x06 "Genre"
+   0x07 "Artist"
+   0x0a "Rating"
+   0x0b "Duration (s)"
+   0x0d "Tempo"
+   0x0f "Key"
+   0x13 "Color"
+   0x23 "Comment"
+   0x2e "Date Added"})
+
+(defn describe-item-type
+  "Given a number field, holding a menu item type renders a
+  description of what it means."
+  [type-field]
+  (str "item type: " (get item-type-labels (:number type-field) "unknown")))
+
+(def known-messages
+  "The purpose and argument descriptions for message types that we
+  know something about."
+  {0x0001 {:type "invalid data"}
+   0x1000 {:type      "load root menu"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "sort order"
+                       "magic constant?"]}
+   0x2002 {:type      "request track metadata"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "rekordbox ID"]}
+   0x2003 {:type      "request album art"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "rekordbox ID"]}
+   0x2004 {:type      "request track waveform summary"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "rekordbox ID"]}
+   0x2104 {:type      "request track cue points"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "rekordbox ID"]}
+   0x2202 {:type      "request CD track data"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "track number"]}
+   0x2204 {:type      "request beat grid information"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "rekordbox ID"]}
+   0x2904 {:type      "request track waveform detail"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "rekordbox ID"]}
+   0x3000 {:type      "render menu"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "offset"
+                       "limit"
+                       "unknown (0)?"
+                       "len_a (= limit)?"
+                       "unknown (0)?"]}
+   0x3e03 {:type "request USB information"} ; TODO: See if this can be used to work around all-players-in-use!!!
+   0x4000 {:type      "requested data available"
+           :arguments ["request type"
+                       "number of items available"]}
+   0x4001 {:type "rendered menu header"}
+   0x4002 {:type      "album art"
+           :arguments ["request type"
+                       "constant 0?"
+                       "image length"
+                       "image bytes"]}
+   0x4101 {:type      "rendered menu item"
+           :arguments ["numeric 1"
+                       "numeric 2"
+                       "label 1 byte size"
+                       "label 1"
+                       "label 2 byte size 2"
+                       "label 2"
+                       describe-item-type
+                       "column configuration?"
+                       "album art id"]}
+   0x4201 {:type "rendered menu footer"}
+   0x4402 {:type      "waveform summary"
+           :arguments ["request type"
+                       "constant 0?"
+                       "image length"
+                       "image bytes"]}
+   0x4602 {:type      "beat grid"
+           :arguments ["request type"
+                       "constant 0?"
+                       "image length"
+                       "image bytes"
+                       "constant 0?"]}
+   0x4702 {:type      "cue points"
+           :arguments ["request type"
+                       "unknown"
+                       "blob 1 length"
+                       "blob 1"
+                       "constant 0x24?"
+                       "unknown"
+                       "unknown"
+                       "blob 2 length"
+                       "blob 2"]}
+   0x4a02 {:type      "waveform detail"
+           :arguments ["request type"
+                       "constant 0?"
+                       "image length"
+                       "image bytes"]}})
+
+(defn get-message-type
+  "Extracts the message type tag from a message structure."
+  [message]
+  (get-in message [:message-type :message-type]))
+
+(defn describe-message
+  "Summarizes the salient information about a message."
+  [message]
+  (when message
+    (let [message-type (get-message-type message)
+          description (get known-messages message-type)]
+      (println (str "Transaction: " (get-in message [:transaction :number])
+                    ", message type: " (format "0x%04x (%s)" message-type (:type description "unknown"))
+                    ", argument count: " (get-in message [:message-type :argument-count])
+                    ", arguments:"))
+      (doall
+       (map-indexed
+        (fn [i arg]
+          (print (case (:type arg)
+                   :number (format "  number: %10d (0x%08x)" (:number arg) (:number arg))
+                   :blob   (str "  blob: " (clojure.string/join " " (map #(format "%02x" %) arg)))
+                   :string (str "  string: \"" (:string arg) "\"")
+                   (str "unknown: " arg)))
+          (let [description (get-in description [:arguments i] "unknown")
+                resolved (if (ifn? description) (description arg) description)]
+            (println (str " [" resolved "]"))))
+        (:arguments message)))))
+  nil)
+
+(defn read-menu-responses
+  "After a menu setup query (which is also used for things like track
+  metadata) has returned a successful response including the number of
+  items available, this requests all of the items, gathering the
+  corresponding messages."
+  [player menu-field item-count]
+  (let [id (swap! (:counter player) inc)
+        zero-field (number-field 0)
+        count-field (number-field item-count)
+        request (build-message id 0x3000 menu-field zero-field count-field zero-field count-field zero-field)]
+    (print "Sending > ")
+    (describe-message request)
+    (send-message player request)
+    (loop [i 1
+           result []]
+      (if-let [response (read-message player)]
+        (do (print "Received" i " > ")
+            (describe-message response)
+            (let [message-type (get-message-type response)]
+              (if (= message-type 0x4201)  ; Footer means we are done
+                result
+                (recur (inc i) (if (= message-type 0x4101) (conj result response) result)))))
+        (do (timbre/error "Unable to read menu footer, returning partial result")
+            result)))))
+
+(defn request-metadata
+  "Sends the sequence of messages that request the metadata for a
+  track in a media slot on the player."
+  [player slot track]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field (:number player) 1 slot 1)
+        setup (build-message id 0x2002 menu-field (number-field track))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (when (= 0x4000 (get-message-type response))
+        (let [metadata (read-menu-responses player menu-field (get-in response [:arguments 1 :number]))]
+          ;; TODO build and return more compact structure.
+          )))))
+
 (defn disconnect
   "Closes a connection to a player. You can not use it after this
   point."
@@ -295,7 +473,9 @@
           os       (.getOutputStream sock)
           player   {:socket        sock
                     :input-stream  is
-                    :output-stream os}
+                    :output-stream os
+                    :number        pose-as-player-number
+                    :counter       (atom 0)}
           greeting (number-field 1)]  ; The greeting packet is a number field representing the number 1.
       (.setSoTimeout sock read-timeout)
       (send-bytes os (:bytes greeting))
@@ -304,6 +484,6 @@
             (timbre/error "Did not receive expected greeting response from player, closed."))
         (do
           (send-message player (build-setup-message pose-as-player-number))
-          (clojure.pprint/pprint (read-message player))
+          (describe-message (read-message player))
           player)))))
 

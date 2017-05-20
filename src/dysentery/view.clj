@@ -769,9 +769,9 @@
   monitor packets broadcast to port 50001, and register packet
   listeners that will create or update windows to display those
   packets."
-  [devices]
+  [devices device-name player-number]
   (let [[interface address] (finder/find-interface-and-address-for-device (first devices))]
-    (vcdj/start interface address)
+    (vcdj/start interface address :device-name device-name :player-number player-number)
     (vcdj/add-packet-listener (partial handle-device-packet 50002)))
   (try
     (swap! watcher-state
@@ -825,8 +825,13 @@
 
 (defn watch-devices
   "Create windows that show packets coming from all DJ-Link devices on
-  the network, to help analyze them."
-  []
+  the network, to help analyze them. The player number and device name
+  of the virtual CDJ used to obtain status packets can be set using
+  optional keyword arguments `:player-number` and `:device-name`. If
+  you want to experiment with metadata requests, you must override the
+  player number to fall between 1 and 4 (and not have any actual
+  player with that number on the network)."
+  [& {:keys [device-name player-number] :or {device-name "Virtual CDJ" player-number 5}}]
   (when-let [devices (seq (find-devices))]
     (describe-devices devices)
     (swap! animator (fn [current]
@@ -843,4 +848,4 @@
                                                                                                    fade-time)))))))))
                                     (Thread/sleep 50)
                                     (recur (System/currentTimeMillis)))))))
-    (start-watching-devices devices)))
+    (start-watching-devices devices device-name player-number)))
