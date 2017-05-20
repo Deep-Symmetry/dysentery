@@ -329,7 +329,7 @@
                        "numeric 2"
                        "label 1 byte size"
                        "label 1"
-                       "label 2 byte size 2"
+                       "label 2 byte size"
                        "label 2"
                        describe-item-type
                        "column configuration?"
