@@ -324,6 +324,8 @@
                        "constant 0?"
                        "image length"
                        "image bytes"]}
+   0x4003 {:type      "requested media not available"
+           :arguments ["request type"]}
    0x4101 {:type      "rendered menu item"
            :arguments ["numeric 1"
                        "numeric 2"
