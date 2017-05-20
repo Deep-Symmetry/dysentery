@@ -481,6 +481,7 @@
                     :input-stream  is
                     :output-stream os
                     :number        pose-as-player-number
+                    :target        target-player-number
                     :counter       (atom 0)}
           greeting (number-field 1)]  ; The greeting packet is a number field representing the number 1.
       (.setSoTimeout sock read-timeout)
