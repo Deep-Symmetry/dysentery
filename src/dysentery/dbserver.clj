@@ -258,19 +258,20 @@
 
 (def item-type-labels
   "The map from a menu item type value to the corresponding label."
-  {0x01 "Folder"
-   0x02 "Album Title"
-   0x03 "Disc"
-   0x04 "Track Title"
-   0x06 "Genre"
-   0x07 "Artist"
-   0x0a "Rating"
-   0x0b "Duration (s)"
-   0x0d "Tempo"
-   0x0f "Key"
-   0x13 "Color"
-   0x23 "Comment"
-   0x2e "Date Added"})
+  {0x01  "Folder"
+   0x02  "Album Title"
+   0x03  "Disc"
+   0x04  "Track Title"
+   0x06  "Genre"
+   0x07  "Artist"
+   0x0a  "Rating"
+   0x0b  "Duration (s)"
+   0x0d  "Tempo"
+   0x0f  "Key"
+   0x13  "Color"
+   0x23  "Comment"
+   0x2e  "Date Added"
+   0x704 "Track List entry"})
 
 (defn describe-item-type
   "Given a number field, holding a menu item type renders a
@@ -286,6 +287,12 @@
            :arguments ["requesting player, menu (1), media, analyzed (1)"
                        "sort order"
                        "magic constant?"]}
+   0x1002 {:type "request artist list"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "sort order?"]}
+   0x1004 {:type "request track list"
+           :arguments ["requesting player, menu (1), media, analyzed (1)"
+                       "sort order?"]}
    0x2002 {:type      "request track metadata"
            :arguments ["requesting player, menu (1), media, analyzed (1)"
                        "rekordbox ID"]}
@@ -393,30 +400,45 @@
         (:arguments message)))))
   nil)
 
+(def max-menu-request-count
+  "The largest number of menu items we will request at a single time.
+  I don't know how large a value is safe, and it may vary across
+  different models."
+  20)
+
 (defn read-menu-responses
   "After a menu setup query (which is also used for things like track
   metadata) has returned a successful response including the number of
   items available, this requests all of the items, gathering the
-  corresponding messages."
-  [player menu-field item-count]
-  (let [id (swap! (:counter player) inc)
-        zero-field (number-field 0)
-        count-field (number-field item-count)
-        request (build-message id 0x3000 menu-field zero-field count-field zero-field count-field zero-field)]
-    (print "Sending > ")
-    (describe-message request)
-    (send-message player request)
-    (loop [i 1
-           result []]
-      (if-let [response (read-message player)]
-        (do (print "Received" i " > ")
-            (describe-message response)
-            (let [message-type (get-message-type response)]
-              (if (= message-type 0x4201)  ; Footer means we are done
-                result
-                (recur (inc i) (if (= message-type 0x4101) (conj result response) result)))))
-        (do (timbre/error "Unable to read menu footer, returning partial result")
-            result)))))
+  corresponding messages. The version with extra arguments is called
+  internally to gather menus larger than can be requested in one
+  transaction."
+  ([player menu-field item-count]
+   (read-menu-responses player menu-field item-count 0 []))
+  ([player menu-field item-count offset received]
+   (let [id (swap! (:counter player) inc)
+         count (min (- item-count offset) max-menu-request-count)
+         zero-field (number-field 0)
+         offset-field (number-field offset)
+         count-field (number-field count)
+         request (build-message id 0x3000 menu-field offset-field count-field zero-field count-field zero-field)]
+     (print "Sending > ")
+     (describe-message request)
+     (send-message player request)
+     (let [result (loop [i 1
+                         batch received]
+                    (if-let [response (read-message player)]
+                      (do (print "Received" i " > ")
+                          (describe-message response)
+                          (let [message-type (get-message-type response)]
+                            (if (= message-type 0x4201)  ; Footer means we are done
+                              batch
+                              (recur (inc i) (if (= message-type 0x4101) (conj batch response) batch)))))
+                      (do (timbre/error "Unable to read menu footer, returning partial result")
+                          batch)))]
+       (if (>= (+ offset count) item-count)
+         result  ; We have now read all the items, can return the full result
+         (recur player menu-field item-count (+ offset count) result))))))
 
 (defn request-metadata
   "Sends the sequence of messages that request the metadata for a
@@ -433,12 +455,70 @@
       (describe-message response)
       (when (= 0x4000 (get-message-type response))
         (let [item-count (get-in response [:arguments 1 :number])]
-          (if (pos? item-count)
+          (cond
+            (= item-count 0xffffffff)
+            (timbre/error "No track with id" track "in slot" slot "on player" (:target player))
+
+            (pos? item-count)
             (let [metadata (read-menu-responses player menu-field item-count)]
               ;; TODO build and return more compact structure.
               )
+
+            :else
             (timbre/error "No metadata available from player" (:target player) "slot" slot "track" track
                           "(are you using a valid, unused player number?)")))))))
+
+(defn request-track-list
+  "Sends the sequence of messages that request the track list for a
+  media slot on the player."
+  [player slot]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field (:number player) 1 slot 1)
+        setup (build-message id 0x1004 menu-field (number-field 0))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (when (= 0x4000 (get-message-type response))
+        (let [item-count (get-in response [:arguments 1 :number])]
+          (cond
+            (= item-count 0xffffffff)
+            (timbre/error "No track listing available for slot" slot "on player" (:target player))
+
+            (pos? item-count)
+            (let [tracks (read-menu-responses player menu-field item-count)]
+              ;; TODO build and return more compact structure?
+              tracks
+              )
+
+            :else
+            (timbre/error "No track listing available for slot" slot "on player"  (:target player))))))))
+
+(defn experiment
+  "Sends a sequence of messages like those requesting metadata, but
+  using a different message kind, and with a variable list of argument
+  fields. For example, to retrieve the root menu, invoke as:
+  (experiment player slot 0x1000 (number-field 0)
+              (number-field 0x00ff))"
+  [player slot kind & args]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field (:number player) 1 slot 1)
+        setup (apply build-message (concat [id kind menu-field] args))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (when (= 0x4000 (get-message-type response))
+        (let [item-count (get-in response [:arguments 1 :number])]
+          (if (pos? item-count)
+            (let [results (read-menu-responses player menu-field item-count)]
+              ;; TODO build and return more compact structure.
+              )
+            (timbre/error "No results available for this experiment.")))))))
 
 (defn disconnect
   "Closes a connection to a player. You can not use it after this
@@ -491,6 +571,9 @@
             (timbre/error "Did not receive expected greeting response from player, closed."))
         (do
           (send-message player (build-setup-message pose-as-player-number))
-          (describe-message (read-message player))
+          (let [response (read-message player)]
+            (describe-message response)
+            (when (not= target-player-number (get-in response [:arguments 1 :number]))
+              (timbre/warn "Expected to receive target player number in response argument 1")))
           player)))))
 
