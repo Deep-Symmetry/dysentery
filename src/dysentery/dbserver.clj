@@ -298,7 +298,7 @@
                        "rekordbox ID"]}
    0x2003 {:type      "request album art"
            :arguments ["requesting player, menu (1), media, analyzed (1)"
-                       "rekordbox ID"]}
+                       "art ID"]}
    0x2004 {:type      "request track waveform summary"
            :arguments ["requesting player, menu (1), media, analyzed (1)"
                        "rekordbox ID"]}
@@ -391,7 +391,7 @@
         (fn [i arg]
           (print (case (:type arg)
                    :number (format "  number: %10d (0x%08x)" (:number arg) (:number arg))
-                   :blob   (str "  blob: " (clojure.string/join " " (map #(format "%02x" %) arg)))
+                   :blob   (str "  blob: " (clojure.string/join " " (map #(format "%02x" %) (:data arg))))
                    :string (str "  string: \"" (:string arg) "\"")
                    (str "unknown: " arg)))
           (let [description (get-in description [:arguments i] "unknown")
@@ -404,7 +404,7 @@
   "The largest number of menu items we will request at a single time.
   I don't know how large a value is safe, and it may vary across
   different models."
-  20)
+  64)
 
 (defn read-menu-responses
   "After a menu setup query (which is also used for things like track
@@ -490,11 +490,35 @@
             (pos? item-count)
             (let [tracks (read-menu-responses player menu-field item-count)]
               ;; TODO build and return more compact structure?
-              tracks
-              )
+              tracks)
 
             :else
             (timbre/error "No track listing available for slot" slot "on player"  (:target player))))))))
+
+(defn request-album-art
+  "Sends the sequence of messages that request album art (using the
+  artwork id as reported in a metadata or track list response) for a
+  track in a media slot on the player."
+  [player slot artwork-id]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field (:number player) 1 slot 1)
+        setup (build-message id 0x2003 menu-field (number-field artwork-id))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (if (= 0x4002 (get-message-type response))
+        (let [img (javax.imageio.ImageIO/read
+                   (java.io.ByteArrayInputStream. (byte-array (get-in response [:arguments 3 :data]))))
+              frame (javax.swing.JFrame. (str "Album art " artwork-id))]
+          (doto frame
+            (.add (javax.swing.JLabel. (javax.swing.ImageIcon. img)))
+            (.setSize 180 120)
+            (.setVisible true))
+          response)
+        (timbre/error "No artwork with id" id "available for slot" slot "on player" (:target player))))))
 
 (defn experiment
   "Sends a sequence of messages like those requesting metadata, but
