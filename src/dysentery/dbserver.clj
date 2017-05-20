@@ -430,9 +430,12 @@
       (print "Received > ")
       (describe-message response)
       (when (= 0x4000 (get-message-type response))
-        (let [metadata (read-menu-responses player menu-field (get-in response [:arguments 1 :number]))]
-          ;; TODO build and return more compact structure.
-          )))))
+        (let [item-count (get-in response [:arguments 1 :number])]
+          (if (pos? item-count)
+            (let [metadata (read-menu-responses player menu-field item-count)]
+              ;; TODO build and return more compact structure.
+              )
+            (timbre/error "No metadata available for player" (:number player) "slot" slot "track" track)))))))
 
 (defn disconnect
   "Closes a connection to a player. You can not use it after this
