@@ -47,7 +47,7 @@ address of the local network.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 02}} \\
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 02}}
   \end{bytefield}
   \caption{Initial announcement packets from Mixer}
   \label{fig:mixerInitial}
@@ -80,7 +80,7 @@ port they are connected to?
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {$N$} {\tt 02}} &
-    \bitbox{6}{MAC address} \\
+    \bitbox{6}{MAC address}
   \end{bytefield}
   \caption{First-stage Mixer device number assignment packets}
   \label{fig:mixerStage1}
@@ -115,7 +115,7 @@ with the content shown in Figure~\ref{fig:mixerStage2}.
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 32}} &
     \bitbox{4}{IP address} & \bitbox{6}{MAC address} &
     \bitbox{1}{$D$} & \bitbox{1}{$N$} \\
-    \bitboxes*{1}{{\tt 02} {\tt 01}} \\
+    \bitboxes*{1}{{\tt 02} {\tt 01}}
   \end{bytefield}
   \caption{Second-stage Mixer device number assignment packets}
   \label{fig:mixerStage2}
@@ -147,7 +147,7 @@ content shown in Figure~\ref{fig:mixerStage3}.
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 26}} &
-    \bitbox{1}{$D$} & \bitbox{1}{$N$} \\
+    \bitbox{1}{$D$} & \bitbox{1}{$N$}
   \end{bytefield}
   \caption{Final-stage Mixer device number assignment packets}
   \label{fig:mixerStage3}
@@ -179,7 +179,7 @@ the content shown in Figure~\ref{fig:mixerKeepalive}.
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
     \bitbox{1}{$D$} & \bitbox{1}{\tt 02} &
     \bitbox{6}{MAC address} & \bitbox{4}{IP address} \\
-    \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 02} {\tt 00}} \\
+    \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 02} {\tt 00}}
   \end{bytefield}
   \caption{Mixer keep-alive packets}
   \label{fig:mixerKeepalive}
@@ -205,7 +205,7 @@ for the mixer.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 01}} \\
+    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 01}}
   \end{bytefield}
   \caption{Initial announcement packets from CDJ}
   \label{fig:cdjInitial}
@@ -229,7 +229,7 @@ for the CDJ, and was {\tt 0x02} for the mixer.
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {$N$} {\tt 01}} &
-    \bitbox{6}{MAC address} \\
+    \bitbox{6}{MAC address}
   \end{bytefield}
   \caption{First-stage CDJ device number assignment packets}
   \label{fig:cdjStage1}
@@ -267,7 +267,7 @@ packets with the content shown in Figure~\ref{fig:cdjKeepalive}.
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
     \bitbox{1}{$D$} & \bitbox{1}{\tt 01} &
     \bitbox{6}{MAC address} & \bitbox{4}{IP address} \\
-    \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 01} {\tt 00}} \\
+    \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 01} {\tt 00}}
   \end{bytefield}
   \caption{CDJ keep-alive packets}
   \label{fig:cdjKeepalive}
@@ -344,7 +344,7 @@ Figure~\ref{fig:beatPacket}.
       \bitboxes*{1}{{\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt 00}} & \bitbox{3}{$Pitch$} &
       \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{2}{$BPM$} & \bitbox{1}{$B_b$} & \bitboxes*{1}{{\tt 00} {\tt 00}} &
       \bitbox{1}{$D$}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
 
   \end{bytefield}
   \caption{Beat packets}
@@ -456,7 +456,7 @@ shown in Figure~\ref{fig:mixerStatus}.
     \begin{leftwordgroup}{\tiny 48} % 0x30
       \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09}} &
       \bitbox{1}{$X$} & \bitbox{1}{$B_b$} & \bitbox[]{8}{}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
   \end{bytefield}
   \caption{Mixer status packets}
   \label{fig:mixerStatus}
@@ -580,7 +580,7 @@ and Nexus 2 players send packets that are 284 or 292~bytes long.
 
     \begin{leftwordgroup}{\tiny 208} % 0xd0
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{12}{}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
 
   \end{bytefield}
   \caption{CDJ status packets}
@@ -681,7 +681,7 @@ byte?
   \begin{bytefield}[endianness=big,bitwidth=4em]{8}
     \bitheader{0-7} \\
     \bitbox{1}{\tt 1} & \bitbox{1}{\small{Play}} & \bitbox{1}{\small{Master}} & \bitbox{1}{\small{Sync}}
-    \bitbox{1}{\small{On-Air}} & \bitbox{1}{\tt 1} & \bitbox{1}{\tt 0} & \bitbox{1}{\tt 0} \\
+    \bitbox{1}{\small{On-Air}} & \bitbox{1}{\tt 1} & \bitbox{1}{\tt 0} & \bitbox{1}{\tt 0}
   \end{bytefield}
   \caption{CDJ state flag bits}
   \label{fig:cdjStateFlags}
@@ -873,7 +873,7 @@ Figure~\ref{fig:dbServerQueryPacket}.
     
     \begin{leftwordgroup}{\tiny 16} % 0x10
       \bitboxes*{1}{{\tt e} {\tt r} {\tt 00}} & \bitbox[]{13}{}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
     
   \end{bytefield}
   \caption{DB Server query packet}
@@ -919,7 +919,7 @@ big-endian string respectively.
 
 \subsubsection{Number Fields}
 
-Number fields are indicated by an initial byte {\tt 0x0f}, {\tt 0x10},
+Number fields are indicated by an initial byte~{\tt 0x0f}, {\tt 0x10},
 or {\tt 0x11} which is followed by big-endian integer value of length
 1, 2, or 4~bytes respectively, as shown in Figure~\ref{fig:numFields}.
 So, as noted above, the initial greeting packet sent to and received
@@ -940,7 +940,7 @@ representing the value 1.
 
     \begin{bytefield}[bitwidth=2em]{5}
       \bitheader{0-4} \\
-      \bitbox{1}{\tt 11}\bitbox{4}{$n$} \\
+      \bitbox{1}{\tt 11}\bitbox{4}{$n$}
     \end{bytefield}
   \end{center}
   \caption{Number Fields of length 1, 2, and 4}
@@ -948,17 +948,58 @@ representing the value 1.
 \end{figure}
 
 
-\subsubsection{Message Type Fields}
+\subsubsection{Binary Fields}
 
-Message Type fields are very similar to Number fields, except they
-begin with a {\tt 0x10} byte and seem only to be used as the third
-field in a message, as described in
-Section~\ref{sec:dbServerMessages}, to identify what kind of message
-it is, and how many argument fields it contains. Once again the field
-has four bytes following the type indicator, but in this case they are
-subdivided. The first two bytes are a big-endian integer identifying
-the message type. They are followed by a byte which always seems to be
-{\tt 0x0f},
+Variable-length binary (blob) fields are indicated by an initial
+byte~{\tt 0x14}, followed by a 4~byte big-endian integer which
+specifies the length of the field payload. The length is followed by
+the specified number of bytes (for example, an album art image,
+waveform or beat grid). This is illustrated in
+Figure~\ref{fig:blobField}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+
+      \bitbox{1}{\tt 14} & \bitbox{4}{$length$} & \bitbox[lrt]{11}{Binary data}
+    \end{leftwordgroup} \\
+
+    \skippedwords \\
+    \wordbox[lrb]{1}{}
+
+  \end{bytefield}
+  \caption{Binary (Blob) Field}
+  \label{fig:blobField}
+\end{figure}
+
+\subsubsection{String Fields}
+
+Variable-length string fields are indicated by an initial byte~{\tt
+  0x26}, followed by a 4~byte big-endian integer which specifies the
+length of the string, in two-byte UTF-16 big-endian characters. So the
+length is folowed by $2 \times length$ bytes containing the actual
+string characters. The last character of the string is always NUL,
+represented by {\tt 0x0000}. This is illustrated in
+Figure~\ref{fig:stringField}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+
+      \bitbox{1}{\tt 26} & \bitbox{4}{$length$} & \bitbox[lrt]{11}{UTF-16BE string}
+    \end{leftwordgroup} \\
+
+    \skippedwords \\
+    \wordbox[lrb]{1}{}
+
+  \end{bytefield}
+  \caption{String Field}
+  \label{fig:stringField}
+\end{figure}
 
 \subsection{Messages}
 \label{sec:dbServerMessages}
@@ -1016,6 +1057,12 @@ argument in that position.
         {$t_5$} {$t_6$} {$t_7$} {$t_8$} {$t_9$} {$t_{10}$} {$t_{11}$} {$t_{12}$}}
     \end{leftwordgroup} \\
 
+    \begin{leftwordgroup}{\tiny 32} % 0x20
+      \wordbox[lrt]{1}{Arguments} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{}
+    \end{leftwordgroup}
+
   \end{bytefield}
   \caption{Message Header}
   \label{fig:messageHeader}
@@ -1065,7 +1112,7 @@ At this point, the player is ready to accept queries.
     
     \begin{leftwordgroup}{\tiny 32} % 0x20
       \bitbox{1}{\tt 11} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {$D$}} & \bitbox[]{11}{}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
     
   \end{bytefield}
   \caption{Query context setup message}
@@ -1097,7 +1144,7 @@ Figure~\ref{fig:trackSetupPacket}.
     \begin{leftwordgroup}{\tiny 32} % 0x20
       \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 01} & \bitbox{1}{$S_r$} & \bitboxes*{1}{{\tt 01} {\tt 11}} &
       \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
     
   \end{bytefield}
   \caption{Track metadata query setup packet}
@@ -1148,7 +1195,7 @@ to what you sent in it.
     \begin{leftwordgroup}{\tiny 48} % 0x30
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 11} {\tt 00} {\tt 00} {\tt 00}
         {\tt 0b} {\tt 11} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{2}{}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
     
   \end{bytefield}
   \caption{Track metadata query final packet}
@@ -1199,7 +1246,7 @@ starting 19~bytes before the end of the field.
     \begin{leftwordgroup}{\tiny 16} % 0x10
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
         {\tt 00} {\tt 00}{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
     
   \end{bytefield}
   \caption{Final track metadata response field}
@@ -1227,7 +1274,7 @@ like the one shown in Figure~\ref{fig:artworkRequestPacket}.
     \begin{leftwordgroup}{\tiny 32} % 0x20
       \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 08} & \bitbox{1}{$S_r$} & \bitboxes*{1}{{\tt 01} {\tt 11}} &
       \bitbox{4}{$artwork$} & \bitbox[]{6}{}
-    \end{leftwordgroup} \\
+    \end{leftwordgroup}
     
   \end{bytefield}
   \caption{Artwork query packet}
