@@ -851,11 +851,14 @@ zero.
 
 Thanks to
 @EvanPurkhiser\footnote{\url{https://github.com/EvanPurkhiser}}, we
-are finally making progress in retrieving metadata from CDJs!
+finally started making progress in retrieving metadata from CDJs, and
+now some shared code from Austin
+Wright\footnote{\url{https://bitbucket.org/awwright/libpdjl}} is
+boosting our understanding considerably!
 
 To be polite about it, the first step is to determine the port on
 which the player is offering its remote database server. That can be
-determined by opening a TCP connection to port 12,523 on the player
+determined by opening a TCP connection to port $12,523$ on the player
 and sending it sending a packet with the content shown in
 Figure~\ref{fig:dbServerQueryPacket}.
 
@@ -898,22 +901,104 @@ The first packet sent to the database server contains the five bytes
 {\tt 11 00 00 00 01}, and results in the same five bytes being sent
 back.
 
-All further packets have a shared structure. They start with a
-six-byte pattern which serves as a message separator: {\tt 11 87 23 49
-  ae 11}. This is followed by a four-byte message sequence number,
-which is increased for each message sent (but which remains constant
-when multple responses are being sent in response to the same message,
-for example when the CDJ is sending back all the metadata fields that
-have been requested for a track, each field will be introduced by the
-message separator, followed by the sequence number of the final
-message that was used to request the metadata, followed by the field
-itself).
+All further packets have a shared structure. They consist of lists of
+type-tagged fields (a type byte, followed by at least four value
+bytes, although in the case of the variable-size types, those four
+bytes are a big-endian integer that specifies the length of the
+additional value bytes that make up the field). So far, there are four
+known field types, and it turns out that the packet we just saw is one
+of them, it represents the number 1.
 
-The next packet seems to be necessary for establishing the context for
-queries, and contains the values shown in
-Figure~\ref{fig:querySetupPacket}. Note that in this packet, the
-message sequence number is always {\tt fffffffe}; that may be part of the
-process of setting up the query context.
+\subsection{Field Types}
+
+The first byte of a field identifies what type of field is coming. The
+values {\tt 0x0f}, {\tt 0x10}, and {\tt 0x11} are followed by 1, 2,
+and 4~byte fixed-length integer fields, while {\tt 0x14} and {\tt
+  0x26} introduce variable-length fields, a binary blob and a UTF-16
+big-endian string respectively.
+
+\subsubsection{Number Fields}
+
+Number fields are indicated by an initial byte {\tt 0x0f}, {\tt 0x10},
+or {\tt 0x11} which is followed by big-endian integer value of length
+1, 2, or 4~bytes respectively, as shown in Figure~\ref{fig:numFields}.
+So, as noted above, the initial greeting packet sent to and received
+back from the database server is a number field, four bytes long,
+representing the value 1.
+
+\begin{figure}
+  \begin{center}
+    \begin{bytefield}[bitwidth=2em]{2}
+      \bitheader{0-1} \\
+      \bitbox{1}{\tt 0f}\bitbox{1}{$n$} \\
+    \end{bytefield}
+
+    \begin{bytefield}[bitwidth=2em]{3}
+      \bitheader{0-2} \\
+      \bitbox{1}{\tt 10}\bitbox{2}{$n$} \\
+    \end{bytefield}
+
+    \begin{bytefield}[bitwidth=2em]{5}
+      \bitheader{0-4} \\
+      \bitbox{1}{\tt 11}\bitbox{4}{$n$} \\
+    \end{bytefield}
+  \end{center}
+  \caption{Number Fields of length 1, 2, and 4}
+  \label{fig:numFields}
+\end{figure}
+
+
+\subsubsection{Message Type Fields}
+
+Message Type fields are very similar to Number fields, except they
+begin with a {\tt 0x10} byte and seem only to be used as the third
+field in a message, as described in
+Section~\ref{sec:dbServerMessages}, to identify what kind of message
+it is, and how many argument fields it contains. Once again the field
+has four bytes following the type indicator, but in this case they are
+subdivided. The first two bytes are a big-endian integer identifying
+the message type. They are followed by a byte which always seems to be
+{\tt 0x0f},
+
+\subsection{Messages}
+\label{sec:dbServerMessages}
+
+Messages are introduced by a 4~byte Number field containing the magic
+value {\tt 0x872349ae}. This is followed by another 4~byte number
+field that contains a transaction ID, which starts at 1 and is
+incremented for each query sent, and all messages sent in response to
+that query will contain the same transaction ID. This is followed by a
+2~byte number field containing the message type, a 1~byte number field
+containing the number of argument fields present in the message, and a
+blob field containing a series of bytes which identify the types of
+each argument field. This blob is always 12~bytes long, regardless of
+how few arguments there are (and presumably this means no message ever
+has more than 12 arguments). Tag bytes past the actual argument count
+of the message are set to 0.
+
+The argument type tags use different values than the field type tags
+themselves, for some reason, and it is not clear why this redundant
+information is necessary at all, but that is true a number of places
+in the protocol as you will see later. Here are the known tag values
+and their meanings:
+
+\begin{description}
+\item[\tt 0x02] A string in UTF-16 big-endian encoding, with trailing
+  NUL (zero) character.
+\item[\tt 0x03] A binary blob.
+\item[\tt 0x06] A 4~byte big-endian integer.
+\end{description}
+
+I am guessing that if we ever see them, a tag of 4 would represent a
+1~byte integer, and 5 would represent a 2~byte integer. But so far no
+such messages have been seen.
+
+This header is followed by the fields that make up the message
+arguments, if any. The header structure is illustrated in
+Figure~\ref{fig:messageHeader}, where $TxID$ is the transaction ID,
+$n$ is the number of arguments found in the message, and $t_1$ through
+$t_{12}$ are the type tags for each argument, or 0 if there is no
+argument in that position.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
@@ -921,39 +1006,76 @@ process of setting up the query context.
 
     \begin{leftwordgroup}{\tiny 0} % 0x00
       
-      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitboxes*{1}{{\tt ff} {\tt ff}
-        {\tt ff} {\tt fe}} & \bitboxes*{1}{{\tt 10} {\tt 00} {\tt 00} {\tt 0f} {\tt 01} {\tt 14}}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{$TxID$} &
+      \bitbox{1}{\tt 10} & \bitbox{2}{$type$} & \bitbox{1}{\tt 0f} & \bitbox{1}{$n$} &
+      \bitbox{1}{\tt 14}
     \end{leftwordgroup} \\
     
     \begin{leftwordgroup}{\tiny 16} % 0x10
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 00} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{$t_1$} {$t_2$} {$t_3$} {$t_4$}
+        {$t_5$} {$t_6$} {$t_7$} {$t_8$} {$t_9$} {$t_{10}$} {$t_{11}$} {$t_{12}$}}
     \end{leftwordgroup} \\
-    
-    \begin{leftwordgroup}{\tiny 32} % 0x20
-      \bitboxes*{1}{{\tt 11} {\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D$} & \bitbox[]{11}{}
-    \end{leftwordgroup} \\
-    
+
   \end{bytefield}
-  \caption{Query context setup packet}
-  \label{fig:querySetupPacket}
+  \caption{Message Header}
+  \label{fig:messageHeader}
 \end{figure}
 
-The value $D$ is, like in the other packets, a player device number.
-In this case it is the device that is asking for metadata information.
-It must be a valid player number between 1 and 4, and that player must
-actually be present on the network, must not be the same player that
-you are contacting to request metadata from, and must not be a player
-that has connected to that player via Link and loaded a track from it.
-So the safest device number to use is the device number you are using
-for your virtual CDJ, but since it must be between 1 and 4, you can
-only do that if there are fewer than four actual CDJs on the network.
+Before you can send your first actual query, you need to send a
+special message which seems to be necessary for establishing the
+context for queries. It has a $type$ of 0, a special $TxID$ value of
+{\tt 0xfffffffe}, and a single numeric argument, as shown in
+Figure~\ref{fig:querySetupPacket}.
+
+The value $D$ is, like in the other packets we have seen, a player
+device number. In this case it is the device that is asking for
+metadata information. It must be a valid player number between 1 and
+4, and that player must actually be present on the network, must not
+be the same player that you are contacting to request metadata from,
+and must not be a player that has connected to that player via Link
+and loaded a track from it. So the safest device number to use is the
+device number you are using for your virtual CDJ, but since it must be
+between 1 and 4, you can only do that if there are fewer than four
+actual CDJs on the network.
+
+TODO: Resume here, showing response packet, now that we understand its
+structure.
 
 The player responds with a 42 byte packet that starts with the message
 separator and the message sequence number you sent. We have not yet
 found any other meaningful information in this response.
 
-At this point, the player is ready to accept queries. To ask for
+At this point, the player is ready to accept queries.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
+    \bitheader{0-15} \\
+
+    \begin{leftwordgroup}{\tiny 0} % 0x00
+
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt fffffffe} &
+      \bitbox{1}{\tt 10} & \bitbox{2}{\tt 0000} & \bitbox{1}{\tt 0f} & \bitbox{1}{\tt 01} &
+      \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny 16} % 0x10
+      \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{\tt 06} {\tt 00} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny 32} % 0x20
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {$D$}} & \bitbox[]{11}{}
+    \end{leftwordgroup} \\
+    
+  \end{bytefield}
+  \caption{Query context setup message}
+  \label{fig:querySetupPacket}
+\end{figure}
+
+
+[ --- Skim and probably delete from here to end of section! --- ]
+
+To ask for
 metadata about a particular track, send a packet like the one shown in
 Figure~\ref{fig:trackSetupPacket}.
 
