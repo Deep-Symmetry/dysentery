@@ -64,10 +64,12 @@ Pioneer gear to try out.
 Dysentery is currently being developed as a
 [Clojure](http://clojure.org/) library, because I find that to be the
 most powerful development environment available to me at the moment.
+Once I figure things out well enough here, I implement them in
 [beat-link](https://github.com/brunchboy/beat-link#beat-link), which
-is intended to be useful in other projects, is a standard Java package
-on Maven Central. If you want to hack on the dysentery source, you'll
-need to learn a little bit about Clojure. Finally,
+is intended to be useful in other projects: it is a standard Java
+library available as a package from Maven Central. If you want to hack
+on the dysentery source, you'll need to learn a little bit about
+Clojure. Finally,
 [beat-link-trigger](https://github.com/brunchboy/beat-link-trigger#beat-link-trigger)
 builds a friendly graphical interface on top of beat-link, making it
 easy to synchronize light shows, videos, and Ableton Live to tracks
@@ -217,6 +219,17 @@ In December 2016 I heard from
 [@EvanPurkhiser](https://github.com/EvanPurkhiser), who had found this
 project, and went on to make important breakthroughs in obtaining track
 metadata.
+
+In May 2017 [Austin Wright](https://bitbucket.org/awwright/) contacted
+me on the Afterglow
+[Gitter channel](https://gitter.im/brunchboy/afterglow) and told me
+about some really cool work he was doing. He was even gracious enough
+to publish a bunch of
+[source code](https://bitbucket.org/awwright/libpdjl) that I've been
+able to use to get a much deeper understanding of how metadata queries
+work, and to gain access to things like beat grid information (and
+eventually, hopefully, track waveform images). This is the current
+area of active research.
 
 ### Why Dysentery?
 
