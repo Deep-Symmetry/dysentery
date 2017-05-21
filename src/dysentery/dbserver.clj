@@ -54,8 +54,8 @@
              (dec remaining)))))
 
 (defn bytes->number
-  "Given a byte vector, calculates the integer that the bytes
-  represent."
+  "Given a byte sequence in big-endian order, calculates the integer
+  that the bytes represent."
   [bytes]
   (loop [left (rest bytes)
          result (util/unsign (first bytes))]
@@ -498,7 +498,8 @@
 (defn request-album-art
   "Sends the sequence of messages that request album art (using the
   artwork id as reported in a metadata or track list response) for a
-  track in a media slot on the player."
+  track in a media slot on the player. Displays the image retrieved
+  and returns the response containing it."
   [player slot artwork-id]
   (let [id (swap! (:counter player) inc)
         menu-field (number-field (:number player) 1 slot 1)
@@ -519,6 +520,52 @@
             (.setVisible true))
           response)
         (timbre/error "No artwork with id" id "available for slot" slot "on player" (:target player))))))
+
+(defn request-beat-grid
+  "Sends the sequence of messages that request the beat grid for a
+  track in a media slot on the player. Returns the response containing
+  it."
+  [player slot track]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field (:number player) 8 slot 1)
+        setup (build-message id 0x2204 menu-field (number-field track))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (if (= 0x4602 (get-message-type response))
+        (let [data (get-in response [:arguments 3 :data])]
+          (loop [i 20
+                 result [{:beat 0 :time 0}]]
+            (if (< i (count data))
+              (recur (+ i 16)
+                     (conj result {:beat (get data i) :time (bytes->number (reverse (subvec data (+ i 4) (+ i 8))))}))
+              result)))
+        (timbre/error "No beat grid for track" id "available for slot" slot "on player" (:target player))))))
+
+(defn request-waveform-summary
+  "Sends the sequence of messages that request the overview track
+  waveform for a track in a media slot on the player. Displays the
+  image retrieved and returns the response containing it. THIS SEEMS
+  NOT TO WORK RIGHT YET, AND CAUSES THE PLAYER TO SEND AN EXTRA
+  `0x0100` MESSAGE AFTER ITS RESPONSE, THEN CLOSE THE SOCKET. I will
+  have to investigate with some fresh packet captures."
+  [player slot track]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field (:number player) 8 slot 1)
+        setup (build-message id 0x2004 menu-field (number-field 4) (number-field track) (number-field 0)
+                             (blob-field []))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (if (= 0x4402 (get-message-type response))
+        response  ; TODO: Figure out how to interpret and display
+        (timbre/error "No waveform summary for track" id "available for slot" slot "on player" (:target player))))))
 
 (defn experiment
   "Sends a sequence of messages like those requesting metadata, but
