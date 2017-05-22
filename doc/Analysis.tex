@@ -26,6 +26,41 @@
 
 \pagestyle{headings}
 
+\newcommand\hexhead{
+  \bitbox[]{1}{\tiny\bfseries 0}
+  \bitbox[]{1}{\tiny\bfseries 1}
+  \bitbox[]{1}{\tiny\bfseries 2}
+  \bitbox[]{1}{\tiny\bfseries 3}
+  \bitbox[]{1}{\tiny\bfseries 4}
+  \bitbox[]{1}{\tiny\bfseries 5}
+  \bitbox[]{1}{\tiny\bfseries 6}
+  \bitbox[]{1}{\tiny\bfseries 7}
+  \bitbox[]{1}{\tiny\bfseries 8}
+  \bitbox[]{1}{\tiny\bfseries 9}
+  \bitbox[]{1}{\tiny\bfseries a}
+  \bitbox[]{1}{\tiny\bfseries b}
+  \bitbox[]{1}{\tiny\bfseries c}
+  \bitbox[]{1}{\tiny\bfseries d}
+  \bitbox[]{1}{\tiny\bfseries e}
+  \bitbox[]{1}{\tiny\bfseries f}
+}
+
+\newcommand\messagehead{
+  \bitbox[]{5}{\tiny\bfseries start}
+  \bitbox[]{5}{\tiny $TxID$}
+  \bitbox[]{3}{\tiny $type$}
+  \bitbox[]{2}{\tiny $args$}
+  \bitbox[]{1}{\tiny $tags$}
+}
+
+\newlength{\bitboxmaxheight}
+\setlength{\bitboxmaxheight}{\heightof{W}}
+\newcommand{\baselinealign}[1]{%
+  \centering
+  \small
+  \raisebox{0pt}[\bitboxmaxheight][0pt]{#1}%
+}
+
 \section{Mixer Startup}
 
 When the mixer starts up, after it obtains an IP address (or gives up
@@ -37,8 +72,8 @@ simply announcing its existence to UDP port 50000 on the broadcast
 address of the local network.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.5em]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.5em,boxformatting={\baselinealign}]{16}
+    \hexhead \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
         \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
@@ -69,8 +104,8 @@ use to tell them which device number to use based on which network
 port they are connected to?
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.5em]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.5em,boxformatting={\baselinealign}]{16}
+    \hexhead \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
         \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
@@ -102,8 +137,8 @@ local network broadcast address, at roughly 300 millisecond intervals,
 with the content shown in Figure~\ref{fig:mixerStage2}.
 
 \begin{figure}[ht]
-  \begin{bytefield}[bitwidth=1.5em]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.5em,boxformatting={\baselinealign}]{16}
+    \hexhead \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
         \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
@@ -136,8 +171,8 @@ same port 50000. These shorter packets have 38 bytes of data and the
 content shown in Figure~\ref{fig:mixerStage3}.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.5em]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.5em,boxformatting={\baselinealign}]{16}
+    \hexhead \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
         \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
@@ -166,8 +201,8 @@ network broadcast address, roughly every second and a half. They have
 the content shown in Figure~\ref{fig:mixerKeepalive}.
 
 \begin{figure}[ht]
-  \begin{bytefield}[bitwidth=1.5em]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.5em,boxformatting={\baselinealign}]{16}
+    \hexhead \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
         \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
@@ -195,8 +230,8 @@ is the final byte, which is {\tt 0x01} for the CDJ, and was {\tt 0x02}
 for the mixer.
 
 \begin{figure}[ht]
-  \begin{bytefield}[bitwidth=1.5em]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.5em,boxformatting={\baselinealign}]{16}
+    \hexhead \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
         \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
@@ -218,8 +253,8 @@ Figure~\ref{fig:cdjStage1} and Figure~\ref{fig:mixerStage1} is byte~37
 for the CDJ, and was {\tt 0x02} for the mixer.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.5em]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.5em,boxformatting={\baselinealign}]{16}
+    \hexhead \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
         \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a}
@@ -254,8 +289,8 @@ The CDJ then moves to the keep-alive stage, sending out 54-byte
 packets with the content shown in Figure~\ref{fig:cdjKeepalive}.
 
 \begin{figure}[ht]
-  \begin{bytefield}[bitwidth=1.5em]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.5em,boxformatting={\baselinealign}]{16}
+    \hexhead \\
     \begin{rightwordgroup}{Name}
       \begin{leftwordgroup}{Header}
         \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
@@ -312,35 +347,35 @@ is counting beats.) The content of these packets is shown in
 Figure~\ref{fig:beatPacket}.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
       \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
         {\tt 4c} {\tt \textbf{28}}}
       & \bitbox[lrt]{5}{}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 32} % 0x20
+    \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 3c} {\tt 00} {\tt 00} {\tt 01} {\tt 00}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 48} % 0x30
+    \begin{leftwordgroup}{\tiny\bfseries 30}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt ff} {\tt ff} {\tt ff} {\tt ff}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 64} % 0x40
+    \begin{leftwordgroup}{\tiny\bfseries 40}
       \bitboxes*{1}{{\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff}
         {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt ff}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 80} % 0x50
+    \begin{leftwordgroup}{\tiny\bfseries 50}
       \bitboxes*{1}{{\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt 00}} & \bitbox{3}{$Pitch$} &
       \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{2}{$BPM$} & \bitbox{1}{$B_b$} & \bitboxes*{1}{{\tt 00} {\tt 00}} &
       \bitbox{1}{$D$}
@@ -434,26 +469,26 @@ Packets from the mixer will have a length of 56 bytes and the content
 shown in Figure~\ref{fig:mixerStatus}.
 
 \begin{figure}[h]
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
       \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
         {\tt 4c} {\tt \textbf{29}}}
       & \bitbox[lrt]{5}{}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 32} % 0x20
+    \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 14}} &
       \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{1}{$F$} &
       \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 80} {\tt 00}} & \bitbox{2}{$BPM$}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 48} % 0x30
+    \begin{leftwordgroup}{\tiny\bfseries 30}
       \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09}} &
       \bitbox{1}{$X$} & \bitbox{1}{$B_b$} & \bitbox[]{8}{}
     \end{leftwordgroup}
@@ -507,78 +542,78 @@ send 208-byte packets with slightly less information. Newer firmware
 and Nexus 2 players send packets that are 284 or 292~bytes long.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
       \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
         {\tt 4c} {\tt \textbf{0a}}}
       & \bitbox[lrt]{5}{}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 32} % 0x20
+    \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 03} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt b0}} &
       \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 01}} & \bitbox{1}{$A$} &
       \bitbox{1}{$D_r$} & \bitbox{1}{$S_r$} & \bitbox{1}{$t_r$} & \bitbox{1}{\tt 00} &
       \bitbox{4}{$rekordbox$}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 48} % 0x30
+    \begin{leftwordgroup}{\tiny\bfseries 30}
       \bitboxes*{1}{{\tt 00} {\tt 00}} \bitbox{2}{$Track$} \bitboxes*{1}{{\tt 00} {\tt 00} {$t_2$} {$t_3$}
         {\tt 00} {\tt 00} {$t_4$} {$t_5$} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 64} % 0x40
+    \begin{leftwordgroup}{\tiny\bfseries 40}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {$t_6$} {$t_7$}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 80} % 0x50
+    \begin{leftwordgroup}{\tiny\bfseries 50}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 96} % 0x60
+    \begin{leftwordgroup}{\tiny\bfseries 60}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
         {\tt 01} {\tt 00} {$U_a$} {\tt 04} {\tt 00} {\tt 00} {\tt 00} {$U_l$}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 112} % 0x70
+    \begin{leftwordgroup}{\tiny\bfseries 70}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 04} {\tt 00}} & \bitbox{1}{$U_g$} & \bitboxes*{1}{{\tt 00} {\tt 00}
         {\tt 01} {\tt 00} {\tt 00}} & \bitbox{1}{$P_1$} & \bitbox{4}{$Firmware$}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 128} % 0x80
+    \begin{leftwordgroup}{\tiny\bfseries 80}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox{2}{$Sync_n$} &
       \bitbox{1}{\tt 00} & \bitbox{1}{$F$} & \bitbox{1}{\tt ff} &
       \bitbox{1}{$P_2$} & \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_1$}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 144} % 0x90
+    \begin{leftwordgroup}{\tiny\bfseries 90}
       \bitbox{2}{$l_1$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff} {\tt 00}} &
       \bitbox{3}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{\tt 00} & \bitbox{1}{\tt ff}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 160} % 0xa0
+    \begin{leftwordgroup}{\tiny\bfseries a0}
       \bitbox{4}{$Beat$} & \bitbox{2}{$Cue$} & \bitbox{1}{$B_b$} &
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 176} % 0xb0
+    \begin{leftwordgroup}{\tiny\bfseries b0}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 10} {\tt 00}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 192} % 0xc0
+    \begin{leftwordgroup}{\tiny\bfseries c0}
       \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_3$} & \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_4$} & 
       \bitbox{4}{$Packet$} & \bitbox{1}{$nx$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 208} % 0xd0
+    \begin{leftwordgroup}{\tiny\bfseries d0}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{12}{}
     \end{leftwordgroup}
 
@@ -863,15 +898,15 @@ and sending it sending a packet with the content shown in
 Figure~\ref{fig:dbServerQueryPacket}.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0f} {\tt R} {\tt e} {\tt m} {\tt o}
         {\tt t} {\tt e} {\tt D} {\tt B} {\tt S} {\tt e} {\tt r} {\tt v}}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitboxes*{1}{{\tt e} {\tt r} {\tt 00}} & \bitbox[]{13}{}
     \end{leftwordgroup}
     
@@ -958,14 +993,10 @@ waveform or beat grid). This is illustrated in
 Figure~\ref{fig:blobField}.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
-
-      \bitbox{1}{\tt 14} & \bitbox{4}{$length$} & \bitbox[lrt]{11}{Binary data}
-    \end{leftwordgroup} \\
-
+    \bitbox{1}{\tt 14} & \bitbox{4}{$length$} & \bitbox[lrt]{11}{Binary data} \\
     \skippedwords \\
     \wordbox[lrb]{1}{}
 
@@ -985,14 +1016,10 @@ represented by {\tt 0x0000}. This is illustrated in
 Figure~\ref{fig:stringField}.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
-
-      \bitbox{1}{\tt 26} & \bitbox{4}{$length$} & \bitbox[lrt]{11}{UTF-16BE string}
-    \end{leftwordgroup} \\
-
+    \bitbox{1}{\tt 26} & \bitbox{4}{$length$} & \bitbox[lrt]{11}{UTF-16BE string} \\
     \skippedwords \\
     \wordbox[lrb]{1}{}
 
@@ -1042,22 +1069,22 @@ $t_{12}$ are the type tags for each argument, or 0 if there is no
 argument in that position.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
       
       \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{$TxID$} &
       \bitbox{1}{\tt 10} & \bitbox{2}{$type$} & \bitbox{1}{\tt 0f} & \bitbox{1}{$n$} &
       \bitbox{1}{\tt 14}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{$t_1$} {$t_2$} {$t_3$} {$t_4$}
         {$t_5$} {$t_6$} {$t_7$} {$t_8$} {$t_9$} {$t_{10}$} {$t_{11}$} {$t_{12}$}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 32} % 0x20
+    \begin{leftwordgroup}{}
       \wordbox[lrt]{1}{Arguments} \\
       \skippedwords \\
       \wordbox[lrb]{1}{}
@@ -1095,59 +1122,98 @@ found any other meaningful information in this response.
 At this point, the player is ready to accept queries.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
 
       \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt fffffffe} &
       \bitbox{1}{\tt 10} & \bitbox{2}{\tt 0000} & \bitbox{1}{\tt 0f} & \bitbox{1}{\tt 01} &
       \bitbox{1}{\tt 14}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{\tt 06} {\tt 00} {\tt 00} {\tt 00}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 32} % 0x20
-      \bitbox{1}{\tt 11} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {$D$}} & \bitbox[]{11}{}
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{$D_{ours}$} & \bitbox[]{11}{}
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Query context setup message}
+  \caption{Query Context Setup message}
   \label{fig:querySetupPacket}
 \end{figure}
 
 
-[ --- Skim and probably delete from here to end of section! --- ]
+The player will respond with a message of type {\tt 0x4000}, which is
+the common ``success'' response when requested data is available. The
+response message has two numeric arguments, the first of which is the
+message type of the request we sent (which was 0), and the second
+usually tells you the number of items that are available in response
+to the query you made, but in this special setup query, it returns its
+own player number. The overall structure is illustrated in
+Figure~\ref{fig:querySetupResponse}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt fffffffe} &
+      \bitbox{1}{\tt 10} & \bitbox{2}{\tt 4000} & \bitbox{1}{\tt 0f} & \bitbox{1}{\tt 02} &
+      \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{\tt 06} {\tt 06} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000000}} & \bitbox{1}{\tt 11} & \bitbox{4}{$D_{theirs}$} &
+      \bitbox[]{6}{}
+    \end{leftwordgroup}
+    
+  \end{bytefield}
+  \caption{Query Context Setup response}
+  \label{fig:querySetupResponse}
+\end{figure}
+
+--- TODO: Heavy revision needed from here to end of section! ---
 
 To ask for
 metadata about a particular track, send a packet like the one shown in
 Figure~\ref{fig:trackSetupPacket}.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
-      
-      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
-      \bitboxes*{1}{{\tt 10} {\tt 20} {\tt 02} {\tt 0f} {\tt 02} {\tt 14}}
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{$TxID$} &
+      \bitbox{1}{\tt 10} & \bitbox{2}{\tt 2002} & \bitbox{1}{\tt 0f} & \bitbox{1}{\tt 02} &
+      \bitbox{1}{\tt 14}
     \end{leftwordgroup} \\
-    
-    \begin{leftwordgroup}{\tiny 16} % 0x10
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 00} {\tt 00} {\tt 00}
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{\tt 06} {\tt 00} {\tt 00} {\tt 00}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 32} % 0x20
-      \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 01} & \bitbox{1}{$S_r$} & \bitboxes*{1}{{\tt 01} {\tt 11}} &
-      \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} & \bitbox{1}{\tt 01}
+        & \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Track metadata query setup packet}
+  \caption{Track metadata request message}
   \label{fig:trackSetupPacket}
 \end{figure}
 
@@ -1172,33 +1238,33 @@ previous packet, while the values of $D$ and $S_r$ should be identical
 to what you sent in it.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
       
       \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
       \bitboxes*{1}{{\tt 10} {\tt 30} {\tt 00} {\tt 0f} {\tt 06} {\tt 14}}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 06} {\tt 06} {\tt 06}
         {\tt 06} {\tt 06} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 32} % 0x20
+    \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 01} & \bitbox{1}{$S_r$} &
       \bitboxes*{1}{{\tt 01} {\tt 11} {\tt 00} {\tt 00}
         {\tt 00} {\tt 00} {\tt 11} {\tt 00} {\tt 00} {\tt 00} {\tt 0b} {\tt 11}}
     \end{leftwordgroup} \\
 
-    \begin{leftwordgroup}{\tiny 48} % 0x30
+    \begin{leftwordgroup}{\tiny\bfseries 30}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 11} {\tt 00} {\tt 00} {\tt 00}
         {\tt 0b} {\tt 11} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{2}{}
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Track metadata query final packet}
+  \caption{Render Menu request message (TODO: redo)}
   \label{fig:trackMetadataPacket}
 \end{figure}
 
@@ -1232,24 +1298,22 @@ contains the track's artwork ID, as a 4-byte big-endian integer
 starting 19~bytes before the end of the field.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    ~\\
-    ~\\
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
       
       \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
       \bitboxes*{1}{{\tt 10} {\tt 42} {\tt 01} {\tt 0f} {\tt 00} {\tt 14}}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
         {\tt 00} {\tt 00}{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Final track metadata response field}
+  \caption{Menu footer message (TODO: redo)}
   \label{fig:finalMetadataField}
 \end{figure}
 
@@ -1257,27 +1321,27 @@ To request the artwork image corresponding to that ID, send a packet
 like the one shown in Figure~\ref{fig:artworkRequestPacket}.
 
 \begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt]{16}
-    \bitheader{0-15} \\
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
 
-    \begin{leftwordgroup}{\tiny 0} % 0x00
+    \begin{leftwordgroup}{\tiny\bfseries 00}
       
       \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
       \bitboxes*{1}{{\tt 10} {\tt 20} {\tt 03} {\tt 0f} {\tt 02} {\tt 14}}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 16} % 0x10
+    \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 06} {\tt 00} {\tt 00}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
     
-    \begin{leftwordgroup}{\tiny 32} % 0x20
+    \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 08} & \bitbox{1}{$S_r$} & \bitboxes*{1}{{\tt 01} {\tt 11}} &
       \bitbox{4}{$artwork$} & \bitbox[]{6}{}
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Artwork query packet}
+  \caption{Artwork request message (TODO: redo)}
   \label{fig:artworkRequestPacket}
 \end{figure}
 
