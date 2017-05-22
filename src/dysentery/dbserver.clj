@@ -340,15 +340,16 @@
    0x4003 {:type      "requested media not available"
            :arguments ["request type"]}
    0x4101 {:type      "rendered menu item"
-           :arguments ["numeric 1"
-                       "numeric 2"
+           :arguments ["numeric 1 (parent id, e.g. artist for track)"
+                       "numeric 2 (this id)"
                        "label 1 byte size"
                        "label 1"
                        "label 2 byte size"
                        "label 2"
                        describe-item-type
-                       "column configuration?"
-                       "album art id"]}
+                       "column configuration? byte 3 is 1 when track played."
+                       "album art id"
+                       "playlist position"]}
    0x4201 {:type "rendered menu footer"}
    0x4402 {:type      "waveform summary"
            :arguments ["request type"
