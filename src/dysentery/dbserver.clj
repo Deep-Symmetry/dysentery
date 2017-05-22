@@ -264,6 +264,7 @@
    0x04  "Track Title"
    0x06  "Genre"
    0x07  "Artist"
+   0x08  "Playlist"
    0x0a  "Rating"
    0x0b  "Duration (s)"
    0x0d  "Tempo"
@@ -284,38 +285,43 @@
   know something about."
   {0x0001 {:type "invalid data"}
    0x1000 {:type      "load root menu"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "sort order"
                        "magic constant?"]}
    0x1002 {:type "request artist list"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "sort order?"]}
    0x1004 {:type "request track list"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "sort order?"]}
+   0x1105 {:type      "request playlist or playlist folder"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
+                       "unknown"
+                       "playlist or folder ID"
+                       "0=playlist, 1=folder"]}
    0x2002 {:type      "request track metadata"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "rekordbox ID"]}
    0x2003 {:type      "request album art"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "art ID"]}
    0x2004 {:type      "request track waveform summary"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "rekordbox ID"]}
    0x2104 {:type      "request track cue points"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "rekordbox ID"]}
    0x2202 {:type      "request CD track data"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "track number"]}
    0x2204 {:type      "request beat grid information"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "rekordbox ID"]}
    0x2904 {:type      "request track waveform detail"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "rekordbox ID"]}
    0x3000 {:type      "render menu"
-           :arguments ["requesting player, menu (1), media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, analyzed (1)"
                        "offset"
                        "limit"
                        "unknown (0)?"
@@ -495,6 +501,40 @@
 
             :else
             (timbre/error "No track listing available for slot" slot "on player"  (:target player))))))))
+
+(defn request-playlist
+  "Sends the sequence of messages that request a playlist. If `folder?`
+  is true, it means you are asking for a folder within the playlist
+  menu, not for an actual playlist. The root playlist menu is obtained
+  by requesting folder 0."
+  ([player slot id]
+   (request-playlist player slot id false))
+  ([player slot id folder?]
+   (let [tx (swap! (:counter player) inc)
+         menu-field (number-field (:number player) 1 slot 1)
+         setup (build-message tx 0x1105 menu-field (number-field 0) (number-field id)
+                              (number-field (if folder? 1 0)))]
+     (print "Sending > ")
+     (describe-message setup)
+     (send-message player setup)
+     (when-let [response (read-message player)]
+       (print "Received > ")
+       (describe-message response)
+       (when (= 0x4000 (get-message-type response))
+         (let [item-count (get-in response [:arguments 1 :number])]
+           (cond
+             (= item-count 0xffffffff)
+             (timbre/error "No playlist with id" id (str (when folder? "as folder ") "available for slot") slot
+                           "on player" (:target player))
+
+             (pos? item-count)
+             (let [entries (read-menu-responses player menu-field item-count)]
+               ;; TODO build and return more compact structure?
+               entries)
+
+             :else
+             (timbre/error "No playlist with id" id (str (when folder? "as folder ") "available for slot") slot
+                           "on player" (:target player)))))))))
 
 (defn request-album-art
   "Sends the sequence of messages that request album art (using the
