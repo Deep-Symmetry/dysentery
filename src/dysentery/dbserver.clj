@@ -92,7 +92,7 @@
   {:type :blob
    :data (vec data)
    :arg-list-tag 0x03
-   :bytes (into [0x14] (concat (number->bytes (count data) 4) data))})
+   :bytes (when (pos? (count data)) (into [0x14] (concat (number->bytes (count data) 4) data)))})
 
 (defn string-field
   "Creates a variable sized field containing a string, prefixed
