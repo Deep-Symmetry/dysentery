@@ -44,6 +44,7 @@
   "Splits a number with the specified byte size into its individual
   bytes, returning them as a vector."
   [n size]
+  {:pre [(pos? size)]}
   (loop [result (list (bit-and n 0xff))
          n (bit-shift-right n 8)
          remaining (dec size)]
@@ -64,26 +65,20 @@
       result)))
 
 (defn number-field
-  "Creates a field that represents a 4-byte number in a message. Can
-  be created from just the number, or from the four individual bytes."
-  ([n]
-   {:type         :number
-    :number       n
-    :arg-list-tag 0x06
-    :bytes        (into [0x11] (number->bytes n 4))})
-  ([byte-1 byte-2 byte-3 byte-4]
-   (number-field (bytes->number [byte-1 byte-2 byte-3 byte-4]))))
-
-(defn message-type-field
-  "Creates a 4-byte field which, as the third field in a message,
-  identifies the type of the message, as well as the number of
-  argument fields that it includes. The type is stored in the first
-  two bytes of this field, followed by 0x0f, and the argument count."
-  [message-type argument-count]
-  {:type           :message-type
-   :message-type   message-type
-   :argument-count argument-count
-   :bytes          (into [0x10] (concat (number->bytes message-type 2) [0x0f (bit-and argument-count 0xff)]))})
+  "Creates a field that represents a 1, 2, or 4-byte number in a
+  message. Can be created from the value and length, or from a
+  sequence of the individual bytes."
+  ([n size]
+   (number-field (number->bytes n size)))
+  ([bytes]
+   (let [type-tag (case (count bytes)
+                    1 0x0f
+                    2 0x10
+                    4 0x11)]
+     {:type         :number
+      :number       (bytes->number bytes)
+      :arg-list-tag 0x06
+      :bytes        (into [type-tag] bytes)})))
 
 (defn blob-field
   "Creates a variable sized field containing bytes of data, prefixed
@@ -123,19 +118,25 @@
   [is]
   (timbre/error "Attempt to read field failed."))
 
-(defmethod read-field 0x11  ; A number field
-  [is]
-  (if-let [bytes (recv-bytes is 4)]
-    (number-field (bytes->number bytes))
-    (timbre/error "Attempt to read number field failed.")))
+(defn- read-number-field
+  "Shared implementation for reading number fields once we know what
+  size to expect."
+  [is size]
+  (if-let [bytes (recv-bytes is size)]
+    (number-field (bytes->number bytes) size)
+    (timbre/error "Attempt to read" size "byte number field failed.")))
 
-(defmethod read-field 0x10  ; A message type field
+(defmethod read-field 0x0f  ; A 1-byte number field
   [is]
-  (if-let [bytes (recv-bytes is 4)]
-    (if (not= (get bytes 2) 0x0f)
-      (timbre/error "Message type field does not have value 15 following message type, found" (get bytes 2))
-      (message-type-field (bytes->number (take 2 bytes)) (util/unsign (get bytes 3))))
-    (timbre/error "Attempt to read message type field failed.")))
+  (read-number-field is 1))
+
+(defmethod read-field 0x10  ; A 2-byte number field
+  [is]
+  (read-number-field is 2))
+
+(defmethod read-field 0x11  ; A 4-byte number field
+  [is]
+  (read-number-field is 4))
 
 (defmethod read-field 0x14  ; A blob field
   [is]
@@ -163,16 +164,18 @@
 (def message-start-marker
   "The number field which is always used to identify the start of a new
   message."
-  (number-field 0x872349ae))
+  (number-field 0x872349ae 4))
 
 (defn build-message
   "Puts together the fields that make up a message, with the specified
-  transaction number, message type, and argument fields, as a map with
-  the same structure returned by `read-message`."
+  transaction number, message type, argument-type, and argument
+  fields, as a map with the same structure returned by
+  `read-message`."
   [transaction-number message-type & args]
   {:start          message-start-marker
-   :transaction    (number-field transaction-number)
-   :message-type   (message-type-field message-type (count args))
+   :transaction    (number-field transaction-number 4)
+   :message-type   (number-field message-type 2)
+   :argument-count (number-field (count args) 1)
    :argument-types (blob-field (take 12 (concat (map :arg-list-tag args) (repeat 0))))
    :arguments      args})
 
@@ -182,12 +185,14 @@
   message with transaction ID `0xfffffffe` and a message type of 0,
   whose sole argument is a number field containing our player number."
   [player-number]
-  (build-message 0xfffffffe 0 (number-field player-number)))
+  (build-message 0xfffffffe 0 (number-field player-number 4)))
 
 (defn send-message
   "Sends the bytes that make up a message to the specified player."
   [player message]
-  (let [fields (concat (reduce #(conj %1 (message %2)) [] [:start :transaction :message-type :argument-types])
+  (let [fields (concat (reduce #(conj %1 (message %2))
+                               []
+                               [:start :transaction :message-type :argument-count :argument-types])
                        (:arguments message))]
     (send-bytes (:output-stream player) (vec (apply concat (map :bytes fields))))))
 
@@ -197,7 +202,7 @@
   returning the completed message map on success, or `nil` on
   failure."
   [is message]
-  (let [expected (get-in message [:message-type :argument-count])]
+  (let [expected (get-in message [:argument-count :number])]
     (if (> expected 12)
       (timbre/error "Can't read a message with more than twelve arguments.")
       (if (= (count (:arguments message)) expected)
@@ -211,7 +216,7 @@
           (timbre/error "Unable to read an argument field when trying to read a message."))))))
 
 (defn- read-argument-types
-  "Reads the fourth field of a message, which should be a blob listing
+  "Reads the fifth field of a message, which should be a blob listing
   the argument types, and continues building the message map if
   successful, or returns `nil` on failure."
   [is message]
@@ -221,14 +226,25 @@
       (timbre/error "Did not find argument-type blob field when trying to read a message."))
     (timbre/error "Unable to read argument-type blob field when trying to read a message.")))
 
+(defn- read-argument-count
+  "Reads the fourth field of a message, which should be a one-byte
+  number field, and continues building the message map if successful,
+  or returns `nil` on failure."
+  [is message]
+  (if-let [argument-count (read-field is)]
+    (if (and (= :number (:type argument-count)) (= 2 (count (:bytes argument-count))))
+      (read-argument-types is (assoc message :argument-count argument-count))
+      (timbre/error "Did not find argument-count field when trying to read a message."))
+    (timbre/error "Unable to read argument-count field when trying to read a message.")))
+
 (defn- read-message-type
-  "Reads the third field of a message, which should be a special
-  message-type field, and continues building the message map if
-  successful, or returns `nil` on failure."
+  "Reads the third field of a message, which should be a two-byte
+  number field, and continues building the message map if successful,
+  or returns `nil` on failure."
   [is message]
   (if-let [message-type (read-field is)]
-    (if (= :message-type (:type message-type))
-      (read-argument-types is (assoc message :message-type message-type))
+    (if (and (= :number (:type message-type)) (= 3 (count (:bytes message-type))))
+      (read-argument-count is (assoc message :message-type message-type))
       (timbre/error "Did not find message-type field when trying to read a message."))
     (timbre/error "Unable to read message-type field when trying to read a message.")))
 
@@ -379,9 +395,9 @@
                        "image bytes"]}})
 
 (defn get-message-type
-  "Extracts the message type tag from a message structure."
+  "Extracts the message type value from a message structure."
   [message]
-  (get-in message [:message-type :message-type]))
+  (get-in message [:message-type :number]))
 
 (defn describe-message
   "Summarizes the salient information about a message."
@@ -391,7 +407,7 @@
           description (get known-messages message-type)]
       (println (str "Transaction: " (get-in message [:transaction :number])
                     ", message type: " (format "0x%04x (%s)" message-type (:type description "unknown"))
-                    ", argument count: " (get-in message [:message-type :argument-count])
+                    ", argument count: " (get-in message [:argument-count :number])
                     ", arguments:"))
       (doall
        (map-indexed
@@ -425,9 +441,9 @@
   ([player menu-field item-count offset received]
    (let [id (swap! (:counter player) inc)
          count (min (- item-count offset) max-menu-request-count)
-         zero-field (number-field 0)
-         offset-field (number-field offset)
-         count-field (number-field count)
+         zero-field (number-field 0 4)
+         offset-field (number-field offset 4)
+         count-field (number-field count 4)
          ;; TODO: Based on LinkInfo-tracklist.txt looks like the last count-field should be item-count instead!
          request (build-message id 0x3000 menu-field offset-field count-field zero-field count-field zero-field)]
      (print "Sending > ")
@@ -453,8 +469,8 @@
   track in a media slot on the player."
   [player slot track]
   (let [id (swap! (:counter player) inc)
-        menu-field (number-field (:number player) 1 slot 1)
-        setup (build-message id 0x2002 menu-field (number-field track))]
+        menu-field (number-field [(:number player) 1 slot 1])
+        setup (build-message id 0x2002 menu-field (number-field track 4))]
     (print "Sending > ")
     (describe-message setup)
     (send-message player setup)
@@ -481,8 +497,8 @@
   media slot on the player."
   [player slot]
   (let [id (swap! (:counter player) inc)
-        menu-field (number-field (:number player) 1 slot 1)
-        setup (build-message id 0x1004 menu-field (number-field 0))]
+        menu-field (number-field [(:number player) 1 slot 1])
+        setup (build-message id 0x1004 menu-field (number-field 0 4))]
     (print "Sending > ")
     (describe-message setup)
     (send-message player setup)
@@ -512,9 +528,9 @@
    (request-playlist player slot id false))
   ([player slot id folder?]
    (let [tx (swap! (:counter player) inc)
-         menu-field (number-field (:number player) 1 slot 1)
-         setup (build-message tx 0x1105 menu-field (number-field 0) (number-field id)
-                              (number-field (if folder? 1 0)))]
+         menu-field (number-field [(:number player) 1 slot 1])
+         setup (build-message tx 0x1105 menu-field (number-field 0 4) (number-field id 4)
+                              (number-field (if folder? 1 0) 4))]
      (print "Sending > ")
      (describe-message setup)
      (send-message player setup)
@@ -544,8 +560,8 @@
   and returns the response containing it."
   [player slot artwork-id]
   (let [id (swap! (:counter player) inc)
-        menu-field (number-field (:number player) 1 slot 1)
-        setup (build-message id 0x2003 menu-field (number-field artwork-id))]
+        menu-field (number-field [(:number player) 1 slot 1])
+        setup (build-message id 0x2003 menu-field (number-field artwork-id 4))]
     (print "Sending > ")
     (describe-message setup)
     (send-message player setup)
@@ -569,8 +585,8 @@
   it."
   [player slot track]
   (let [id (swap! (:counter player) inc)
-        menu-field (number-field (:number player) 8 slot 1)
-        setup (build-message id 0x2204 menu-field (number-field track))]
+        menu-field (number-field [(:number player) 8 slot 1])
+        setup (build-message id 0x2204 menu-field (number-field track 4))]
     (print "Sending > ")
     (describe-message setup)
     (send-message player setup)
@@ -590,14 +606,11 @@
 (defn request-waveform-summary
   "Sends the sequence of messages that request the overview track
   waveform for a track in a media slot on the player. Displays the
-  image retrieved and returns the response containing it. THIS SEEMS
-  NOT TO WORK RIGHT YET, AND CAUSES THE PLAYER TO SEND AN EXTRA
-  `0x0100` MESSAGE AFTER ITS RESPONSE, THEN CLOSE THE SOCKET. I will
-  have to investigate with some fresh packet captures."
+  image retrieved and returns the response containing it."
   [player slot track]
   (let [id (swap! (:counter player) inc)
-        menu-field (number-field (:number player) 8 slot 1)
-        setup (build-message id 0x2004 menu-field (number-field 4) (number-field track) (number-field 0)
+        menu-field (number-field [(:number player) 8 slot 1])
+        setup (build-message id 0x2004 menu-field (number-field 4 4) (number-field track 4) (number-field 0 4)
                              (blob-field []))]
     (print "Sending > ")
     (describe-message setup)
@@ -613,11 +626,11 @@
   "Sends a sequence of messages like those requesting metadata, but
   using a different message kind, and with a variable list of argument
   fields. For example, to retrieve the root menu, invoke as:
-  (experiment player slot 0x1000 (number-field 0)
-              (number-field 0x00ff))"
+  (experiment player slot 0x1000 (number-field 0 4)
+              (number-field 0x00ff 4))"
   [player slot kind & args]
   (let [id (swap! (:counter player) inc)
-        menu-field (number-field (:number player) 1 slot 1)
+        menu-field (number-field [(:number player) 1 slot 1])
         setup (apply build-message (concat [id kind menu-field] args))]
     (print "Sending > ")
     (describe-message setup)
@@ -676,7 +689,7 @@
                     :number        pose-as-player-number
                     :target        target-player-number
                     :counter       (atom 0)}
-          greeting (number-field 1)]  ; The greeting packet is a number field representing the number 1.
+          greeting (number-field 1 4)]  ; The greeting packet is a 4-byte number field representing the number 1.
       (.setSoTimeout sock read-timeout)
       (send-bytes os (:bytes greeting))
       (if (not= (read-field is) greeting)
@@ -686,7 +699,11 @@
           (send-message player (build-setup-message pose-as-player-number))
           (let [response (read-message player)]
             (describe-message response)
-            (when (not= target-player-number (get-in response [:arguments 1 :number]))
-              (timbre/warn "Expected to receive target player number in response argument 1")))
-          player)))))
+            (if (= (get-message-type response) 0x4000)
+              (do  ; Successful response
+                (when (not= target-player-number (get-in response [:arguments 1 :number]))
+                  (timbre/warn "Expected to receive target player number in response argument 1"))
+                player)
+              (do (disconnect player)
+                  (timbre/error "Did not receive message type 0x4000 in response to setup message, closed.")))))))))
 
