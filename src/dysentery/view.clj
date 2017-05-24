@@ -213,7 +213,7 @@
                                 4 "collection"
                                 "???")
               :rekordbox-type (case (get packet 42)
-                                0 "n/a"
+                                0 "unanalyzed"
                                 1 "rekordbox"
                                 5 "CD-DA"
                                 "???")
@@ -221,11 +221,16 @@
               :track (build-int packet 50 2)
               :usb-activity (get packet 106)
               :usb-local (case (get packet 111)
-                           4 "Unloaded"
-                           2 "Unloading..."
+                           4 "Empty"
+                           2 "Unloading"
                            0 "Loaded"
                            "???")
-              :usb-global (if (pos? (get packet 117)) "Found" "Absent")
+              :sd-local (case (get packet 115)
+                           4 "Empty"
+                           2 "Unloading"
+                           0 "Loaded"
+                           "???")
+              :link-status (if (pos? (get packet 117)) "Found" "Absent")
               :p-1 (case (get packet 123)
                      0 "No Track"
                      3 "Playing"
@@ -354,14 +359,20 @@
     (#{50 51} index)  ; Track index
     [hex (Color/green)]  ; All values are valid
 
-    (= index 106)  ; USB actvity? Alternates between 4 and 6 when USB in use.
+    (= index 106)  ; USB actvity. Alternates between 4 and 6 when USB in use.
+    [hex (recognized-if (#{4 6} value))]
+
+    (= index 107)  ; SD actvity. Alternates between 4 and 6 when SD in use.
     [hex (recognized-if (#{4 6} value))]
 
     (= index 111)  ; Seems to indicate USB media status in the current player?
     [hex (recognized-if (#{0 2 4} value))] ; 4=no USB, 0=USB mounted, 2=unmounting USB
 
-    (= index 117)  ; Seems to indicate USB media is mounted in any player?
-    [hex (recognized-if (or (and (zero? value) (= 4 (get packet 111)))
+    (= index 115)  ; Seems to indicate SD media status in the current player?
+    [hex (recognized-if (#{0 2 4} value))] ; 4=no SD, 0=SD mounted, 2=unmounting SD
+
+    (= index 117)  ; Seems to indicate linkable media is mounted in any player?
+    [hex (recognized-if (or (and (zero? value) (= 4 (get packet 111)) (= 4 (get packet 115)))
                             (pos? value)))]
 
     (= index 123)  ; Play mode part 1

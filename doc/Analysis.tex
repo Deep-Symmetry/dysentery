@@ -384,13 +384,13 @@ Figure~\ref{fig:beatPacket}.
     \end{leftwordgroup} \\
     
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 3c} {\tt 00} {\tt 00} {\tt 01} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 3c}} &
+      \bitbox{4}{$nextBeat$} & \bitbox{4}{$2ndBeat$} & \bitbox{4}{$nextBar$}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 30}
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt ff} {\tt ff} {\tt ff} {\tt ff}}
+      \bitbox{4}{$4thBeat$} & \bitbox{4}{$2ndBar$} & \bitbox{4}{$8thBeat$} &
+      \bitboxes*{1}{{\tt ff} {\tt ff} {\tt ff} {\tt ff}}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 40}
@@ -399,7 +399,7 @@ Figure~\ref{fig:beatPacket}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 50}
-      \bitboxes*{1}{{\tt ff} {\tt ff} {\tt ff} {\tt ff} {\tt 00}} & \bitbox{3}{$Pitch$} &
+      \bitboxes*{1}{{\tt ff} {\tt ff} {\tt ff} {\tt ff}} & \bitbox{4}{$Pitch$} &
       \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{2}{$BPM$} & \bitbox{1}{$B_b$} & \bitboxes*{1}{{\tt 00} {\tt 00}} &
       \bitbox{1}{$D$}
     \end{leftwordgroup}
@@ -413,12 +413,26 @@ The Device Number in $D$ (bytes~33 and 95) is the Player Number as
 displayed on the CDJ itself, or 33 for the mixer, or another value for
 a computer running rekordbox.
 
+To facilitate synchronization of variable-tempo tracks, the number of
+milliseconds after which a variety of upcoming beats will occur are
+reported. $nextBeat$ at bytes~36--39 is the number of milliseconds in
+which the very next beat will arrive. $2ndBeat$ (bytes~40--43) is the
+number of milliseconds until the beat after that. $nextBar$
+(bytes~44--47) reports the number of milliseconds until the next
+measure of music begins, which may be from 1 to 4 beats away.
+$4thBeat$ (bytes~48--51) reports how many millisecond will elapse
+until the fourth upcoming beat; $2ndBar$ (bytes~52--55) the interval
+until the second measure after the current one begins (which will
+occur in 5 to 8 beats, depending how far into the current measure we
+have reached); and $8thBeat$ (bytes~56--59) tells how many millieconds
+we have to wait until the eighth upcoming beat will arrive.
+
 The player's current pitch adjustment\footnote{The mixer always
-  reports a pitch of $+0\%$.} can be found in bytes~85--87, labeled
+  reports a pitch of $+0\%$.} can be found in bytes~84--87, labeled
 $Pitch$. It represents a three-byte pitch adjustment percentage, where
-{\tt 0x100000} represents no adjustment ($0\%$), {\tt 0x000000}
+{\tt 0x00100000} represents no adjustment ($0\%$), {\tt 0x00000000}
 represents slowing all the way to a complete stop ($-100\%$, reachable
-only in Wide tempo mode), and {\tt 0x200000} represents playing at
+only in Wide tempo mode), and {\tt 0x00200000} represents playing at
 double speed ($+100\%$).
 
 The pitch adjustment percentage represented by $Pitch$ is calculated
@@ -602,11 +616,11 @@ and Nexus 2 players send packets that are 284 or 292~bytes long.
 
     \begin{leftwordgroup}{\tiny\bfseries 60}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
-        {\tt 01} {\tt 00} {$U_a$} {\tt 04} {\tt 00} {\tt 00} {\tt 00} {$U_l$}}
+        {\tt 01} {\tt 00} {$U_a$} {$S_a$} {\tt 00} {\tt 00} {\tt 00} {$U_l$}}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 70}
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 04} {\tt 00}} & \bitbox{1}{$U_g$} & \bitboxes*{1}{{\tt 00} {\tt 00}
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {$S_l$} {\tt 00}} & \bitbox{1}{$L$} & \bitboxes*{1}{{\tt 00} {\tt 00}
         {\tt 01} {\tt 00} {\tt 00}} & \bitbox{1}{$P_1$} & \bitbox{4}{$Firmware$}
     \end{leftwordgroup} \\
 
@@ -665,8 +679,9 @@ the CD drive, {\tt 02} means the SD slot, and {\tt 03} means the USB
 slot. When a track is loaded from a rekordbox collection on a laptop,
 $S_r$ has the value {\tt 04}. $t_r$ at byte~42 may be an indicator of
 whether the track came from rekordbox: It seems to have the value {\tt
-  00} when no track is loaded, {\tt 01} when a rekordbox track is
-loaded, and {\tt 05} when a regular audio CD is loaded.
+  00} when no track is loaded or an unanalyzed track is loaded, {\tt
+  01} when a rekordbox track is loaded, and {\tt 05} when an audio CD
+is loaded.
 
 The field $rekordbox$ at bytes~44--47 contains the rekordbox database
 ID of the loaded track when a rekordbox track is being played.
@@ -690,26 +705,34 @@ version of this document.)
 
 Byte~106, labeled $U_a$ (for ``USB activity''), alternates between the
 values 4 and 6 when there is USB activity---it may even alternate in
-time with the flashing USB indicator LED on the player. Byte~111
-($U_l$ for ``USB local'') has the value 4 when there is no USB media
-loaded, 0 when USB is loaded, and 2 when the USB Stop button has been
-pressed and the USB media is being unmounted.
+time with the flashing USB indicator LED on the player. Byte~107,
+$S_a$, is the same kind of activity indicator for the SD slot.
+Byte~111 ($U_l$ for ``USB local'') has the value 4 when there is no
+USB media loaded, 0 when USB is loaded, and 2 when the USB Stop button
+has been pressed and the USB media is being unmounted.
 
-Byte~117, labeled $U_g$ (for ``USB global''), appears to have the
-value 1 whenever USB media is present in any player on the network,
-whether or not the Link option is chosen in the other players, and 0
-otherwise. I don't know if that is true of other linkable SD media as
-well; this needs more investigation.
+Byte~115 ($S_l$ for ``SD local'') has the value 4 when there is no SD
+media loaded, 0 when SD is loaded, and 2 when the SD door has been
+opened and the SD media is being unmounted.
+
+Byte~117, labeled $L$ (for ``Link available''), appears to have the
+value 1 whenever USB, SD, or CD media is present in any player on the
+network, whether or not the Link option is chosen in the other
+players, and 0 otherwise.
 
 Byte~123, labeled $P_1$, appears to describe the current play mode.
 The values that have been seen so far, and their apparent meanings,
 are:
 \begin{description}
 \item[0] No track is loaded.
+\item[2] A track is in the process of loading.
 \item[3] The player is playing normally.
 \item[4] The player is playing a loop.
 \item[5] The player is paused anywhere other than the cue point.
 \item[6] The player is paused at the cue point.
+\item[7] Cue Play is in progress (playback while the cue button is
+  held down).
+\item[8] Cue scratch is in progress.
 \item[9] The player is searching forwards or backwards.
 \item[17] The player reached the end of the track and stopped.
 \end{description}

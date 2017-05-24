@@ -3,14 +3,17 @@
         <em>D<sub>r</sub></em>: {{rekordbox-device}}; &nbsp;
         <em>S<sub>r</sub></em>: {{rekordbox-slot}}; &nbsp;
         <em>t<sub>s</sub></em>: {{rekordbox-type}}; &nbsp;
-        <em>rekordbox</em>: {{rekordbox-id}}
+        <em>rekordbox</em>: {{rekordbox-id}};
+        <em>Track</em>: {{track}}
         <br/>
 
-        <em>Track</em>: {{track}};
         <em>U<sub>a</sub></em>:
         <b>{% if usb-activity = 6 %}<font color="yellow">6</font>{% else %}4{% endif %}</b>; &nbsp;
+        <em>S<sub>a</sub></em>:
+        <b>{% if sd-activity = 6 %}<font color="yellow">6</font>{% else %}4{% endif %}</b>; &nbsp;
         <em>U<sub>l</sub></em>: USB {{usb-local}}; &nbsp;
-        <em>U<sub>g</sub></em>: Link USB {{usb-global}}
+        <em>S<sub>l</sub></em>: SD {{sd-local}}; &nbsp;
+        <em>L</em>: {{link-status}}
         <br/>
 
         <em>P<sub>1</sub></em>: {{p-1}}; &nbsp;
