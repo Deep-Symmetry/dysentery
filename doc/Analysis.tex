@@ -8,6 +8,7 @@
 \usepackage{hyperref}
 \usepackage{bookmark}
 \usepackage{color}
+\usepackage{alltt}
 
 \title{DJ Link Packet Analysis}
 \author{James Elliott\\Deep Symmetry, LLC}
@@ -1165,15 +1166,6 @@ device number you are using for your virtual CDJ, but since it must be
 between 1 and 4, you can only do that if there are fewer than four
 actual CDJs on the network.
 
-TODO: Resume here, showing response packet, now that we understand its
-structure.
-
-The player responds with a 42 byte packet that starts with the message
-separator and the message sequence number you sent. We have not yet
-found any other meaningful information in this response.
-
-At this point, the player is ready to accept queries.
-
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
     \hexhead \\
@@ -1181,22 +1173,29 @@ At this point, the player is ready to accept queries.
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
 
-      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt fffffffe} &
-      \bitbox{1}{\tt 10} & \bitbox{2}{\tt 0000} & \bitbox{1}{\tt 0f} & \bitbox{1}{\tt 01} &
-      \bitbox{1}{\tt 14}
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{\tt fffffffe} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 0000} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 01} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 10}
-      \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{\tt 06} {\tt 00} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 11} & \bitbox{4}{$D_{ours}$} & \bitbox[]{11}{}
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Query Context Setup message}
+  \caption{Query context setup message}
   \label{fig:querySetupPacket}
 \end{figure}
 
@@ -1217,31 +1216,37 @@ Figure~\ref{fig:querySetupResponse}.
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
 
-      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt fffffffe} &
-      \bitbox{1}{\tt 10} & \bitbox{2}{\tt 4000} & \bitbox{1}{\tt 0f} & \bitbox{1}{\tt 02} &
-      \bitbox{1}{\tt 14}
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{\tt fffffffe} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4000} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 10}
-      \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{\tt 06} {\tt 06} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000000}} & \bitbox{1}{\tt 11} & \bitbox{4}{$D_{theirs}$} &
       \bitbox[]{6}{}
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Query Context Setup response}
+  \caption{Query context setup response}
   \label{fig:querySetupResponse}
 \end{figure}
 
---- TODO: Heavy revision needed from here to end of section! ---
+\subsection{Track Metadata}
 
-To ask for
-metadata about a particular track, send a packet like the one shown in
-Figure~\ref{fig:trackSetupPacket}.
+To ask for metadata about a particular track, send a packet like the
+one shown in Figure~\ref{fig:trackSetupPacket}.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -1250,19 +1255,26 @@ Figure~\ref{fig:trackSetupPacket}.
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
 
-      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 872349ae} & \bitbox{1}{\tt 11} & \bitbox{4}{$TxID$} &
-      \bitbox{1}{\tt 10} & \bitbox{2}{\tt 2002} & \bitbox{1}{\tt 0f} & \bitbox{1}{\tt 02} &
-      \bitbox{1}{\tt 14}
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2002} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 10}
-      \bitbox{4}{{\tt 0000000c}\small{ (12)}} & \bitboxes*{1}{{\tt 06} {\tt 00} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} & \bitbox{1}{\tt 01}
-        & \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
     \end{leftwordgroup}
     
   \end{bytefield}
@@ -1270,7 +1282,7 @@ Figure~\ref{fig:trackSetupPacket}.
   \label{fig:trackSetupPacket}
 \end{figure}
 
-As described above, $seq$ should be 1 for the first query packet you
+As described above, $TxID$ should be 1 for the first query packet you
 send, 2 for the next, and so on. $D$ should have the same value you
 used in your initial query context setup packet, identifying the
 device that is asking the question. $S_r$ is the slot in which the
@@ -1279,123 +1291,477 @@ CDJ status packets, as shown in Figure~\ref{fig:cdjStatus}. Similarly,
 $rekordbox$ identifies the local rekordbox database ID of the track
 being asked about, as found in the CDJ status packet.
 
-Once again the player responds with a 42 byte packet that starts with
-the message separator and the message sequence number you sent, and
-which contains no known useful information. But at this point there is
-only one more message you need to send in order to get the metadata
-response. That has the content shown in
-Figure~\ref{fig:trackMetadataPacket}.
-
-The value of $seq$ should be one higher than the one you sent in your
-previous packet, while the values of $D$ and $S_r$ should be identical
-to what you sent in it.
+Track metadata requests are built on the mechanism that is used to
+request and draw scrollable menus on the CDJs, so the request is
+essentially interpreted as setting up to draw the ``menu'' of
+information that is known about the track. The player responds with a
+success indicator, saying it is ready to send these ``menu items'' and
+reporting how many of them are available, as shown in
+Figure~\ref{fig:trackSetupResponse}.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
     \hexhead \\
+    \messagehead \\
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
       
-      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
-      \bitboxes*{1}{{\tt 10} {\tt 30} {\tt 00} {\tt 0f} {\tt 06} {\tt 14}}
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4000} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
     
     \begin{leftwordgroup}{\tiny\bfseries 10}
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 06} {\tt 06} {\tt 06}
-        {\tt 06} {\tt 06} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002002} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 0000000b} & \bitbox[]{6}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Track metadata ready response}
+  \label{fig:trackSetupResponse}
+\end{figure}
+
+We've seen this type of ``data available'' response already in
+Figure~\ref{fig:querySetupResponse}, but this one is a more typical
+example. As usual, $TxID$ matches the value we sent in our request,
+and the first argument, with value {\tt 0x2002}, reflects the $type$
+field of our request. The second argument reports that there are 11
+({\tt 0x0b}) entries of track metadata available to be retrieved for
+the track we asked about, and that the player is ready to send them to
+us.
+
+If there was no track with ID $rekordbox$ in that media slot, the
+second argument would have the value {\tt 0xffffffff} to let us know.
+If we messed up something else about the request, we will get a
+response with a $type$ other than {\tt 0x4000}. See
+Section~\ref{sec:experimenting} for instructions on how to explore
+these variations on your own.
+
+But assuming everything went well, we can get the player to send us
+all eleven of those metadata entries by telling it to render all of
+the current menu, using a ``render menu'' request with $type$ {\tt 0x3000} shown in
+Figure~\ref{fig:renderMenuRequest}.
+
+As always, the value of $TxID$ should be one higher than the one you
+sent in your setup packet, while the values of $D$ and $S_r$ should be
+identical to what you sent in it.
+
+The request has six numeric arguments. At this point it is worth
+talking a bit more about the byte after $D$ in the first argument.
+This seems to specify the location of the menu being drawn, with the
+value 1 meaning the main menu on the left-hand half of the CDJ
+display, while 2 means the submenu (for example the info popup when it
+is open) which overlays the right-hand half of the display. We don't
+yet know exactly what, if any, difference there is between the
+response details when 2 is used instead of 1 here. And special data
+requests use different values: for example, the track waveform
+summary, which is drawn in a strip along the entire bottom of the
+display, is requested with a menu location number of 8 in this second
+byte.
+
+The byte after $S_r$ seems to always have the value 1. We've seen it
+described as ``source analyzed'' but don't know exactly what that
+means.
+
+The second argument, $offset$, specifies which menu entry is the first
+one you want to see, and the third argument, $limit$, specifies how
+many should be sent. In this case, since there are only 11 entries, we
+can request them all at once, so we will set $offset$ to 0 and $limit$
+to 11. But for large playlists, for example, you need to request
+batches of entries that are smaller than the total available, or the
+player will be unable to send them to you. We have not found what the
+exact limit is, but getting 64 at a time seems to work on Nexus 2
+players.
+
+We don't know the purpose of the fourth argument, but sending a value
+of 0 works. The fifth argument, $limit_2$, is also poorly understood,
+but sending a second copy of $limit$ here works. And the sixth and
+final argument also has an unknown purpose, but 0 works.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 3000} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 06} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
     
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 01} & \bitbox{1}{$S_r$} &
-      \bitboxes*{1}{{\tt 01} {\tt 11} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 11} {\tt 00} {\tt 00} {\tt 00} {\tt 0b} {\tt 11}}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$offset$} & \bitbox{1}{\tt 11} & \bitbox{4}{$limit$} &
+      \bitbox{1}{\tt 11}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 30}
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 11} {\tt 00} {\tt 00} {\tt 00}
-        {\tt 0b} {\tt 11} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{2}{}
+      \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{$limit_2$} & \bitbox{1}{\tt 11} & 
+      \bitbox{4}{\tt 00000000} & \bitbox[]{2}{}
     \end{leftwordgroup}
-    
+
   \end{bytefield}
-  \caption{Render Menu request message (TODO: redo)}
-  \label{fig:trackMetadataPacket}
+  \caption{Render Menu request message}
+  \label{fig:renderMenuRequest}
 \end{figure}
 
-This will cause the player to send back a series of messages
-containing the metadata fields describing the track you requested.
-Each field will begin with the six-byte message separator sequence,
-followed by the value of $seq$ you sent in the final metadata query
-packet. Because this may be split across multiple packets, you should
-keep reading until you see the final response field, which will have
-the content shown in Figure~\ref{fig:finalMetadataField}.
-
-The first two metadata response fields don't contain any values we
-have yet figured out. Several contain string values. These are stored
-as UTF-16 big-endian strings whose length is stored at bytes~42-45,
-and where the string itself begins at byte~46. (The byte indices here
-are counted from the start of the four-byte message sequence number
-that follows the message separator, so the sequence number is found at
-bytes~0-3.)
-
-The string-containing fields are the third (track title), fourth
-(artist), fifth (album), eighth (comment), ninth (musical key),
-twelfth (genre), and thirteenth (label), although that has always been
-blank so far. It may represent the color label assigned to a track,
-and I just don't have tracks with that set.
-
-The fifth field contains the track length in seconds, stored as a
-four-byte integer at bytes~32-35.
-
-In addition to containing the track title, the third field also
-contains the track's artwork ID, as a 4-byte big-endian integer
-starting 19~bytes before the end of the field.
+So, for our metadata request, the packet we want to send in order to
+get all the metadata will have the specific values shown in
+Figure~\ref{fig:renderTrackMetadata}:
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
     \hexhead \\
+    \messagehead \\
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
-      
-      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
-      \bitboxes*{1}{{\tt 10} {\tt 42} {\tt 01} {\tt 0f} {\tt 00} {\tt 14}}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 3000} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 06} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
     
     \begin{leftwordgroup}{\tiny\bfseries 10}
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00}{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
-    \end{leftwordgroup}
-    
-  \end{bytefield}
-  \caption{Menu footer message (TODO: redo)}
-  \label{fig:finalMetadataField}
-\end{figure}
-
-To request the artwork image corresponding to that ID, send a packet
-like the one shown in Figure~\ref{fig:artworkRequestPacket}.
-
-\begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
-    \hexhead \\
-
-    \begin{leftwordgroup}{\tiny\bfseries 00}
-      
-      \bitboxes*{1}{{\tt 11} {\tt 87} {\tt 23} {\tt 49} {\tt ae} {\tt 11}} & \bitbox{4}{$seq$} &
-      \bitboxes*{1}{{\tt 10} {\tt 20} {\tt 03} {\tt 0f} {\tt 02} {\tt 14}}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
     \end{leftwordgroup} \\
-    
-    \begin{leftwordgroup}{\tiny\bfseries 10}
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0c} {\tt 06} {\tt 06} {\tt 00} {\tt 00}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
-    \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 11} & \bitbox{1}{$D$} & \bitbox{1}{\tt 08} & \bitbox{1}{$S_r$} & \bitboxes*{1}{{\tt 01} {\tt 11}} &
-      \bitbox{4}{$artwork$} & \bitbox[]{6}{}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 0000000b} &
+      \bitbox{1}{\tt 11}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 0000000b} & \bitbox{1}{\tt 11} & 
+      \bitbox{4}{\tt 00000000} & \bitbox[]{2}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Render track metadata request message}
+  \label{fig:renderTrackMetadata}
+\end{figure}
+
+This causes the player to send us 13 messages: The 11 metadata items
+we requested are sent (with $type$ {\tt 0x4101},
+Figure~\ref{fig:trackMetadataMenuItem}), but they are preceded by a
+menu header message (with $type$ {\tt 0x4001},
+Figure~\ref{fig:trackMetadataMenuHeader}), and followed by a menu
+footer message (with $type$ {\tt 0x4201},
+Figure~\ref{fig:trackMetadataMenuFooter}). This wrapping happens with
+all ``render menu'' requests, and the menu footer is an easy way to
+know you are done, although you can also count the messages.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4001} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000001} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} & \bitbox[]{6}{}
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Artwork request message (TODO: redo)}
-  \label{fig:artworkRequestPacket}
+  \caption{Track metadata menu header response}
+  \label{fig:trackMetadataMenuHeader}
+\end{figure}
+
+The menu item responses all have the same structure, and use all
+twelve message argument slots, containing ten numbers and two strings,
+although they generally don't have meaningful values in all of the
+slots. They have the general structure shown in in
+Figure~\ref{fig:trackMetadataMenuItem}, and the arguments are:
+
+\begin{description}
+\item[1] Numeric, a parent ID, such as an artist for a track
+  item.
+\item[2] Numeric, the main ID, such as $rekordbox$ for a
+  track item.
+\item[3] Numeric, the length in bytes of Label 1.
+\item[4] String, Label 1 (main text, such as the track title or
+  artist name, as appropriate for the item type).
+\item[5] Numeric, the length in bytes of Label 2.
+\item[6] String, Label 2 (secondary text, e.g. for playlist entries
+  the artist name, and Label 1 holds the title).
+\item[7] Numeric, the type of this item (see
+  Section~\ref{sec:menuItemTypes}).
+\item[8] Numeric, some sort of flags field, details still unclear.
+\item[9] Numeric, holds the album art ID when the type is a Track
+  Title.
+\item[10] Numeric, playlist position when relevant, e.g. when listing
+  a playlist.
+\item[11] Numeric, purpose unknown.
+\item[12] Numeric, purpose unknown.
+\end{description}
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4101} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 0c} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 02} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 02} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[rbt]{lightpurple}{1}{\tt 06}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \wordbox[lrt]{1}{Arguments} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Track metadata item response}
+  \label{fig:trackMetadataMenuItem}
+\end{figure}
+
+\subsubsection{Track Metadata Item 1: Title}
+\label{sec:trackTitleItem}
+
+The first item returned after the menu header is the track title, so
+argument 7 has the value {\tt 0x04}. Argument 1, which may always be
+some kind of parent ID, holds the artist ID associated with the track.
+The second argument seems to always be the main ID, and for this
+response it holds the $rekordbox$ ID of the track. Argument 4 holds
+the track title text, and argument 8 holds the album $artwork$ ID if
+any is available for the track. This ID can be used to retrieve the
+actual album art image as described in Section~\ref{sec:albumArt}.
+
+\subsubsection{Track Metadata Item 2: Artist}
+
+The second item contains artist information so argument 7 has the
+value {\tt 0x07}. Argument 2 holds the artist ID, argument 4 contains
+the text of the artist name.
+
+\subsubsection{Track Metadata Item 3: Album Title}
+
+The third item contains album title information so argument 7 has the
+value {\tt 0x02}. Argument 4 contains the text of the album name.
+
+\subsubsection{Track Metadata Item 4: Duration}
+
+The fourth item contains track duration information so argument 7 has
+the value {\tt 0x0b}. Argument 2 contains the length, in seconds, of
+the track when played at normal tempo.
+
+\subsubsection{Track Metadata Item 5: Tempo}
+
+The fifth item contains tempo information so argument 7 has the value
+{\tt 0x0d}. Argument 2 contains the track's starting tempo, in BPM,
+times 100, as reported in $BPM$ values in other packets described
+earlier.
+
+\subsubsection{Track Metadata Item 6: Comment}
+
+The sixth item contains comment information so argument 7 has the
+value {\tt 0x23}. Argument 4 contains the text of the track comment
+entered by the DJ in rekordbox.
+
+\subsubsection{Track Metadata Item 7: Key}
+
+The seventh item contains key information so argument 7 has the value
+{\tt 0x0f}. Argument 4 contains the text of the track's dominant key
+signature.
+
+\subsubsection{Track Metadata Item 8: Rating}
+
+The eighth item contains rating information so argument 7 has the
+value {\tt 0x0a}. Argument 2 contains a value from 0 to 5
+corresponding to the number of stars the DJ has assigned the track in
+rekordbox.
+
+\subsubsection{Track Metadata Item 9: Color}
+
+The ninth item contains color information so argument 7 has the value
+{\tt 0x13}. I assume Argument 2 contains a value corresponding to the
+color the DJ has assigned the track in rekordbox, but I have not yet
+figured out the details.
+
+\subsubsection{Track Metadata Item 10: Genre}
+
+The tenth item contains genre information so argument 7 has the value
+{\tt 0x06}. Argument 2 contains the numeric genre ID, and argument 4
+contains the text of the genre name.
+
+\subsubsection{Track Metadata Item 11: Date Added}
+
+The eleventh and final item contains the date added information so
+argument 7 has the value {\tt 0x2e}. Argument 4 contains the date the
+track was added to the collection in the format ``yyyy-mm-dd''. This
+information seems to propagate into rekordbox from iTunes.
+
+\subsection{Menu Footer Response}
+
+The menu footer message has a $type$ of {\tt 0x4201} and no arguments,
+so it has a header only, and is always made up of the exact same
+sequence of bytes (apart from the $TxID$), as shown in
+Figure~\ref{fig:trackMetadataMenuFooter}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4201} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 00} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+    
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+  \end{bytefield}
+  \caption{Track metadata menu footer response}
+  \label{fig:trackMetadataMenuFooter}
+\end{figure}
+
+\subsection{Menu Item Types}
+\label{sec:menuItemTypes}
+
+As noted above, the seventh argument in a menu item response
+identifies the type of the item. The meanings we have identified so
+far are:
+
+\begin{description}
+\item[\tt 0x0001] Folder (such as in the playlists menu, a nested list
+  of playlists rather than an individual playlist)
+\item[\tt 0x0002] Album title
+\item[\tt 0x0003] Disc
+\item[\tt 0x0004] Track Title
+\item[\tt 0x0006] Genre
+\item[\tt 0x0007] Artist
+\item[\tt 0x0008] Playlist
+\item[\tt 0x000a] Rating
+\item[\tt 0x000b] Duration (in seconds)
+\item[\tt 0x000d] Tempo
+\item[\tt 0x000f] Key
+\item[\tt 0x0013] Color
+\item[\tt 0x0023] Comment
+\item[\tt 0x002e] Date Added
+\item[\tt 0x0704] Track List Entry
+\end{description}
+
+As noted above, track metadata responses use many of these types.
+Others are used in different kinds of menus and queries.
+
+\subsection{Album Art}
+\label{sec:albumArt}
+
+To request the artwork image associated with a track, send a message
+with $type$ {\tt 0x2003} containing the $artwork$ ID that was
+specified in the track title item (as described in
+Section~\ref{sec:trackTitleItem}), like the one shown in
+Figure~\ref{fig:artworkRequest}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2003} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$artwork$} & \bitbox[]{6}{}
+    \end{leftwordgroup}
+    
+  \end{bytefield}
+  \caption{Track artwork request message}
+  \label{fig:artworkRequest}
 \end{figure}
 
 As usual, $seq$ should be incremented each time you send a query, and
@@ -1406,15 +1772,148 @@ in which the track being asked about can be found, and has the same
 values used in CDJ status packets, as shown in
 Figure~\ref{fig:cdjStatus}. Finally, $artwork$ identifies the specific
 artwork image you are requesting, as it was specified in the track
-medatata response.
+medatata response. As with other graphical requests, the value after
+$D$, which identifies the location of the menu for which data is being
+loaded, is 8.
 
-The response will be a single field, starting with the six-byte
-message separator sequence followed by the sequence number you sent as
-$seq$. The length in bytes of the image will be specified by a
-four-byte big-endian integer starting at byte~48 of the response
-field, and the image itself will be sent as the indicated number of
-bytes immediately following the length (so starting at byte~52 of the
-response).
+The response will be a message with $type$ {\tt 0x4002}, containing
+four arguments. The first argument echoes back our request type, which
+was {\tt 0x2003}. The second always seems to be 0. The third contains
+the length of the image in bytes, which seems redundant, because that
+is also conveyed in the fourth argument itself, which is a blob
+containing the actual bytes of the image data, as shown in
+Figure~\ref{fig:artworkResponse}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4002} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 04} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 03} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002003} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length$} & \bitbox{1}{\tt 20}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \bitbox{4}{$length$} & \bitbox[lrt]{12}{Image bytes} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Track artwork response message}
+  \label{fig:artworkResponse}
+\end{figure}
+
+\subsection{Experimenting with Metadata}
+\label{sec:experimenting}
+
+The best way to get a feel for the details of working with these
+messages is to load dysentery into a Clojure REPL, as described on the
+project page, and play with some of the functions in the {\tt
+  dysentery.dbserver} namespace. Have no more than three players
+connected and active on your network, so you have an unused player
+number for dysentery to use. In this example, player number 1 is
+available, so we set dysentery up to pose as player 1:
+
+\begin{footnotesize}\begin{alltt}
+> \textbf{lein repl}
+nREPL server started on port 53806 on host 127.0.0.1 -
+ nrepl://127.0.0.1:53806
+REPL-y 0.3.7, nREPL 0.2.12
+Clojure 1.8.0
+Java HotSpot(TM) 64-Bit Server VM 1.8.0_77-b03
+dysentery loaded.
+dysentery.core=> \textbf{(view/watch-devices :player-number 1)}
+Looking for DJ Link devices...
+Found:
+   DJM-2000nexus 33 /172.16.42.3
+   CDJ-2000nexus 2 /172.16.42.4
+
+To communicate create a virtual CDJ with address
+  /172.16.42.2, MAC address 3c:15:c2:e7:08:6c,
+  and use broadcast address /172.16.42.255
+{:socket #object[java.net.DatagramSocket 0x22b952b1
+                 "java.net.DatagramSocket@22b952b1"],
+ :watcher #future[{:status :pending, :val nil} 0x3eb8f41b]}
+dysentery.core> \textbf{(def p2 (db/connect-to-player 2 1))}
+Transaction: 4294967294, message type: 0x4000
+ (requested data available), argument count: 2, arguments:
+  number:          0 (0x00000000) [request type]
+  number:          2 (0x00000002) [# items available]
+#'dysentery.core/p2
+dysentery.core> \textbf{(def md (db/request-metadata p2 2 1))}
+Sending > Transaction: 1, message type: 0x2002
+ (request track metadata), argument count: 2, arguments:
+  number:   16843265 (0x01010201) [player, menu, media, 1]
+  number:          1 (0x00000001) [rekordbox ID]
+Received > Transaction: 1, message type: 0x4000
+ (requested data available), argument count: 2, arguments:
+  number:       8194 (0x00002002) [request type]
+  number:         11 (0x0000000b) [# items available]
+Sending > Transaction: 2, message type: 0x3000
+ (render menu), argument count: 6, arguments:
+  number:   16843265 (0x01010201) [player, menu, media, 1]
+  number:          0 (0x00000000) [offset]
+  number:         11 (0x0000000b) [limit]
+  number:          0 (0x00000000) [unknown (0)?]
+  number:         11 (0x0000000b) [len_a (= limit)?]
+  number:          0 (0x00000000) [unknown (0)?]
+Received 1  > Transaction: 2, message type: 0x4001
+ (rendered menu header), argument count: 2, arguments:
+  number:          1 (0x00000001) [unknown]
+  number:          0 (0x00000000) [unknown]
+Received 2  > Transaction: 2, message type: 0x4101
+ (rendered menu item), argument count: 12, arguments:
+  number:          1 (0x00000001) [numeric 1 (parent id)]
+  number:          1 (0x00000001) [numeric 2 (this id)]
+  number:         80 (0x00000050) [label 1 byte size]
+  string: "Escape ft. Zoe Phillips" [label 1]
+  number:          2 (0x00000002) [label 2 byte size]
+  string: "" [label 2]
+  number:          4 (0x00000004) [item type: Track Title]
+  number:   16777216 (0x01000000) [column configuration?]
+  number:          0 (0x00000000) [album art id]
+  number:          0 (0x00000000) [playlist position]
+  number:        256 (0x00000100) [unknown]
+  number:          0 (0x00000000) [unknown]
+...
+Received 13  > Transaction: 2, message type: 0x4201
+ (rendered menu footer), argument count: 0, arguments:
+#'dysentery.core/md
+dysentery.core>
+\end{alltt}\end{footnotesize}
+
+In this interaction, after setting up the watcher so we can find
+players on the network, we set the {\tt var} p2 to be a connection to
+player 2, in which we are posing as player 1. Then we submit a
+metadata request to {\tt p2}, requesting the track in slot 2 (SD
+card), with $rekordbox$ id 1. You can see the messages being sent and
+received to accomplish that. For more functions that you can call,
+including the very flexible {\tt experiment} function, look at the
+source for the {\tt dysentery.dbserver} namespace. Most of the
+response messages containing track metadata were omitted for brevity;
+you will get more meaningful results trying it with your own tracks,
+and then you can see all the details.
 
 \subsection{Background Research}
 
