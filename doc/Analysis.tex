@@ -984,12 +984,12 @@ The first packet sent to the database server contains the five bytes
 back.
 
 All further packets have a shared structure. They consist of lists of
-type-tagged fields (a type byte, followed by at least four value
-bytes, although in the case of the variable-size types, those four
-bytes are a big-endian integer that specifies the length of the
-additional value bytes that make up the field). So far, there are four
-known field types, and it turns out that the packet we just saw is one
-of them, it represents the number 1.
+type-tagged fields (a type byte, followed some number of value bytes,
+although in the case of the variable-size types, the first four bytes
+are a big-endian integer that specifies the length of the additional
+value bytes that make up the field). So far, there are four known
+field types, and it turns out that the packet we just saw is one of
+them, it represents the number 1 as a 4-byte integer.
 
 \subsection{Field Types}
 
@@ -1810,7 +1810,7 @@ Figure~\ref{fig:artworkResponse}.
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002003} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
-      \bitbox{1}{\tt 11} & \bitbox{4}{$length$} & \bitbox{1}{\tt 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length$} & \bitbox{1}{\tt 14}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{}
