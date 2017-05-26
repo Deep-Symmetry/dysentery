@@ -2146,6 +2146,11 @@ response messages containing track metadata were omitted for brevity;
 you will get more meaningful results trying it with your own tracks,
 and then you can see all the details.
 
+\section{What's Missing?}
+
+We know this analysis isn't complete. Here are some loose ends to
+explore.
+
 \subsection{Background Research}
 
 Prior to Evan and Austin's breakthroughs, here is all we knew:
@@ -2179,11 +2184,35 @@ There is another capture at
 with more Link Info streams to be studied (all of the odd numbered
 {\tt tcp.stream} values in Wireshark are the relevant ones).
 
-\section{What's Missing?}
+\subsection{Deeper Emulation and Tempo Mastery}
 
-We know this analysis isn't complete. There are some values we know
-are available and useful (because CDJs and rekordbox itself show
-them), but we have not figured out how to find them yet.
+With the help of Austin's {\tt
+ libpdjl}\footnote{\url{https://bitbucket.org/awwright/libpdjl}}, it
+looks like it will be possible to emulate a CDJ well enough to act as
+a tempo master, which will allow bidirectional sync with Ableton Link.
+This is probably my next area of focus.
+
+It should also be easy enough to capture the traffic that rekordbox
+sends when it tells a player to load and start playing a track, and
+reproduce that.
+
+\subsection{Mysterious Values}
+
+There are still many values with unknown meanings described above, and
+many menu types that have yet to be explored; I hav focused on the
+ones that will be immediately useful to Beat Link Trigger.
+Contributions of additional research and insight are eagerly
+welcomed---I would have not gotten nearly this far without help!
+
+\subsection{Reading Data Without a CDJ}
+
+In order to offer metadata, timecode, waveforms, and so on, when there
+are four actual CDJs on the network, it is necessary to pre-load and
+cache all the data, since dbserver queries are not possible with all
+player numbers in use. While this can be done with a single CDJ
+powered up, it would be really nice to be able to read the information
+right out of the rekordbox files on the media that the DJ will be
+using for the show. So far, we don't know how to do that.
 
 Before we discovered how to ask players for metadata about
 particular tracks, we did some research into the underlying rexordbox
