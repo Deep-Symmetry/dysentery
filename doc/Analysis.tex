@@ -9,6 +9,7 @@
 \usepackage{bookmark}
 \usepackage{color}
 \usepackage{alltt}
+\usepackage{tabu, booktabs}
 
 \title{DJ Link Packet Analysis}
 \author{James Elliott\\Deep Symmetry, LLC}
@@ -84,6 +85,10 @@
 \definecolor{lightred}{rgb}{1,0.7,0.71}
 \definecolor{lightcyan}{rgb}{0.84,1,1}
 \definecolor{lightpurple}{rgb}{1,0.71,1}
+
+\tableofcontents
+
+\newpage
 
 \section{Mixer Startup}
 
@@ -1699,24 +1704,44 @@ As noted above, the seventh argument in a menu item response
 identifies the type of the item. The meanings we have identified so
 far are:
 
-\begin{description}
-\item[\tt 0x0001] Folder (such as in the playlists menu, a nested list
-  of playlists rather than an individual playlist)
-\item[\tt 0x0002] Album title
-\item[\tt 0x0003] Disc
-\item[\tt 0x0004] Track Title
-\item[\tt 0x0006] Genre
-\item[\tt 0x0007] Artist
-\item[\tt 0x0008] Playlist
-\item[\tt 0x000a] Rating
-\item[\tt 0x000b] Duration (in seconds)
-\item[\tt 0x000d] Tempo
-\item[\tt 0x000f] Key
-\item[\tt 0x0013] Color
-\item[\tt 0x0023] Comment
-\item[\tt 0x002e] Date Added
-\item[\tt 0x0704] Track List Entry
-\end{description}
+\begin{center}
+  \begin{tabu}{rl}
+    \toprule
+    \bfseries{Type} & \bfseries{Meaning} \\
+
+    {\tt 0x0001} & Folder (such as in the playlists menu)\footnote{A nested list
+      of playlists rather than an individual playlist.} \\
+
+    {\tt 0x0002} & Album title \\
+
+    {\tt 0x0003} & Disc \\
+
+    {\tt 0x0004} & Track Title \\
+
+    {\tt 0x0006} & Genre \\
+
+    {\tt 0x0007} & Artist \\
+
+    {\tt 0x0008} & Playlist \\
+
+    {\tt 0x000a} & Rating \\
+
+    {\tt 0x000b} & Duration (in seconds) \\
+
+    {\tt 0x000d} & Tempo \\
+
+    {\tt 0x000f} & Key \\
+
+    {\tt 0x0013} & Color \\
+
+    {\tt 0x0023} & Comment \\
+
+    {\tt 0x002e} & Date Added \\
+
+    {\tt 0x0704} & Track List \\
+    \bottomrule
+  \end{tabu}
+\end{center}
 
 As noted above, track metadata responses use many of these types.
 Others are used in different kinds of menus and queries.
@@ -1956,7 +1981,7 @@ undetermined. It looks like there may be some sort of monotonically
 increasing value following the beat millisecond value, but what it
 means, and why it sometimes skips values, is mysterious.
 
-\subsection{Requesting the Waveform Overview}
+\subsection{Requesting Track Waveforms}
 
 TODO: Describe!
 
@@ -2136,14 +2161,20 @@ validate this analysis, and perhaps even figure out more details, you
 can find the tool that is being used to perform this research at: \\
 \url{https://github.com/brunchboy/dysentery}
 
-\begin{center}
-  \begin{samepage}
-    \includegraphics[width=4cm]{assets/DS-Logo-bw-4k}
+\begin{appendix}
 
-    \vspace{0.25cm}
-    \url{http://deepsymmetry.org}
-  \end{samepage}
-\end{center}
+  \listoffigures
+
+  \begin{center}
+    \begin{samepage}
+      \includegraphics[width=4cm]{assets/DS-Logo-bw-4k}
+
+      \vspace{0.25cm}
+      \url{http://deepsymmetry.org}
+    \end{samepage}
+  \end{center}
+
+\end{appendix}
 
 \end{document}
 
