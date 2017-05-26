@@ -375,8 +375,8 @@
    0x4602 {:type      "beat grid"
            :arguments ["request type"
                        "constant 0?"
-                       "image length"
-                       "image bytes"
+                       "beat grid length"
+                       "beat grid bytes"
                        "constant 0?"]}
    0x4702 {:type      "cue points"
            :arguments ["request type"

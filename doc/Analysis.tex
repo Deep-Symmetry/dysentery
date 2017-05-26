@@ -1824,6 +1824,157 @@ Figure~\ref{fig:artworkResponse}.
   \label{fig:artworkResponse}
 \end{figure}
 
+\subsection{Beat Grids}
+
+The CDJs do not send any timing information other than beat numbers
+during playback, which has made it difficult to offer absolute
+timecode information. The discovery of beat grid requests provides a
+clean answer to the problem. The beat grid for a track is a list of
+every beat which occurs in the track, along with the point in time at
+which that beat would occur if the track were played at its standard
+(100\%) tempo. Armed with this table, it is possible to translate any
+beat packet into an absolute position within the track, and, combined
+with the tempo information, to generate timecode signals allowing
+other software (such as video resources) to sync tightly with DJ
+playback.
+
+To request the beat grid of a track, send a message with $type$ {\tt
+  0x2204} containing the $rekordbox$ ID of the track, like the one
+shown in Figure~\ref{fig:beatGridRequest}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2204} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Track beat grid request message}
+  \label{fig:beatGridRequest}
+\end{figure}
+
+As usual, $seq$ should be incremented each time you send a query, and
+will be used to identify the response messages. $D$ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. $S_r$ is the slot
+in which the track being asked about can be found, and has the same
+values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}. Finally, $rekordbox$ identifies the
+specific artwork image you are requesting, as found in a CDJ status
+packet or playlist response. As with graphical requests, the value
+after $D$, which identifies the location of the menu for which data is
+being loaded, is 8.
+
+The response will be a message with $type$ {\tt 0x4602}, containing
+four arguments. The first argument echoes back our request type, which
+was {\tt 0x2204}. The second always seems to be 0. The third contains
+the length of the beat grid in bytes, which seems redundant, because
+that is also conveyed in the fourth argument itself, which is a blob
+containing the actual bytes of the beat grid, as shown in
+Figure~\ref{fig:beatGridResponse}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4602} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 04} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 03} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002204} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length$} & \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \bitbox{4}{$length$} & \bitbox[lrt]{12}{Beat grid bytes} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Track beat grid response message}
+  \label{fig:beatGridResponse}
+\end{figure}
+
+The beat grid itself is spread through the value returned as argument
+4, consisting of one-byte beat-within-bar numbers (labeled $B_b$ in
+Figure~\ref{fig:cdjStatus}), followed by four-byte timing information,
+specifying the number of milliseconds after the start of the track
+(when played at its native tempo) at which that beat falls.
+
+The $B_b$ value of the first beat in the track is found at byte 20 of
+argument 4, and the time at which that beat occurs, in milliseconds,
+is encoded as a 4-byte big-endian integer at bytes 21--24. Subsequent
+beats are found at 16-byte intervals, so the second $B_b$ value is
+found at byte 36, and the second beat's time, in milliseconds from the
+start of the track, is the big-endian integer at bytes 37--40. The
+$B_b$ value for the third beat is at byte 52, and its millisecond time
+is at bytes 53--56, and so on.
+
+The purpose of the other bytes within the beat grid is so far
+undetermined. It looks like there may be some sort of monotonically
+increasing value following the beat millisecond value, but what it
+means, and why it sometimes skips values, is mysterious.
+
+\subsection{Requesting the Waveform Overview}
+
+TODO: Describe!
+
+\subsection{Requesting All Tracks}
+
+If you want to cache all the metadata associated with a media stick,
+this query is a good starting point.
+
+TODO: Fill out!
+
+\subsection{Playlists}
+
+If you want to be more selective about the metadata that you are
+caching, you can navigate the playlist folder hierarcy and deal with
+only speific playlists.
+
+TODO: Fill out!
+
 \subsection{Experimenting with Metadata}
 \label{sec:experimenting}
 
@@ -1917,7 +2068,7 @@ and then you can see all the details.
 
 \subsection{Background Research}
 
-Prior to Evan's breakthrough, here is all we knew:
+Prior to Evan and Austin's breakthroughs, here is all we knew:
 
 By setting up a managed switch to mirror traffic sent directly between
 CDJs, we have been able to see how the Link Info operation is
