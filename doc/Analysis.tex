@@ -729,19 +729,36 @@ players, and 0 otherwise.
 Byte~123, labeled $P_1$, appears to describe the current play mode.
 The values that have been seen so far, and their apparent meanings,
 are:
-\begin{description}
-\item[0] No track is loaded.
-\item[2] A track is in the process of loading.
-\item[3] The player is playing normally.
-\item[4] The player is playing a loop.
-\item[5] The player is paused anywhere other than the cue point.
-\item[6] The player is paused at the cue point.
-\item[7] Cue Play is in progress (playback while the cue button is
-  held down).
-\item[8] Cue scratch is in progress.
-\item[9] The player is searching forwards or backwards.
-\item[17] The player reached the end of the track and stopped.
-\end{description}
+\begin{center}
+  \begin{tabu}{rX}
+    \toprule
+
+    \bfseries{Value} & \bfseries{Meaning} \\
+
+    0 & No track is loaded \\
+
+    2 & A track is in the process of loading \\
+
+    3 & Player is playing normally \\
+
+    4 & Player is playing a loop \\
+
+    5 & Player is paused anywhere other than the cue point \\
+
+    6 & Player is paused at the cue point \\
+
+    7 & Cue Play is in progress (playback while the cue button is
+  held down) \\
+
+  8 & Cue scratch is in progress \\
+
+  9 & Player is searching forwards or backwards \\
+
+  17 & Player reached the end of the track and stopped \\
+
+    \bottomrule
+  \end{tabu}
+\end{center}
 
 The $Firmware$ value at bytes~124--127 is an ASCII represenation of the
 firmware version running in the player.
@@ -871,12 +888,23 @@ rekordbox track is loaded, and {\tt 0x0000} when a non-rekordbox track
 Byte~157 (labeled $P_3$) seems to communicate additional information
 about the current play mode, with the following meanings that we have
 found so far:
-\begin{description}
-\item[0] No track is loaded.
-\item[1] The player is paused or playing in Reverse mode.
-\item[9] The player is playing in Forward mode with jog mode set to Vinyl.
-\item[13] The player is playing in Forward mode with jog mode set to CDJ.
-\end{description}
+\begin{center}
+  \begin{tabu}{rX}
+    \toprule
+
+    \bfseries{Value} & \bfseries{Meaning} \\
+
+    0 & No track is loaded \\
+
+    1 & Player is paused or playing in Reverse mode \\
+
+    9 & Player is playing in Forward mode with jog mode set to Vinyl \\
+
+    13 & Player is playing in Forward mode with jog mode set to CDJ \\
+
+    \bottomrule
+  \end{tabu}
+\end{center}
 
 The 4-byte beat counter (which counts each beat from 1 through the end
 of the track) is found in bytes~160--163, labeled $Beat$. When the
@@ -1102,12 +1130,21 @@ information is necessary at all, but that is true a number of places
 in the protocol as you will see later. Here are the known tag values
 and their meanings:
 
-\begin{description}
-\item[\tt 0x02] A string in UTF-16 big-endian encoding, with trailing
-  NUL (zero) character.
-\item[\tt 0x03] A binary blob.
-\item[\tt 0x06] A 4~byte big-endian integer.
-\end{description}
+\begin{center}
+  \begin{tabu}{rX}
+    \toprule
+
+    \bfseries{Tag} & \bfseries{Meaning} \\
+
+    {\tt 0x02} & A string in UTF-16 big-endian encoding, with trailing
+    NUL (zero) character \\
+
+    {\tt 0x03} & A binary blob \\
+
+    {\tt 0x06} & A 4~byte big-endian integer \\
+    \bottomrule
+  \end{tabu}
+\end{center}
 
 I am guessing that if we ever see them, a tag of 4 would represent a
 1~byte integer, and 5 would represent a 2~byte integer. But so far no
@@ -1529,27 +1566,43 @@ although they generally don't have meaningful values in all of the
 slots. They have the general structure shown in in
 Figure~\ref{fig:trackMetadataMenuItem}, and the arguments are:
 
-\begin{description}
-\item[1] Numeric, a parent ID, such as an artist for a track
-  item.
-\item[2] Numeric, the main ID, such as $rekordbox$ for a
-  track item.
-\item[3] Numeric, the length in bytes of Label 1.
-\item[4] String, Label 1 (main text, such as the track title or
-  artist name, as appropriate for the item type).
-\item[5] Numeric, the length in bytes of Label 2.
-\item[6] String, Label 2 (secondary text, e.g. for playlist entries
-  the artist name, and Label 1 holds the title).
-\item[7] Numeric, the type of this item (see
-  Section~\ref{sec:menuItemTypes}).
-\item[8] Numeric, some sort of flags field, details still unclear.
-\item[9] Numeric, holds the album art ID when the type is a Track
-  Title.
-\item[10] Numeric, playlist position when relevant, e.g. when listing
-  a playlist.
-\item[11] Numeric, purpose unknown.
-\item[12] Numeric, purpose unknown.
-\end{description}
+\begin{center}
+  \begin{tabu}{rcX}
+    \toprule
+
+    \bfseries{Arg} & \bfseries{Type} & \bfseries{Meaning} \\
+
+    1 & number & parent ID, such as an artist for a track item \\
+
+    2 & number & main ID, such as $rekordbox$ for a track item \\
+
+    3 & number & length in bytes of Label 1 \\
+
+    4 & string & Label 1 (main text, such as the track title or
+    artist name, as appropriate for the item type) \\
+
+    5 & number & length in bytes of Label 2 \\
+
+    6 & string & Label 2 (secondary text, e.g. artist name for
+    playlist entries, where Label 1 holds the title) \\
+
+    7 & number & type of this item (see
+    Section~\ref{sec:menuItemTypes}) \\
+
+    8 & number & some sort of flags field, details still unclear \\
+
+    9 & number & holds $artwork$ ID when type is Track Title \\
+
+    10 & number & playlist position when relevant, e.g. when listing
+    a playlist \\
+
+    11 & number & unknown \\
+
+    12 & number & unknown \\
+
+    \bottomrule
+  \end{tabu}
+\end{center}
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -1707,6 +1760,7 @@ far are:
 \begin{center}
   \begin{tabu}{rl}
     \toprule
+
     \bfseries{Type} & \bfseries{Meaning} \\
 
     {\tt 0x0001} & Folder (such as in the playlists menu)\footnote{A nested list
@@ -1739,6 +1793,7 @@ far are:
     {\tt 0x002e} & Date Added \\
 
     {\tt 0x0704} & Track List \\
+
     \bottomrule
   \end{tabu}
 \end{center}
