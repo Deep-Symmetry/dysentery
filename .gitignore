@@ -1,6 +1,10 @@
 /target
 /classes
 /checkouts
+/doc/Analysis.aux
+/doc/Analysis.lof
+/doc/Analysis.log
+/doc/Analysis.toc
 pom.xml
 pom.xml.asc
 *.jar
