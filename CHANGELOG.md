@@ -17,6 +17,8 @@ This change log follows the conventions of
 - Much more robust metadata queries and interpretation.
 - Album art retrieval.
 - Beat grid retrieval.
+- Waveform retrieval.
+- Playlist retrieval, and listing all tracks.
 
 ## [0.1.5] - 2016-07-04
 
