@@ -288,7 +288,12 @@
    0x13  "Color"
    0x23  "Comment"
    0x2e  "Date Added"
-   0x704 "Track List entry"})
+   0x204 "Track List entry by album"
+   0x604 "Track List entry by genre"
+   0x704 "Track List entry"
+   0xd04 "Track List entry by BPM"
+   0x2304 "Track List entry by comment"
+   0x2904 "Playlist entry by track title"})
 
 (defn describe-item-type
   "Given a number field, holding a menu item type renders a
@@ -497,30 +502,35 @@
 
 (defn request-track-list
   "Sends the sequence of messages that request the track list for a
-  media slot on the player."
-  [player slot]
-  (let [id (swap! (:counter player) inc)
-        menu-field (number-field [(:number player) 1 slot 1])
-        setup (build-message id 0x1004 menu-field (number-field 0 4))]
-    (print "Sending > ")
-    (describe-message setup)
-    (send-message player setup)
-    (when-let [response (read-message player)]
-      (print "Received > ")
-      (describe-message response)
-      (when (= 0x4000 (get-message-type response))
-        (let [item-count (get-in response [:arguments 1 :number])]
-          (cond
-            (= item-count 0xffffffff)
-            (timbre/error "No track listing available for slot" slot "on player" (:target player))
+  media slot on the player. If `order` is given it is sent as the
+  second numeric argument in the request; a value of 2 seems to sort
+  the tracks by artist names. There may be other options as yet
+  undiscovered."
+  ([player slot]
+   (request-track-list player slot 0))
+  ([player slot order]
+   (let [id (swap! (:counter player) inc)
+         menu-field (number-field [(:number player) 1 slot 1])
+         setup (build-message id 0x1004 menu-field (number-field order 4))]
+     (print "Sending > ")
+     (describe-message setup)
+     (send-message player setup)
+     (when-let [response (read-message player)]
+       (print "Received > ")
+       (describe-message response)
+       (when (= 0x4000 (get-message-type response))
+         (let [item-count (get-in response [:arguments 1 :number])]
+           (cond
+             (= item-count 0xffffffff)
+             (timbre/error "No track listing available for slot" slot "on player" (:target player))
 
-            (pos? item-count)
-            (let [tracks (read-menu-responses player menu-field item-count)]
-              ;; TODO build and return more compact structure?
-              tracks)
+             (pos? item-count)
+             (let [tracks (read-menu-responses player menu-field item-count)]
+               ;; TODO build and return more compact structure?
+               tracks)
 
-            :else
-            (timbre/error "No track listing available for slot" slot "on player"  (:target player))))))))
+             :else
+             (timbre/error "No track listing available for slot" slot "on player"  (:target player)))))))))
 
 (defn request-playlist
   "Sends the sequence of messages that request a playlist. If `folder?`
@@ -528,11 +538,13 @@
   menu, not for an actual playlist. The root playlist menu is obtained
   by requesting folder 0."
   ([player slot id]
-   (request-playlist player slot id false))
+   (request-playlist player slot id false 0))
   ([player slot id folder?]
+   (request-playlist player slot id folder? 0))
+  ([player slot id folder? sort]
    (let [tx (swap! (:counter player) inc)
          menu-field (number-field [(:number player) 1 slot 1])
-         setup (build-message tx 0x1105 menu-field (number-field 0 4) (number-field id 4)
+         setup (build-message tx 0x1105 menu-field (number-field sort 4) (number-field id 4)
                               (number-field (if folder? 1 0) 4))]
      (print "Sending > ")
      (describe-message setup)

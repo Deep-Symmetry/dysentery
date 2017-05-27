@@ -1557,7 +1557,7 @@ know you are done, although you can also count the messages.
     \end{leftwordgroup}
     
   \end{bytefield}
-  \caption{Track metadata menu header response}
+  \caption{Menu header response}
   \label{fig:trackMetadataMenuHeader}
 \end{figure}
 
@@ -1636,7 +1636,7 @@ Figure~\ref{fig:trackMetadataMenuItem}, and the arguments are:
     \end{leftwordgroup}
 
   \end{bytefield}
-  \caption{Track metadata item response}
+  \caption{Menu item response}
   \label{fig:trackMetadataMenuItem}
 \end{figure}
 
@@ -1747,7 +1747,7 @@ Figure~\ref{fig:trackMetadataMenuFooter}.
     \end{leftwordgroup} \\
 
   \end{bytefield}
-  \caption{Track metadata menu footer response}
+  \caption{Menu footer response}
   \label{fig:trackMetadataMenuFooter}
 \end{figure}
 
@@ -2231,19 +2231,301 @@ another request. The details will be documented once it is implemented
 in dysentery.
 
 \subsection{Requesting All Tracks}
+\label{sec:allTracks}
 
 If you want to cache all the metadata associated with a media stick,
-this query is a good starting point.
+this query is a good starting point. Send a packet like the
+one shown in Figure~\ref{fig:trackListSetupPacket}.
 
-TODO: Fill out!
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 1004} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$sort$} & \bitbox[]{6}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Full track list request message}
+  \label{fig:trackListSetupPacket}
+\end{figure}
+
+As always, $TxID$ should be 1 for the first query packet you send, 2
+for the next, and so on. $D$ should have the same value you used in
+your initial query context setup packet, identifying the device that
+is asking the question. $S_r$ is the slot in which the track being
+asked about can be found, and has the same values used in CDJ status
+packets, as shown in Figure~\ref{fig:cdjStatus}. The new $sort$
+parameter determines the order in which the tracks are sorted, and
+that also affects the item type returned, along with the secondary
+information (beyond the title) that it contains about the track, as
+described in Section~\ref{sec:trackListSorting}. We will start out
+assuming the tracks are being requested in title order, which can be
+done by sending a $sort$ argument value of 0 or 1.
+
+Track list requests (just like metadata requests) are built on the
+mechanism that is used to request and draw scrollable menus on the
+CDJs. The player responds with a success indicator, saying it is ready
+to send these ``menu items'' and reporting how many of them are
+available, much like shown in Figure~\ref{fig:trackSetupResponse},
+although the first argument will be {\tt 0x1004} to reflect the
+message type we just sent, rather than {\tt 0x2002} as it was for the
+metadata request.
+
+As with metadata, the next step is to send a ``render menu'' request
+like that in Figure~\ref{fig:renderMenuRequest} to get the actual
+results. But the number of results available is likely to be much
+higher than shown in Figure~\ref{fig:trackSetupResponse}, because we
+have asked about all tracks in the media slot. That means we will
+probably need more than one ``render menu'' request to get them all.
+
+I don't know how many items you can safely ask for at one time. I have
+had success with values as high as 64 on my CDJ-2000 nexus players,
+but they failed when asking for numbers in the thousands. So to be
+safe, you should ask for the results in chunks of 64 or smaller, by
+setting $limit$ and $limit2$ to the smaller of 64 and the remaining
+number of results you want, and incrementing $offset$ by 64 in each
+request until you have retrieved them all.
+
+As with metadata requests, you will get back two more messages than
+you ask for, because you first get a menu header message (with $type$
+{\tt 0x4001}, Figure~\ref{fig:trackMetadataMenuHeader}), then the
+requested menu items are sent (with $type$ {\tt 0x4101},
+Figure~\ref{fig:trackMetadataMenuItem}), and finally these are
+followed by a menu footer message (with $type$ {\tt 0x4201},
+Figure~\ref{fig:trackMetadataMenuFooter}). This wrapping happens with
+all ``render menu'' requests, and the menu footer is an easy way to
+know you are done, although you can also count the messages.
+
+The details of the menu items are slightly different than in the case
+of a metadata request. In the example where you are retrieving tracks
+in title order, they will have content like this:
+
+\begin{center}
+  \begin{tabu}{rcX}
+    \toprule
+
+    \bfseries{Arg} & \bfseries{Type} & \bfseries{Meaning} \\
+
+    1 & number & artist id \\
+
+    2 & number & $rekordbox$ id of track \\
+
+    3 & number & length in bytes of Label 1 \\
+
+    4 & string & Label 1, Track Title \\
+
+    5 & number & length in bytes of Label 2 \\
+
+    6 & string & Label 2, Artist Name \\
+
+    7 & number & type of this item, {\tt 0x704} for this sort order \\
+
+    8 & number & some sort of flags field, details still unclear \\
+
+    9 & number & unknown \\
+
+    10 & number & unknown \\
+
+    11 & number & unknown \\
+
+    12 & number & unknown \\
+
+    \bottomrule
+  \end{tabu}
+\end{center}
+
+\subsubsection{Alternate Track List Sort Orders}
+\label{sec:trackListSorting}
+
+As noted above, you can request the track list in a diferent order by
+supplying a different value for the $sort$ parameter. The value 0 or 1
+gives the order and information just described. The $sort$ values
+discovered so far are shown in the following table, and return menu
+items with the specified type values in argument 7.
+
+\begin{center}
+  \begin{tabu}{rcX}
+    \toprule
+
+    \bfseries{Sort} & \bfseries{Type} & \bfseries{Description} \\
+
+    1 & {\tt 0x704} & Sorted by track title, described above \\
+
+    2 & {\tt 0x704} & Sorted by artist name, same item type \\
+
+    3 & {\tt 0x204} & Sorted by album, Arg 1 becomes album ID, Label 2 becomes album name \\
+
+    4 & {\tt 0xd04} & Sorted by BPM, Arg 1 becomes BPM$\times$100, Label 2 empty \\
+
+    6 & {\tt 0x604} & Sorted by genre, Arg 1 becomes genre ID, Label 2 becomes genre name \\
+
+    7 & {\tt 0x2304} & Sorted by comment, Label 2 becomes comment \\
+
+    \bottomrule
+  \end{tabu}
+\end{center}
+
+To experiment with this, start up dysentery in a Clojure REPL and
+connect to a player as described in Section~\ref{sec:experimenting},
+then evaluate an expression like {\tt (db/request-track-list p2 3)},
+replacing the arguments with the {\tt var} holding your player
+connection and the proper $S_r$ number for the media slot containing
+the tracks you want to list. You can also add a third argument to
+specify a sort order, like this to sort all the tracks in the USB slot
+by BPM:
+
+{\tt (db/request-track-list p2 3 4)}
+
 
 \subsection{Playlists}
 
 If you want to be more selective about the metadata that you are
-caching, you can navigate the playlist folder hierarcy and deal with
-only speific playlists.
+caching, you can navigate the playlist folder hierarchy and deal with
+only specific playlists. This process is essentially the same as asking
+for all tracks, except that in the playlist request you specify the
+playlist or folder that you want to list. To start at the root of the
+playlist folder hierarchy, you request folder 0. A playlist request
+has the struture shown in Figure~\ref{fig:playlistSetupPacket}.
 
-TODO: Fill out!
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 1105} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 04} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$sort$} & \bitbox{1}{\tt 11} & \bitbox{4}{$id$} & \bitbox{1}{\tt 11}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{$folder?$} & \bitbox[]{12}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Playlist request message}
+  \label{fig:playlistSetupPacket}
+\end{figure}
+
+As always, $TxID$ should be 1 for the first query packet you send, 2
+for the next, and so on. $D$ should have the same value you used in
+your initial query context setup packet, identifying the device that
+is asking the question. $S_r$ is the slot in which the track being
+asked about can be found, and has the same values used in CDJ status
+packets, as shown in Figure~\ref{fig:cdjStatus}. You specify the ID of
+the playlist or folder you want to list in the $id$ argument, and set
+$folder?$ to 1 if you are asking for a folder, and 0 if you are asking
+for a playlist. As noted above, to get the top-level list of
+playlists, ask for folder 0, by passing an $id$ of 0 and passing
+$folder?$ as 1.
+
+Much as when listing all tracks, the response may tell you there are
+more entries in the playlist than you can retreive in a single
+request, so you should follow the procedure outlined in
+Section~\ref{sec:allTracks} to request your results in smaller
+batches. The followup queries that you send are identical for
+playlists as they are described in that section. The actual menu items
+returned when you are asking for a folder have the following content:
+
+\begin{center}
+  \begin{tabu}{rcX}
+    \toprule
+
+    \bfseries{Arg} & \bfseries{Type} & \bfseries{Meaning} \\
+
+    1 & number & parent folder id \\
+
+    2 & number & id of playlist or folder \\
+
+    3 & number & length in bytes of Label 1 \\
+
+    4 & string & Label 1, Name of playlist or folder \\
+
+    5 & number & length in bytes of Label 2 \\
+
+    6 & string & Label 2, empty \\
+
+    7 & number & type of this item, {\tt 0x1} for folder, {\tt 0x8} for playlist \\
+
+    8 & number & unknown \\
+
+    9 & number & unknown \\
+
+    10 & number & playlist position \\
+
+    11 & number & unknown \\
+
+    12 & number & unknown \\
+
+    \bottomrule
+  \end{tabu}
+\end{center}
+
+When you have requested a playlist (by passing its $id$ and a value of
+0 for $folder?$) the responses you get are track list entries, just
+like when you request all tracks as shown in
+Section~\ref{sec:allTracks}. And just like in that section, you can
+get the results in a different order by specifying a value for $sort$.
+The supported values and corresponding item types returned seem to be
+the same as described there. Additionally, if you pass a $sort$ value
+of 9, the playlist entries will come back sorted by track title, Label
+2 will be empty, and the item type will be {\tt 0x2904}.
+
+To experiment with this, start up dysentery in a Clojure REPL and
+connect to a player as described in Section~\ref{sec:experimenting},
+then evaluate an expression like {\tt (db/request-playlist p2 3 1)},
+replacing the arguments with the {\tt var} holding your player
+connection, the proper $S_r$ number for the media slot containing the
+playlist you want to list, and the playlist ID. You can also add a
+third argument to specify that you want to list a folder, like this
+using folder ID 0 to request the root folder:
+
+{\tt (db/request-playlist p2 3 0 true)}
+
+Finally, you can add a fourth argument to specify a sort order, like
+this to sort all the tracks in playlist 12 by genre:
+
+{\tt (db/request-playlist p2 3 12 false 6)}
 
 \subsection{Experimenting with Metadata}
 \label{sec:experimenting}
