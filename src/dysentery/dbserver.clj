@@ -93,7 +93,7 @@
   "Creates a variable sized field containing a string, prefixed
   by a 4-byte size."
   [text]
-  (let [bytes (.getBytes text "UTF-16BE")]
+  (let [bytes (concat (.getBytes text "UTF-16BE") [(byte 0) (byte 0)])]
     {:type   :string
      :string text
      :arg-list-tag 0x02
