@@ -321,9 +321,12 @@
    0x2003 {:type      "request album art"
            :arguments ["requesting player, for menu, media, analyzed (1)"
                        "art ID"]}
-   0x2004 {:type      "request track waveform summary"
+   0x2004 {:type      "request track waveform preview"
            :arguments ["requesting player, for menu, media, analyzed (1)"
-                       "rekordbox ID"]}
+                       "unknown (4)"
+                       "rekordbox ID"
+                       "unknown (0)"
+                       "required declared but missing blob"]}
    0x2104 {:type      "request track cue points"
            :arguments ["requesting player, for menu, media, analyzed (1)"
                        "rekordbox ID"]}
@@ -367,11 +370,11 @@
                        "album art id"
                        "playlist position"]}
    0x4201 {:type "rendered menu footer"}
-   0x4402 {:type      "waveform summary"
+   0x4402 {:type      "waveform preview"
            :arguments ["request type"
                        "constant 0?"
-                       "image length"
-                       "image bytes"]}
+                       "waveform length"
+                       "waveform bytes"]}
    0x4602 {:type      "beat grid"
            :arguments ["request type"
                        "constant 0?"
@@ -391,8 +394,8 @@
    0x4a02 {:type      "waveform detail"
            :arguments ["request type"
                        "constant 0?"
-                       "image length"
-                       "image bytes"]}})
+                       "waveform length"
+                       "waveform bytes"]}})
 
 (defn get-message-type
   "Extracts the message type value from a message structure."
@@ -603,14 +606,52 @@
               result)))
         (timbre/error "No beat grid for track" id "available for slot" slot "on player" (:target player))))))
 
-(defn request-waveform-summary
-  "Sends the sequence of messages that request the overview track
-  waveform for a track in a media slot on the player. Displays the
-  image retrieved and returns the response containing it."
+(defn- draw-waveform-preview-300
+  "Draws the waveform represented by the specified byte vector, using
+  the algorithm described by Austin Wright."
+  [waveform track]
+  (let [img      (java.awt.image.BufferedImage. (count waveform) 32 java.awt.image.BufferedImage/TYPE_INT_RGB)
+        graphics (.createGraphics img)
+        frame    (javax.swing.JFrame. (str "Waveform for track " track))]
+    (doseq [x (range (count waveform))]
+      (let [segment   (get waveform x)
+            intensity (bit-and segment 2r11100000)
+            height    (bit-and segment 2r00011111)
+            color     (java.awt.Color. intensity intensity 255)]
+        (.setColor graphics color)
+        (.drawLine graphics x 31 x (- 31 height))))
+    (doto frame
+      (.add (javax.swing.JLabel. (javax.swing.ImageIcon. img)))
+      (.pack)
+      (.setVisible true))))
+
+(defn- draw-waveform-preview-900
+  "Draws the waveform preview that newer firmware versions seem to
+  return."
+  [waveform track]
+  (let [img      (java.awt.image.BufferedImage. 400 32 java.awt.image.BufferedImage/TYPE_INT_RGB)
+        graphics (.createGraphics img)
+        frame    (javax.swing.JFrame. (str "Waveform for track " track))]
+    (doseq [x (range 400)]
+      (let [segment   (* x 2)
+            height    (get waveform segment)
+            intensity (bit-or 2r1110000 (bit-shift-left (bit-and (get waveform (inc segment)) 2r111) 5))
+            color     (java.awt.Color. intensity intensity 255)]
+        (.setColor graphics color)
+        (.drawLine graphics x 31 x (- 31 height))))
+    (doto frame
+      (.add (javax.swing.JLabel. (javax.swing.ImageIcon. img)))
+      (.pack)
+      (.setVisible true))))
+
+(defn request-waveform-preview
+  "Sends the sequence of messages that request the waveform preview
+  for a track in a media slot on the player. Displays the image
+  retrieved and returns the response containing it."
   [player slot track]
   (let [id (swap! (:counter player) inc)
         menu-field (number-field [(:number player) 8 slot 1])
-        setup (build-message id 0x2004 menu-field (number-field 4 4) (number-field track 4) (number-field 0 4)
+        setup (build-message id 0x2004 menu-field (number-field 1 4) (number-field track 4) (number-field 0 4)
                              (blob-field []))]
     (print "Sending > ")
     (describe-message setup)
@@ -619,8 +660,14 @@
       (print "Received > ")
       (describe-message response)
       (if (= 0x4402 (get-message-type response))
-        response  ; TODO: Figure out how to interpret and display
-        (timbre/error "No waveform summary for track" id "available for slot" slot "on player" (:target player))))))
+        (do
+          (let [waveform (:data (last (:arguments response)))]
+            (case (count waveform)
+              300 (draw-waveform-preview-300 waveform track)
+              900 (draw-waveform-preview-900 waveform track)
+              (timbre/error "Don't know how to draw a waveform preview of length" (count waveform))))
+          response)
+        (timbre/error "No waveform preview for track" track "available for slot" slot "on player" (:target player))))))
 
 (defn experiment
   "Sends a sequence of messages like those requesting metadata, but

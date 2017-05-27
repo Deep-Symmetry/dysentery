@@ -1905,6 +1905,26 @@ Figure~\ref{fig:artworkResponse}.
   \label{fig:artworkResponse}
 \end{figure}
 
+To experiment with this, start up dysentery in a Clojure REPL and
+connect to a player as described in Section~\ref{sec:experimenting},
+then evaluate an expression like:
+
+{\tt (def art (db/request-album-art p2 3 3))}
+
+Replace the arguments with the {\tt var} holding your player
+connection, the proper $S_r$ number for the media slot the art is
+found in, and the $artwork$ ID of the album art, and dysentery will
+open a window like Figure~{\ref{fig:artworkExample}} showing the
+image.
+
+\begin{figure}
+  \vspace{5mm}
+  \centering
+  \includegraphics[width=4cm]{assets/Album-art-example}
+  \caption{Example album art window}
+  \label{fig:artworkExample}
+\end{figure}
+
 \subsection{Beat Grids}
 
 The CDJs do not send any timing information other than beat numbers
@@ -2039,7 +2059,176 @@ means, and why it sometimes skips values, is mysterious.
 
 \subsection{Requesting Track Waveforms}
 
-TODO: Describe!
+Waveform data for tracks can be requested, both the preview, which is
+300 pixels long, and the detailed waveform, which uses 150 pixels per
+second of track content. Although Austin has figured out how to
+interpret the bytes for non-color waveforms, all of my players seem to
+return an expanded format that we have not yet figured out how to
+interpret and draw properly, so this section is incomplete.
+
+To request the waveform preview of a track, send a message with $type$
+{\tt 0x2004} containing the $rekordbox$ ID of the track, like the one
+shown in Figure~\ref{fig:waveformPreviewRequest}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2004} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 05} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 03} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000004} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} & \bitbox{1}{\tt 11}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{\tt 00000000} &
+      \bitbox[]{12}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Waveform preview request message}
+  \label{fig:waveformPreviewRequest}
+\end{figure}
+
+As usual, $seq$ should be incremented each time you send a query, and
+will be used to identify the response messages. $D$ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. $S_r$ is the slot
+in which the track being asked about can be found, and has the same
+values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}. Finally, $rekordbox$ identifies the
+specific artwork image you are requesting, as found in a CDJ status
+packet or playlist response. As with graphical requests, the value
+after $D$, which identifies the location of the menu for which data is
+being loaded, is 8.
+
+You may have noticed that the argument list of the message in
+Figure~\ref{fig:waveformPreviewRequest} specifies that there are five
+arguments, but in fact the message contains only the first four,
+numeric, arguments. The fifth, blob, argument is missing. This seems
+to imply the blob is empty, and this very strange feature of the
+protocol is, in fact, the way the track metadata is requested. The
+fifth argument must be specified in the message header but not
+actually present.
+
+The second argument has an unknown purpose, but we have seen values of
+3 or 4 for it. Similarly, the fourth argument's meaning is unknown,
+but it always seems to be 0.
+
+The response will be a message with $type$ {\tt 0x4402}, containing
+five arguments. The first argument echoes back our request type, which
+was {\tt 0x2004}. The second always seems to be 0. The third contains
+the length of the waveform preview in bytes, which seems redundant,
+because that is also conveyed in the fourth argument itself, which is
+a blob containing the actual bytes of the waveform preview, as shown
+in Figure~\ref{fig:waveformPreviewResponse}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4402} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 04} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 03} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002004} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length$} & \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \bitbox{4}{$length$} & \bitbox[lrt]{12}{Waveform preview bytes} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Waveform preview response message}
+  \label{fig:waveformPreviewResponse}
+\end{figure}
+
+Austin reported that 300-byte values were being returned in the
+preview blob, each representing a pixel-wide slice of waveform, and
+the way to interpret them was to mask off the 5 low-order bits of each
+value, which represented the height of the waveform at that point,
+from 0 to 31. The 3 high-order bits represented the saturation of the
+waveform, ranging from white at 111 to blue at 000. This may have been
+the behavior of earlier firmware versions, or different player models?
+The results I have obtained with the CDJ-2000 nexus are different.
+
+In my testing, there are 900 bytes of waveform data returned. The
+first 800 of them contain 400 columns of waveform data, in the form of
+two-byte pairs, where the first byte is the height of the waveform at
+that column (a value ranging from 0 to 31), and the second byte is the
+whiteness, as before, where 0 is blue and 7 is fully white. My players
+seem to only pay attention to the highest bit of whiteness, drawing
+the waveform as either very dark or light blue accordingly.
+
+To experiment with this, start up dysentery in a Clojure REPL and
+connect to a player as described in Section~\ref{sec:experimenting},
+then evaluate an expression like {\tt (db/request-waveform-preview p2
+  3 1060)}, replacing the arguments with the {\tt var} holding your
+player connection, the proper $S_r$ number for the media slot the
+track is found in, and the $rekordbox$ ID of the track, and dysentery
+will open a window like Figure~{\ref{fig:waveformPreviewExample}}
+showing the waveform preview.
+
+\begin{figure}
+  \vspace{5mm}
+  \centering
+  \includegraphics[width=8cm]{assets/Wave-preview-example}
+  \caption{Example waveform preview window}
+  \label{fig:waveformPreviewExample}
+\end{figure}
+
+I don't yet know what the remaining 100 bytes mean; perhaps they are
+color information for players that support colored waveforms?
+
+Requesting the detailed waveform is very similar to requesting the
+preview, but the request type and arguments are slightly different.
+The details will be documented once it is implemented in dysentery.
+
+\subsection{Requesting Cue Points}
+
+The locations of the cue points stored in a track can be obtained with
+another request. The details will be documented once it is implemented
+in dysentery.
 
 \subsection{Requesting All Tracks}
 
