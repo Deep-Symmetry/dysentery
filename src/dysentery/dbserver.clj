@@ -97,7 +97,7 @@
     {:type   :string
      :string text
      :arg-list-tag 0x02
-     :bytes  (into [0x26] (concat (number->bytes (count bytes) 4) bytes))}))
+     :bytes  (into [0x26] (concat (number->bytes (/ (count bytes) 2) 4) bytes))}))
 
 ;; TODO: Add string-field and a read-field implementation for it
 
