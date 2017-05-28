@@ -1754,53 +1754,55 @@ Figure~\ref{fig:trackMetadataMenuFooter}.
 \subsection{Menu Item Types}
 \label{sec:menuItemTypes}
 
-As noted above, the seventh argument in a menu item response
-identifies the type of the item. The meanings we have identified so
-far are:
+\begin{samepage}
+  As noted above, the seventh argument in a menu item response
+  identifies the type of the item. The meanings we have identified so
+  far are:
 
-\begin{center}
-  \begin{tabu}{rl}
-    \toprule
+  \begin{center}
+    \begin{tabu}{rl}
+      \toprule
 
-    \bfseries{Type} & \bfseries{Meaning} \\
+      \bfseries{Type} & \bfseries{Meaning} \\
 
-    {\tt 0x0001} & Folder (such as in the playlists menu)\footnote{A nested list
-      of playlists rather than an individual playlist.} \\
+      {\tt 0x0001} & Folder (such as in the playlists menu)\footnote{A nested list
+        of playlists rather than an individual playlist.} \\
 
-    {\tt 0x0002} & Album title \\
+      {\tt 0x0002} & Album title \\
 
-    {\tt 0x0003} & Disc \\
+      {\tt 0x0003} & Disc \\
 
-    {\tt 0x0004} & Track Title \\
+      {\tt 0x0004} & Track Title \\
 
-    {\tt 0x0006} & Genre \\
+      {\tt 0x0006} & Genre \\
 
-    {\tt 0x0007} & Artist \\
+      {\tt 0x0007} & Artist \\
 
-    {\tt 0x0008} & Playlist \\
+      {\tt 0x0008} & Playlist \\
 
-    {\tt 0x000a} & Rating \\
+      {\tt 0x000a} & Rating \\
 
-    {\tt 0x000b} & Duration (in seconds) \\
+      {\tt 0x000b} & Duration (in seconds) \\
 
-    {\tt 0x000d} & Tempo \\
+      {\tt 0x000d} & Tempo \\
 
-    {\tt 0x000f} & Key \\
+      {\tt 0x000f} & Key \\
 
-    {\tt 0x0013} & Color \\
+      {\tt 0x0013} & Color \\
 
-    {\tt 0x0023} & Comment \\
+      {\tt 0x0023} & Comment \\
 
-    {\tt 0x002e} & Date Added \\
+      {\tt 0x002e} & Date Added \\
 
-    {\tt 0x0704} & Track List \\
+      {\tt 0x0704} & Track List \\
 
-    \bottomrule
-  \end{tabu}
-\end{center}
+      \bottomrule
+    \end{tabu}
+  \end{center}
 
-As noted above, track metadata responses use many of these types.
-Others are used in different kinds of menus and queries.
+  As noted above, track metadata responses use many of these types.
+  Others are used in different kinds of menus and queries.
+\end{samepage}
 
 \subsection{Album Art}
 \label{sec:albumArt}
