@@ -317,7 +317,7 @@
                        "sort order?"]}
    0x1105 {:type      "request playlist or playlist folder"
            :arguments ["requesting player, for menu, media, analyzed (1)"
-                       "unknown"
+                       "sort order"
                        "playlist or folder ID"
                        "0=playlist, 1=folder"]}
    0x2002 {:type      "request track metadata"
