@@ -634,12 +634,12 @@ and Nexus 2 players send packets that are 284 or 292~bytes long.
     \begin{leftwordgroup}{\tiny\bfseries 80}
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox{2}{$Sync_n$} &
       \bitbox{1}{\tt 00} & \bitbox{1}{$F$} & \bitbox{1}{\tt ff} &
-      \bitbox{1}{$P_2$} & \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_1$}
+      \bitbox{1}{$P_2$} & \bitbox{4}{$Pitch_1$}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 90}
-      \bitbox{2}{$l_1$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff} {\tt 00}} &
-      \bitbox{3}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{\tt 00} & \bitbox{1}{\tt ff}
+      \bitbox{2}{$l_1$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff}} &
+      \bitbox{4}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{\tt 00} & \bitbox{1}{\tt ff}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries a0}
@@ -653,7 +653,7 @@ and Nexus 2 players send packets that are 284 or 292~bytes long.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries c0}
-      \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_3$} & \bitbox{1}{\tt 00} & \bitbox{3}{$Pitch_4$} & 
+      \bitbox{4}{$Pitch_3$} & \bitbox{4}{$Pitch_4$} &
       \bitbox{4}{$Packet$} & \bitbox{1}{$nx$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
