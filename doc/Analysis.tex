@@ -1884,7 +1884,9 @@ was {\tt 0x2003}. The second always seems to be 0. The third contains
 the length of the image in bytes, which seems redundant, because that
 is also conveyed in the fourth argument itself, which is a blob
 containing the actual bytes of the image data, as shown in
-Figure~\ref{fig:artworkResponse}.
+Figure~\ref{fig:artworkResponse}. However, if there is no image data,
+this value will be 0, and the blob field will be completely omitted
+from the response, so you \emph{must not} try to read it!
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -2016,7 +2018,9 @@ was {\tt 0x2204}. The second always seems to be 0. The third contains
 the length of the beat grid in bytes, which seems redundant, because
 that is also conveyed in the fourth argument itself, which is a blob
 containing the actual bytes of the beat grid, as shown in
-Figure~\ref{fig:beatGridResponse}.
+Figure~\ref{fig:beatGridResponse}. However, if there is no beat grid
+available, this value will be 0, and the blob field will be completely
+omitted from the response, so you \emph{must not} try to read it!
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
