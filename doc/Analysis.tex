@@ -712,24 +712,26 @@ version of this document.)
 
 Byte~106, labeled $U_a$ (for ``USB activity''), alternates between the
 values 4 and 6 when there is USB activity---it may even alternate in
-time with the flashing USB indicator LED on the player. Byte~107,
-$S_a$, is the same kind of activity indicator for the SD slot.
-Byte~111 ($U_l$ for ``USB local'') has the value 4 when there is no
-USB media loaded, 0 when USB is loaded, and 2 when the USB Stop button
-has been pressed and the USB media is being unmounted.
+time with the flashing USB indicator LED on the player, although
+visual inspection suggests there is not a perfect correlation.
+Byte~107, $S_a$, is the same kind of activity indicator for the SD
+slot. Byte~111 ($U_l$ for ``USB local'') has the value 4 when there is
+no USB media loaded, 0 when USB is loaded, and 2 or 3 when the USB
+Stop button has been pressed and the USB media is being unmounted.
 
 Byte~115 ($S_l$ for ``SD local'') has the value 4 when there is no SD
-media loaded, 0 when SD is loaded, and 2 when the SD door has been
-opened and the SD media is being unmounted.
+media loaded, 0 when SD is loaded, and 2 or 3 when the SD door has
+been opened and the SD media is being unmounted.
 
 Byte~117, labeled $L$ (for ``Link available''), appears to have the
 value 1 whenever USB, SD, or CD media is present in any player on the
 network, whether or not the Link option is chosen in the other
 players, and 0 otherwise.
 
+\begin{samepage}
 Byte~123, labeled $P_1$, appears to describe the current play mode.
-The values that have been seen so far, and their apparent meanings,
-are:
+The values seen so far, and their apparent meanings, are:
+
 \begin{center}
   \begin{tabu}{rX}
     \toprule
