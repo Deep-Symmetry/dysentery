@@ -2070,12 +2070,14 @@ specifying the number of milliseconds after the start of the track
 
 The $B_b$ value of the first beat in the track is found at byte 20 of
 argument 4, and the time at which that beat occurs, in milliseconds,
-is encoded as a 4-byte big-endian integer at bytes 21--24. Subsequent
-beats are found at 16-byte intervals, so the second $B_b$ value is
-found at byte 36, and the second beat's time, in milliseconds from the
-start of the track, is the big-endian integer at bytes 37--40. The
-$B_b$ value for the third beat is at byte 52, and its millisecond time
-is at bytes 53--56, and so on.
+is encoded as a 4-byte little-endian\footnote{Yes, unlike almost all
+  numbers in the protocol, beat grid and cue point times are
+  little-endian.} integer at bytes 21--24. Subsequent beats are found
+at 16-byte intervals, so the second $B_b$ value is found at byte 36,
+and the second beat's time, in milliseconds from the start of the
+track, is the big-endian integer at bytes 37--40. The $B_b$ value for
+the third beat is at byte 52, and its millisecond time is at bytes
+53--56, and so on.
 
 The purpose of the other bytes within the beat grid is so far
 undetermined. It looks like there may be some sort of monotonically
@@ -2085,11 +2087,10 @@ means, and why it sometimes skips values, is mysterious.
 \subsection{Requesting Track Waveforms}
 
 Waveform data for tracks can be requested, both the preview, which is
-300 pixels long, and the detailed waveform, which uses 150 pixels per
-second of track content. Although Austin has figured out how to
-interpret the bytes for non-color waveforms, all of my players seem to
-return an expanded format that we have not yet figured out how to
-interpret and draw properly, so this section is incomplete.
+400 pixels long, and the detailed waveform, which uses 150 pixels per
+second of track content. (There is apparently another, more compact,
+300 pixel preview format that Austin has seen, but since my players do
+not use it, I don't know the request and response types for that.
 
 To request the waveform preview of a track, send a message with $type$
 {\tt 0x2004} containing the $rekordbox$ ID of the track, like the one
@@ -2142,10 +2143,10 @@ identifying the device that is asking the question. $S_r$ is the slot
 in which the track being asked about can be found, and has the same
 values used in CDJ status packets, as shown in
 Figure~\ref{fig:cdjStatus}. Finally, $rekordbox$ identifies the
-specific artwork image you are requesting, as found in a CDJ status
-packet or playlist response. As with graphical requests, the value
-after $D$, which identifies the location of the menu for which data is
-being loaded, is 8.
+specific track whose waveform preview you are requesting, as found in
+a CDJ status packet or playlist response. As with graphical requests,
+the value after $D$, which identifies the location of the menu for
+which data is being loaded, is 8.
 
 You may have noticed that the argument list of the message in
 Figure~\ref{fig:waveformPreviewRequest} specifies that there are five
@@ -2154,7 +2155,12 @@ numeric, arguments. The fifth, blob, argument is missing. This seems
 to imply the blob is empty, and this very strange feature of the
 protocol is, in fact, the way the track metadata is requested. The
 fifth argument must be specified in the message header but not
-actually present.
+actually present. When reading messages from a player, the same rules
+apply: There is always a numeric field right before a blob field, and
+it always contains a seemingly-redundant copy of the blob length, and
+if that numeric field has the value $0$, you \emph{must not} try to
+read the blob field. Instead, expect the next field or message to
+follow the numeric field.
 
 The second argument has an unknown purpose, but we have seen values of
 3 or 4 for it. Similarly, the fourth argument's meaning is unknown,
@@ -2163,10 +2169,10 @@ but it always seems to be 0.
 The response will be a message with $type$ {\tt 0x4402}, containing
 five arguments. The first argument echoes back our request type, which
 was {\tt 0x2004}. The second always seems to be 0. The third contains
-the length of the waveform preview in bytes, which seems redundant,
-because that is also conveyed in the fourth argument itself, which is
-a blob containing the actual bytes of the waveform preview, as shown
-in Figure~\ref{fig:waveformPreviewResponse}.
+the length of the waveform preview in bytes. If this value is 0, the
+fourth argument will be omitted from the response. When present, the
+fourth argument is a blob containing the actual bytes of the waveform
+preview, as shown in Figure~\ref{fig:waveformPreviewResponse}.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -2243,17 +2249,182 @@ showing the waveform preview.
 \end{figure}
 
 I don't yet know what the remaining 100 bytes mean; perhaps they are
-color information for players that support colored waveforms?
+color information for players that support colored waveforms? More
+likely, however, they are a different request and response pair, and
+we will have to wait for someone to take a packet capture of a nexus 2
+player to see them.
 
 Requesting the detailed waveform is very similar to requesting the
 preview, but the request type and arguments are slightly different.
 The details will be documented once it is implemented in dysentery.
 
-\subsection{Requesting Cue Points}
+\subsection{Requesting Cue Points and Loops}
 
-The locations of the cue points stored in a track can be obtained with
-another request. The details will be documented once it is implemented
-in dysentery.
+The locations of the cue points and loops stored in a track can be
+obtained with a request like the one shown in
+Figure~\ref{fig:cuePointRequestPacket}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2104} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Cue point request message}
+  \label{fig:cuePointRequestPacket}
+\end{figure}
+
+As always, $TxID$ should be 1 for the first query packet you send, 2
+for the next, and so on. $D$ should have the same value you used in
+your initial query context setup packet, identifying the device that
+is asking the question. $S_r$ is the slot in which the track being
+asked about can be found, and has the same values used in CDJ status
+packets, as shown in Figure~\ref{fig:cdjStatus}, and as usual,
+$rekordbox$ is the database ID of the track you're interested in.
+
+The response will be a message with $type$ {\tt 0x4702}, containing
+nine arguments. The first argument echoes back our request type, which
+was {\tt 0x2104}. The second always seems to be 0. The third contains
+the length of the blob containing cue and loop points in bytes, which
+seems redundant, because that is also conveyed in the fourth argument
+itself, which is a blob containing the actual bytes of the cue and
+loop points, as shown in Figure~\ref{fig:cuePointResponse}.
+However, if there are no cue or loop points, this value will be 0, and
+the following blob field will be completely omitted from the response,
+so you \emph{must not} try to read it!
+
+The fifth argument is a number with unknown purpose. It always seems
+to have the value 36, which may be telling us the size of each
+cue/loop point entry in argument 4 (they do seem to each take up 36
+bytes, as shown in Figure~\ref{fig:cuePointEntry}). The remaining
+arguments are all unexplained so far. The next two are numbers that we
+have no idea about. The eighth argument is a number containing the
+length of the second binary field which follows it. We don't know the
+meaning of the final, binary, argument either.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4702} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 09} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 03} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 03} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002004} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length_1$} & \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \bitbox{4}{$length_1$} & \bitbox[lrt]{12}{Cue, loop point bytes} \\
+      \skippedwords \\
+      \bitbox[lrb]{1}{} & \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000036}?} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000000}?} & \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000002}?} \\
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length_2$} &
+      \bitbox{1}{\tt 14} & \bitbox{4}{$length_2$} &\bitbox[lrt]{6}{Unknown bytes} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Cue point response message}
+  \label{fig:cuePointResponse}
+\end{figure}
+
+As described above, the first binary field in the cue point response
+is divided up in to 36 byte entries, each of which potentially holds a
+cue or loop point. They are not in any particular order, with respect
+to the time at which they occur in the track. They each have the
+structure shown in Figure~\ref{fig:cuePointEntry}.
+
+The first byte, $F_l$, has the value $1$ if this entry specifies a
+loop, or $0$ otherwise. The second byte, $F_c$, has the value $1$ if
+this entry contains a cue point, and $0$ otherwise. Entries with loops
+have the value $1$ in both of these bytes, because loops also act as
+cue points. If both values are $0$, the entry is ignored (it is
+probably a leftover cue point that was deleted by the DJ). The third
+byte, labeled $H$, is $0$ for ordinary cue points, but has a value if
+this entry defines a hot cue. Hot cues A through C are represented by
+the values $1$, $2$, and $3$.
+
+The actual location of the cue and loop points are in the values $cue$
+and $loop$. These are both 4-byte integers, and like beat grid
+positions, but unlike essentially every other number in the protocol,
+they are stored with a little-endian byte order. For non-looping cue
+points, only $cue$ has a meaning, and it identifies the position of
+the cue point in the track, in \( \frac{1}{150} \) second units. For
+loops, $cue$ identifies the start of the loop, and $loop$ identifies
+the end of the loop, again in \( \frac{1}{150} \) second units.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitbox{1}{$F_l$} & \bitbox{1}{$F_c$} & \bitbox{1}{$H$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} &
+      \bitbox{4}{$cue$}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox{4}{$loop$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{12}{}
+    \end{leftwordgroup} \\
+
+  \end{bytefield}
+  \caption{Cue/loop point entry}
+  \label{fig:cuePointEntry}
+\end{figure}
+
+
+
+
+
 
 \subsection{Requesting All Tracks}
 \label{sec:allTracks}

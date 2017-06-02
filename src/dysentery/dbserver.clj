@@ -259,6 +259,8 @@
       (timbre/error "Did not find numeric transaction ID field when trying to read a message."))
     (timbre/error "Unable to read transaction ID field when trying to read a message.")))
 
+;; TODO: Need to handle case where a blob argument is preceded by a zero numeric argument,
+;;       which means the blob is of size zero and will not be coming. Also update analysis doc.
 (defn read-message
   "Attempts to read a message from the specified player. Returns
   a map breaking down the fields that make up the message, or `nil` if
@@ -595,9 +597,8 @@
         (timbre/error "No artwork with id" id "available for slot" slot "on player" (:target player))))))
 
 (defn request-beat-grid
-  "Sends the sequence of messages that request the beat grid for a
-  track in a media slot on the player. Returns the response containing
-  it."
+  "Sends the message that requests the beat grid for a track in a
+  media slot on the player. Returns the response containing it."
   [player slot track]
   (let [id (swap! (:counter player) inc)
         menu-field (number-field [(:number player) 8 slot 1])
@@ -617,6 +618,24 @@
                      (conj result {:beat (get data i) :time (bytes->number (reverse (subvec data (+ i 4) (+ i 8))))}))
               result)))
         (timbre/error "No beat grid for track" id "available for slot" slot "on player" (:target player))))))
+
+(defn request-cue-points
+  "Sends the message that requests the cue point information for a
+  track in a media slot on the player. Returns the response containing
+  it."
+  [player slot track]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field [(:number player) 8 slot 1])
+        setup (build-message id 0x2104 menu-field (number-field track 4))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (if (= 0x4702 (get-message-type response))
+        response  ;; TODO: parse
+        (timbre/error "No cue points for track" id "available for slot" slot "on player" (:target player))))))
 
 (defn- draw-waveform-preview-300
   "Draws the waveform represented by the specified byte vector, using
@@ -657,9 +676,9 @@
       (.setVisible true))))
 
 (defn request-waveform-preview
-  "Sends the sequence of messages that request the waveform preview
-  for a track in a media slot on the player. Displays the image
-  retrieved and returns the response containing it."
+  "Sends the message that requests the waveform preview for a track in
+  a media slot on the player. Displays the image retrieved and returns
+  the response containing it."
   [player slot track]
   (let [id (swap! (:counter player) inc)
         menu-field (number-field [(:number player) 8 slot 1])
