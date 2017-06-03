@@ -2163,8 +2163,9 @@ read the blob field. Instead, expect the next field or message to
 follow the numeric field.
 
 The second argument has an unknown purpose, but we have seen values of
-3 or 4 for it. Similarly, the fourth argument's meaning is unknown,
-but it always seems to be 0.
+3 or 4 for it. The fourth argument is the size of the blob argument we
+are supposedly going to send; since we are not sending a blob, we
+always send a 0 here.
 
 The response will be a message with $type$ {\tt 0x4402}, containing
 five arguments. The first argument echoes back our request type, which
@@ -2250,7 +2251,7 @@ showing the waveform preview.
 
 I don't yet know what the remaining 100 bytes mean; perhaps they are
 color information for players that support colored waveforms? More
-likely, however, they are a different request and response pair, and
+likely, however, color uses a different request and response pair, and
 we will have to wait for someone to take a packet capture of a nexus 2
 player to see them.
 
