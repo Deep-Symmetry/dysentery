@@ -2317,14 +2317,15 @@ However, if there are no cue or loop points, this value will be 0, and
 the following blob field will be completely omitted from the response,
 so you \emph{must not} try to read it!
 
-The fifth argument is a number with unknown purpose. It always seems
+The fifth argument is a number with uncertain purpose. It always seems
 to have the value 36, which may be telling us the size of each
 cue/loop point entry in argument 4 (they do seem to each take up 36
-bytes, as shown in Figure~\ref{fig:cuePointEntry}). The remaining
-arguments are all unexplained so far. The next two are numbers that we
-have no idea about. The eighth argument is a number containing the
-length of the second binary field which follows it. We don't know the
-meaning of the final, binary, argument either.
+bytes, as shown in Figure~\ref{fig:cuePointEntry}). The sixth
+argument, shown as $num_{hot}$, seems to contain the number of hot cue
+entries found in argument 4, and the seventh, $num_{cue}$ seems to
+contain the number of ordinary memory point cues. The eighth argument
+is a number containing the length of the second binary field which
+follows it. We don't know the meaning of the final, binary, argument.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -2356,10 +2357,10 @@ meaning of the final, binary, argument either.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{}
-      \bitbox{4}{$length_1$} & \bitbox[lrt]{12}{Cue, loop point bytes} \\
+      \bitbox{4}{$length_1$} & \bitbox[lrt]{12}{Cue and loop point bytes} \\
       \skippedwords \\
-      \bitbox[lrb]{1}{} & \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000036}?} &
-      \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000000}?} & \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000002}?} \\
+      \bitbox[lrb]{1}{} & \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000036}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$num_{hot}$} & \bitbox{1}{\tt 11} & \bitbox{4}{$num_{cue}$} \\
       \bitbox{1}{\tt 11} & \bitbox{4}{$length_2$} &
       \bitbox{1}{\tt 14} & \bitbox{4}{$length_2$} &\bitbox[lrt]{6}{Unknown bytes} \\
       \skippedwords \\
