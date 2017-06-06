@@ -203,6 +203,8 @@ traffic, which was my main goal. I still could not get a lock on where
 the down beat fell, because I could not tell which player was the
 Master.
 
+#### Virtual CDJ
+
 In the spring of 2016 I saw a posting on the original
 [VJ Forums thread](http://vjforums.info/threads/cdj-2000-ethernet-protocol-for-live-bpm-sync.39265/page-2#post-295258)
 where we had been discussing this, announcing that
@@ -215,10 +217,14 @@ behind starting this project, to consolidate what people are learning
 about this protocol, and make it available for other projects to
 benefit from.
 
+#### Initial metadata breakthrough
+
 In December 2016 I heard from
 [@EvanPurkhiser](https://github.com/EvanPurkhiser), who had found this
 project, and went on to make important breakthroughs in obtaining track
 metadata.
+
+#### Robust metadata understanding
 
 In May 2017 [Austin Wright](https://bitbucket.org/awwright/) contacted
 me on the Afterglow
@@ -228,8 +234,8 @@ to publish a bunch of
 [source code](https://bitbucket.org/awwright/libpdjl) that I've been
 able to use to get a much deeper understanding of how metadata queries
 work, and to gain access to things like beat grid information (and
-eventually, hopefully, track waveform images). This is the current
-area of active research.
+eventually track waveform images). This is the current area of active
+research.
 
 ### Why Dysentery?
 
