@@ -700,6 +700,24 @@
           response)
         (timbre/error "No waveform preview for track" track "available for slot" slot "on player" (:target player))))))
 
+(defn request-waveform-detail
+  "Sends the message that requests the waveform detail for a track in
+  a media slot on the player. Displays the image retrieved and returns
+  the response containing it."
+  [player slot track]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field [(:number player) 1 slot 1])
+        setup (build-message id 0x2904 menu-field (number-field track 4) (number-field 0 4))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (if (= 0x4a02 (get-message-type response))
+        response  ;; TODO: Parse
+        (timbre/error "No waveform detail for track" track "available for slot" slot "on player" (:target player))))))
+
 (defn experiment
   "Sends a sequence of messages like those requesting metadata, but
   using a different message kind, and with a variable list of argument

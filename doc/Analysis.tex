@@ -2168,7 +2168,7 @@ are supposedly going to send; since we are not sending a blob, we
 always send a 0 here.
 
 The response will be a message with $type$ {\tt 0x4402}, containing
-five arguments. The first argument echoes back our request type, which
+four arguments. The first argument echoes back our request type, which
 was {\tt 0x2004}. The second always seems to be 0. The third contains
 the length of the waveform preview in bytes. If this value is 0, the
 fourth argument will be omitted from the response. When present, the
@@ -2257,7 +2257,113 @@ player to see them.
 
 Requesting the detailed waveform is very similar to requesting the
 preview, but the request type and arguments are slightly different.
-The details will be documented once it is implemented in dysentery.
+To request the detailed waveform of a track, send a message with $type$
+{\tt 0x2904} containing the $rekordbox$ ID of the track, like the one
+shown in Figure~\ref{fig:waveformDetailRequest}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2904} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 03} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox[]{1}{}
+    \end{leftwordgroup} \\
+
+  \end{bytefield}
+  \caption{Waveform detail request message}
+  \label{fig:waveformDetailRequest}
+\end{figure}
+
+As usual, $seq$ should be incremented each time you send a query, and
+will be used to identify the response messages. $D$ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. $S_r$ is the slot
+in which the track being asked about can be found, and has the same
+values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}. Finally, $rekordbox$ identifies the
+specific track whose waveform preview you are requesting, as found in
+a CDJ status packet or playlist response. Since this is a graphical
+request, I would expect the value after $D$, which identifies the
+location of the menu for which data is being loaded, to be 8 like it
+is for others, but for some reason it is 1, which usually means the
+main menu... maybe because the scrolling waveform appears in the same
+location on the display as the main menu? In many ways this protocol
+is a mystery wrapped in an enigma.
+
+The waveform detail response is essentially identical to the waveform
+preview response, with just the type numbers changed. It will be a
+message with $type$ {\tt 0x4a02}, containing four arguments. The first
+argument echoes back our request type, which was {\tt 0x2904}. The
+second always seems to be 0. The third contains the length of the
+waveform detail in bytes. If this value is 0, the fourth argument
+will be omitted from the response. When present, the fourth argument
+is a blob containing the actual bytes of the waveform detail, as
+shown in Figure~\ref{fig:waveformDetailResponse}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4a02} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 04} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 03} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002904} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length$} & \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \bitbox{4}{$length$} & \bitbox[lrt]{12}{Waveform detail bytes} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Waveform detail response message}
+  \label{fig:waveformDetailResponse}
+\end{figure}
+
+The details of the response payload format will be documented once it
+is implemented in dysentery.
 
 \subsection{Requesting Cue Points and Loops}
 
