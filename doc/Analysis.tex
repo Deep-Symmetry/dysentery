@@ -11,6 +11,7 @@
 \usepackage{color}
 \usepackage{alltt}
 \usepackage{tabu, booktabs}
+\usepackage{longtable}
 
 \title{DJ Link Packet Analysis}
 \author{James Elliott\\Deep Symmetry, LLC}
@@ -1761,71 +1762,67 @@ Figure~\ref{fig:trackMetadataMenuFooter}.
 \subsection{Menu Item Types}
 \label{sec:menuItemTypes}
 
-\begin{samepage}
-  As noted above, the seventh argument in a menu item response
-  identifies the type of the item. The meanings we have identified so
-  far are:
+As noted above, the seventh argument in a menu item response
+identifies the type of the item. The meanings we have identified so
+far are:
 
-  \begin{center}
-    \begin{tabu}{rl}
-      \toprule
+\begin{center}
+  \begin{longtabu}{rl}
 
-      \bfseries{Type} & \bfseries{Meaning} \\
+    \toprule
+    {\bfseries Type} & {\bfseries Meaning} \endhead
 
-      {\tt 0x0001} & Folder (such as in the playlists menu)\footnote{A nested list
-        of playlists rather than an individual playlist.} \\
+    \bottomrule \\
+    \multicolumn{2}{c}{Known Menu Item Types}
+    \endfoot
 
-      {\tt 0x0002} & Album title \\
+    {\tt 0x0001} & Folder (such as in the playlists menu)\footnote{A nested list
+      of playlists rather than an individual playlist.} \\
+    {\tt 0x0002} & Album title \\
+    {\tt 0x0003} & Disc \\
+    {\tt 0x0004} & Track Title \\
+    {\tt 0x0006} & Genre \\
+    {\tt 0x0007} & Artist \\
+    {\tt 0x0008} & Playlist \\
+    {\tt 0x000a} & Rating \\
+    {\tt 0x000b} & Duration (in seconds) \\
+    {\tt 0x000d} & Tempo \\
+    {\tt 0x000e} & Label \\
+    {\tt 0x000f} & Key \\
+    {\tt 0x0013} & Color None \\
+    {\tt 0x0014} & Color Pink \\
+    {\tt 0x0015} & Color Red \\
+    {\tt 0x0016} & Color Orange \\
+    {\tt 0x0017} & Color Yellow \\
+    {\tt 0x0018} & Color Green \\
+    {\tt 0x0019} & Color Aqua \\
+    {\tt 0x001a} & Color Blue \\
+    {\tt 0x001b} & Color Purple \\
+    {\tt 0x0023} & Comment \\
+    {\tt 0x0028} & Original Artist \\
+    {\tt 0x0029} & Remixer \\
+    {\tt 0x002e} & Date Added \\
+    {\tt 0x0204} & Track title and album \\
+    {\tt 0x0604} & Track Title and Genre \\
+    {\tt 0x0704} & Track Title and Artist \\
+    {\tt 0x0a04} & Track Title and Rating \\
+    {\tt 0x0b04} & Track Title and Time \\
+    {\tt 0x0d04} & Track Title and BPM \\
+    {\tt 0x0e04} & Track Title and Label \\
+    {\tt 0x0f04} & Track Title and Key \\
+    {\tt 0x1004} & Track Title and Bit Rate \\
+    {\tt 0x1a04} & Track Title and Color \\
+    {\tt 0x2304} & Track Title and Comment \\
+    {\tt 0x2804} & Track Title and Original Artist \\
+    {\tt 0x2904} & Track Title and Remixer \\
+    {\tt 0x2a04} & Track Title and DJ Play Count \\
+    {\tt 0x2e04} & Track Title and Date Added \\
 
-      {\tt 0x0003} & Disc \\
+  \end{longtabu}
+\end{center}
 
-      {\tt 0x0004} & Track Title \\
-
-      {\tt 0x0006} & Genre \\
-
-      {\tt 0x0007} & Artist \\
-
-      {\tt 0x0008} & Playlist \\
-
-      {\tt 0x000a} & Rating \\
-
-      {\tt 0x000b} & Duration (in seconds) \\
-
-      {\tt 0x000d} & Tempo \\
-
-      {\tt 0x000f} & Key \\
-
-      {\tt 0x0013} & Color None \\
-
-      {\tt 0x0014} & Color Pink \\
-
-      {\tt 0x0015} & Color Red \\
-
-      {\tt 0x0016} & Color Orange \\
-
-      {\tt 0x0017} & Color Yellow \\
-
-      {\tt 0x0018} & Color Green \\
-
-      {\tt 0x0019} & Color Aqua \\
-
-      {\tt 0x001a} & Color Blue \\
-
-      {\tt 0x001b} & Color Purple \\
-
-      {\tt 0x0023} & Comment \\
-
-      {\tt 0x002e} & Date Added \\
-
-      {\tt 0x0704} & Track List \\
-
-      \bottomrule
-    \end{tabu}
-  \end{center}
-
-  As noted above, track metadata responses use many of these types.
-  Others are used in different kinds of menus and queries.
-\end{samepage}
+As noted above, track metadata responses use many of these types.
+Others are used in different kinds of menus and queries.
 
 \subsection{Album Art}
 \label{sec:albumArt}
@@ -2627,6 +2624,7 @@ Figure~\ref{fig:trackMetadataMenuFooter}). This wrapping happens with
 all ``render menu'' requests, and the menu footer is an easy way to
 know you are done, although you can also count the messages.
 
+\begin{samepage}
 The details of the menu items are slightly different than in the case
 of a metadata request. In the example where you are retrieving tracks
 in title order, they will have content like this:
@@ -2664,6 +2662,7 @@ in title order, they will have content like this:
     \bottomrule
   \end{tabu}
 \end{center}
+\end{samepage}
 
 \subsubsection{Alternate Track List Sort Orders}
 \label{sec:trackListSorting}
@@ -2680,17 +2679,35 @@ items with the specified type values in argument 7.
 
     \bfseries{Sort} & \bfseries{Type} & \bfseries{Description} \\
 
-    1 & {\tt 0x704} & Sorted by track title, described above \\
+    1 & {\tt 0x704} & Title and Artist sorted by title \\
 
-    2 & {\tt 0x704} & Sorted by artist name, same item type \\
+    2 & {\tt 0x704} & Title and Artist sorted by artist \\
 
-    3 & {\tt 0x204} & Sorted by album, Arg 1 becomes album ID, Label 2 becomes album name \\
+    3 & {\tt 0x204} & Sorted by album, Arg 1 holds album ID, Label 2 holds album name \\
 
-    4 & {\tt 0xd04} & Sorted by BPM, Arg 1 becomes BPM$\times$100, Label 2 empty \\
+    4 & {\tt 0xd04} & Sorted by BPM, Arg 1 holds BPM$\times$100, Label 2 empty \\
 
-    6 & {\tt 0x604} & Sorted by genre, Arg 1 becomes genre ID, Label 2 becomes genre name \\
+    5 & {\tt 0xa04} & Sorted by rating, Arg 1 holds rating, Label 2 empty \\
 
-    7 & {\tt 0x2304} & Sorted by comment, Label 2 becomes comment \\
+    6 & {\tt 0x604} & Sorted by genre, Arg 1 holds genre ID, Label 2 holds genre name \\
+
+    7 & {\tt 0x2304} & Sorted by comment, Arg 1 holds comment ID, Label 2 holds comment \\
+
+    8 & {\tt 0xb04} & Sorted by time, Arg 1 holds track length in seconds, Label 2 empty \\
+
+    9 & {\tt 0x2904} & Sorted by remixer, Arg 1 holds remixer ID, Label 2 holds remixer \\
+
+    10 & {\tt 0xe04} & Sorted by label, Arg 1 holds label ID, Label 2 holds label \\
+
+    11 & {\tt 0x2804} & Sorted by original artist, Arg 1 holds original artist ID, Label 2 holds original artist \\
+
+    12 & {\tt 0xf04} & Sorted by key, Arg 1 holds key ID, Label 2 holds key text \\
+
+    13 & {\tt 0x1004} & Sorted by bit rate, Arg 1 holds bit rate, Label 2 empty \\
+
+    16 & {\tt 0x2a04} & Sorted by DJ play count, Arg 1 holds play count, Label 2 empty \\
+
+    17 & {\tt 0x2e04} & Sorted by date added, Arg 1 holds date ID, Label 2 holds date text \\
 
     \bottomrule
   \end{tabu}
