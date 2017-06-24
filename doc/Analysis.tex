@@ -732,29 +732,31 @@ value 1 whenever USB, SD, or CD media is present in any player on the
 network, whether or not the Link option is chosen in the other
 players, and 0 otherwise.
 
-\begin{samepage}
 Byte~123, labeled $P_1$, appears to describe the current play mode.
-The values seen so far, and their apparent meanings, are:
+The values seen so far, and their apparent meanings, are shown in
+Table~\ref{table:p1Values}.
 
-\begin{center}
-  \begin{tabu}{rX}
-    \toprule
+\begin{longtabu}{rX}
+  \toprule
 
-    \bfseries{Value} & \bfseries{Meaning} \\
+  {\bfseries Value} & {\bfseries Meaning} \endhead
 
-    0 & No track is loaded \\
+  \bottomrule \\
+  \caption{Known $P_1$ Values} \endfoot
 
-    2 & A track is in the process of loading \\
+  0 & No track is loaded \label{table:p1Values} \\
 
-    3 & Player is playing normally \\
+  2 & A track is in the process of loading \\
 
-    4 & Player is playing a loop \\
+  3 & Player is playing normally \\
 
-    5 & Player is paused anywhere other than the cue point \\
+  4 & Player is playing a loop \\
 
-    6 & Player is paused at the cue point \\
+  5 & Player is paused anywhere other than the cue point \\
 
-    7 & Cue Play is in progress (playback while the cue button is
+  6 & Player is paused at the cue point \\
+
+  7 & Cue Play is in progress (playback while the cue button is
   held down) \\
 
   8 & Cue scratch is in progress \\
@@ -763,10 +765,7 @@ The values seen so far, and their apparent meanings, are:
 
   17 & Player reached the end of the track and stopped \\
 
-    \bottomrule
-  \end{tabu}
-\end{center}
-\end{samepage}
+\end{longtabu}
 
 The $Firmware$ value at bytes~124--127 is an ASCII represenation of the
 firmware version running in the player.
@@ -894,15 +893,17 @@ rekordbox track is loaded, and {\tt 0x0000} when a non-rekordbox track
 (like from a physical CD) is loaded.
 
 Byte~157 (labeled $P_3$) seems to communicate additional information
-about the current play mode, with the following meanings that we have
-found so far:
-\begin{center}
-  \begin{tabu}{rX}
+about the current play mode. The meanings that we have
+found so far are listed in Table~\ref{table:p3Values}.
+
+  \begin{longtabu}{rX}
     \toprule
+    {\bfseries Value} & {\bfseries Meaning} \endhead
 
-    \bfseries{Value} & \bfseries{Meaning} \\
+    \bottomrule \\
+    \caption{Known $P_3$ Values} \endfoot
 
-    0 & No track is loaded \\
+    0 & No track is loaded \label{table:p3Values} \\
 
     1 & Player is paused or playing in Reverse mode \\
 
@@ -910,9 +911,7 @@ found so far:
 
     13 & Player is playing in Forward mode with jog mode set to CDJ \\
 
-    \bottomrule
-  \end{tabu}
-\end{center}
+  \end{longtabu}
 
 The 4-byte beat counter (which counts each beat from 1 through the end
 of the track) is found in bytes~160--163, labeled $Beat$. When the
@@ -1135,24 +1134,23 @@ of the message are set to 0.
 The argument type tags use different values than the field type tags
 themselves, for some reason, and it is not clear why this redundant
 information is necessary at all, but that is true a number of places
-in the protocol as you will see later. Here are the known tag values
-and their meanings:
+in the protocol as you will see later. Table~\ref{table:argumentTags}
+lists the known tag values and their meanings.
 
-\begin{center}
-  \begin{tabu}{rX}
-    \toprule
+\begin{longtabu}{rX}
+  \toprule
+  {\bfseries Tag} & {\bfseries Meaning} \endhead
 
-    \bfseries{Tag} & \bfseries{Meaning} \\
+  \bottomrule \\
+  \caption{Argument Tag Values} \endfoot
 
-    {\tt 0x02} & A string in UTF-16 big-endian encoding, with trailing
-    NUL (zero) character \\
+  {\tt 0x02} & A string in UTF-16 big-endian encoding, with trailing
+  NUL (zero) character \label{table:argumentTags} \\
 
-    {\tt 0x03} & A binary blob \\
+  {\tt 0x03} & A binary blob \\
 
-    {\tt 0x06} & A 4~byte big-endian integer \\
-    \bottomrule
-  \end{tabu}
-\end{center}
+  {\tt 0x06} & A 4~byte big-endian integer \\
+\end{longtabu}
 
 I am guessing that if we ever see them, a tag of 4 would represent a
 1~byte integer, and 5 would represent a 2~byte integer. But so far no
@@ -1572,45 +1570,46 @@ The menu item responses all have the same structure, and use all
 twelve message argument slots, containing ten numbers and two strings,
 although they generally don't have meaningful values in all of the
 slots. They have the general structure shown in in
-Figure~\ref{fig:trackMetadataMenuItem}, and the arguments are:
+Figure~\ref{fig:trackMetadataMenuItem}, and the arguments are listed
+in Table~\ref{table:menuItemArguments}.
 
-\begin{center}
-  \begin{tabu}{rcX}
-    \toprule
+\begin{longtabu}{rcX}
+  \toprule
+  {\bfseries Arg} & {\bfseries Type} & {\bfseries Meaning} \endhead
 
-    \bfseries{Arg} & \bfseries{Type} & \bfseries{Meaning} \\
+  \bottomrule \\
+  \caption{Menu Item Arguments} \endfoot
 
-    1 & number & parent ID, such as an artist for a track item \\
+  1 & number & parent ID, such as an artist for a track item
+  \label{table:menuItemArguments} \\
 
-    2 & number & main ID, such as $rekordbox$ for a track item \\
+  2 & number & main ID, such as $rekordbox$ for a track item \\
 
-    3 & number & length in bytes of Label 1 \\
+  3 & number & length in bytes of Label 1 \\
 
-    4 & string & Label 1 (main text, such as the track title or
-    artist name, as appropriate for the item type) \\
+  4 & string & Label 1 (main text, such as the track title or
+  artist name, as appropriate for the item type) \\
 
-    5 & number & length in bytes of Label 2 \\
+  5 & number & length in bytes of Label 2 \\
 
-    6 & string & Label 2 (secondary text, e.g. artist name for
-    playlist entries, where Label 1 holds the title) \\
+  6 & string & Label 2 (secondary text, e.g. artist name for
+  playlist entries, where Label 1 holds the title) \\
 
-    7 & number & type of this item (see
-    Section~\ref{sec:menuItemTypes}) \\
+  7 & number & type of this item (see
+  Section~\ref{sec:menuItemTypes}) \\
 
-    8 & number & some sort of flags field, details still unclear \\
+  8 & number & some sort of flags field, details still unclear \\
 
-    9 & number & holds $artwork$ ID when type is Track Title \\
+  9 & number & holds $artwork$ ID when type is Track Title \\
 
-    10 & number & playlist position when relevant, e.g. when listing
-    a playlist \\
+  10 & number & playlist position when relevant, e.g. when listing
+  a playlist \\
 
-    11 & number & unknown \\
+  11 & number & unknown \\
 
-    12 & number & unknown \\
+  12 & number & unknown \\
 
-    \bottomrule
-  \end{tabu}
-\end{center}
+\end{longtabu}
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -1764,62 +1763,99 @@ Figure~\ref{fig:trackMetadataMenuFooter}.
 
 As noted above, the seventh argument in a menu item response
 identifies the type of the item. The meanings we have identified so
-far are:
+far are listed in Table~\ref{table:menuItemTypes}.
 
-\begin{center}
-  \begin{longtabu}{rl}
+\begin{longtabu}{rl}
 
-    \toprule
-    {\bfseries Type} & {\bfseries Meaning} \endhead
+  \toprule
+  {\bfseries Type} & {\bfseries Meaning} \endhead
 
-    \bottomrule \\
-    \multicolumn{2}{c}{Known Menu Item Types}
-    \endfoot
+  \bottomrule \\
+  \caption{Known Menu Item Types} \endfoot
 
-    {\tt 0x0001} & Folder (such as in the playlists menu)\footnote{A nested list
-      of playlists rather than an individual playlist.} \\
-    {\tt 0x0002} & Album title \\
-    {\tt 0x0003} & Disc \\
-    {\tt 0x0004} & Track Title \\
-    {\tt 0x0006} & Genre \\
-    {\tt 0x0007} & Artist \\
-    {\tt 0x0008} & Playlist \\
-    {\tt 0x000a} & Rating \\
-    {\tt 0x000b} & Duration (in seconds) \\
-    {\tt 0x000d} & Tempo \\
-    {\tt 0x000e} & Label \\
-    {\tt 0x000f} & Key \\
-    {\tt 0x0013} & Color None \\
-    {\tt 0x0014} & Color Pink \\
-    {\tt 0x0015} & Color Red \\
-    {\tt 0x0016} & Color Orange \\
-    {\tt 0x0017} & Color Yellow \\
-    {\tt 0x0018} & Color Green \\
-    {\tt 0x0019} & Color Aqua \\
-    {\tt 0x001a} & Color Blue \\
-    {\tt 0x001b} & Color Purple \\
-    {\tt 0x0023} & Comment \\
-    {\tt 0x0028} & Original Artist \\
-    {\tt 0x0029} & Remixer \\
-    {\tt 0x002e} & Date Added \\
-    {\tt 0x0204} & Track title and album \\
-    {\tt 0x0604} & Track Title and Genre \\
-    {\tt 0x0704} & Track Title and Artist \\
-    {\tt 0x0a04} & Track Title and Rating \\
-    {\tt 0x0b04} & Track Title and Time \\
-    {\tt 0x0d04} & Track Title and BPM \\
-    {\tt 0x0e04} & Track Title and Label \\
-    {\tt 0x0f04} & Track Title and Key \\
-    {\tt 0x1004} & Track Title and Bit Rate \\
-    {\tt 0x1a04} & Track Title and Color \\
-    {\tt 0x2304} & Track Title and Comment \\
-    {\tt 0x2804} & Track Title and Original Artist \\
-    {\tt 0x2904} & Track Title and Remixer \\
-    {\tt 0x2a04} & Track Title and DJ Play Count \\
-    {\tt 0x2e04} & Track Title and Date Added \\
+  {\tt 0x0001} & \label{table:menuItemTypes}Folder (such as in the
+  playlists menu)\footnote{A nested list of playlists rather than an
+    individual playlist.} \\
 
-  \end{longtabu}
-\end{center}
+  {\tt 0x0002} & Album title \\
+
+  {\tt 0x0003} & Disc \\
+
+  {\tt 0x0004} & Track Title \\
+
+  {\tt 0x0006} & Genre \\
+
+  {\tt 0x0007} & Artist \\
+
+  {\tt 0x0008} & Playlist \\
+
+  {\tt 0x000a} & Rating \\
+
+  {\tt 0x000b} & Duration (in seconds) \\
+
+  {\tt 0x000d} & Tempo \\
+
+  {\tt 0x000e} & Label \\
+
+  {\tt 0x000f} & Key \\
+
+  {\tt 0x0013} & Color None \\
+
+  {\tt 0x0014} & Color Pink \\
+
+  {\tt 0x0015} & Color Red \\
+
+  {\tt 0x0016} & Color Orange \\
+
+  {\tt 0x0017} & Color Yellow \\
+
+  {\tt 0x0018} & Color Green \\
+
+  {\tt 0x0019} & Color Aqua \\
+
+  {\tt 0x001a} & Color Blue \\
+
+  {\tt 0x001b} & Color Purple \\
+
+  {\tt 0x0023} & Comment \\
+
+  {\tt 0x0028} & Original Artist \\
+
+  {\tt 0x0029} & Remixer \\
+
+  {\tt 0x002e} & Date Added \\
+
+  {\tt 0x0204} & Track title and album \\
+
+  {\tt 0x0604} & Track Title and Genre \\
+
+  {\tt 0x0704} & Track Title and Artist \\
+
+  {\tt 0x0a04} & Track Title and Rating \\
+
+  {\tt 0x0b04} & Track Title and Time \\
+
+  {\tt 0x0d04} & Track Title and BPM \\
+
+  {\tt 0x0e04} & Track Title and Label \\
+
+  {\tt 0x0f04} & Track Title and Key \\
+
+  {\tt 0x1004} & Track Title and Bit Rate \\
+
+  {\tt 0x1a04} & Track Title and Color \\
+
+  {\tt 0x2304} & Track Title and Comment \\
+
+  {\tt 0x2804} & Track Title and Original Artist \\
+
+  {\tt 0x2904} & Track Title and Remixer \\
+
+  {\tt 0x2a04} & Track Title and DJ Play Count \\
+
+  {\tt 0x2e04} & Track Title and Date Added \\
+
+\end{longtabu}
 
 As noted above, track metadata responses use many of these types.
 Others are used in different kinds of menus and queries.
@@ -2588,7 +2624,8 @@ that also affects the item type returned, along with the secondary
 information (beyond the title) that it contains about the track, as
 described in Section~\ref{sec:trackListSorting}. We will start out
 assuming the tracks are being requested in title order, which can be
-done by sending a $sort$ argument value of 0 or 1.
+done by sending a $sort$ argument value of 0 or 1, and that the DJ has
+configured the media device to show artists as the second column.
 
 Track list requests (just like metadata requests) are built on the
 mechanism that is used to request and draw scrollable menus on the
@@ -2624,94 +2661,107 @@ Figure~\ref{fig:trackMetadataMenuFooter}). This wrapping happens with
 all ``render menu'' requests, and the menu footer is an easy way to
 know you are done, although you can also count the messages.
 
-\begin{samepage}
 The details of the menu items are slightly different than in the case
 of a metadata request. In the example where you are retrieving tracks
-in title order, they will have content like this:
+in the default order, with the second column configured to be artists,
+they will have the content shown in
+Table~\ref{table:trackListWithArtists}.
 
-\begin{center}
-  \begin{tabu}{rcX}
-    \toprule
+\begin{longtabu}{rcX}
+  \toprule
+  {\bfseries Arg} & {\bfseries Type} & {\bfseries Meaning} \endhead
 
-    \bfseries{Arg} & \bfseries{Type} & \bfseries{Meaning} \\
+  \bottomrule \\
+  \caption{Track List Entries with Artists} \endfoot
 
-    1 & number & artist id \\
+  1 & number & artist id \label{table:trackListWithArtists} \\
 
-    2 & number & $rekordbox$ id of track \\
+  2 & number & $rekordbox$ id of track \\
 
-    3 & number & length in bytes of Label 1 \\
+  3 & number & length in bytes of Label 1 \\
 
-    4 & string & Label 1, Track Title \\
+  4 & string & Label 1, Track Title \\
 
-    5 & number & length in bytes of Label 2 \\
+  5 & number & length in bytes of Label 2 \\
 
-    6 & string & Label 2, Artist Name \\
+  6 & string & Label 2, Artist Name \\
 
-    7 & number & type of this item, {\tt 0x704} for this sort order \\
+  7 & number & type of this item, {\tt 0x704} for Title and Artist \\
 
-    8 & number & some sort of flags field, details still unclear \\
+  8 & number & some sort of flags field, details still unclear \\
 
-    9 & number & unknown \\
+  9 & number & unknown \\
 
-    10 & number & unknown \\
+  10 & number & unknown \\
 
-    11 & number & unknown \\
+  11 & number & unknown \\
 
-    12 & number & unknown \\
+  12 & number & unknown \\
 
-    \bottomrule
-  \end{tabu}
-\end{center}
-\end{samepage}
+\end{longtabu}
 
 \subsubsection{Alternate Track List Sort Orders}
 \label{sec:trackListSorting}
 
 As noted above, you can request the track list in a diferent order by
 supplying a different value for the $sort$ parameter. The value 0 or 1
-gives the order and information just described. The $sort$ values
-discovered so far are shown in the following table, and return menu
-items with the specified type values in argument 7.
+gives the order just described, with the default second column
+information configured for the media. The $sort$ values discovered so
+far are shown in the Table~\ref{table:sortOrders}, and return menu
+items with the specified item type values in argument 7.
 
-\begin{center}
-  \begin{tabu}{rcX}
-    \toprule
+\begin{longtabu}{rcX}
+  \toprule
+  {\bfseries Sort} & {\bfseries Type} & {\bfseries Description} \endhead
 
-    \bfseries{Sort} & \bfseries{Type} & \bfseries{Description} \\
+  \bottomrule \\
+  \caption{Sort Orders} \endfoot
 
-    1 & {\tt 0x704} & Title and Artist sorted by title \\
+  1 & {\tt 0x704} & Title and Artist sorted by
+  title \label{table:sortOrders} \\
 
-    2 & {\tt 0x704} & Title and Artist sorted by artist \\
+  2 & {\tt 0x704} & Title and Artist sorted by artist \\
 
-    3 & {\tt 0x204} & Sorted by album, Arg 1 holds album ID, Label 2 holds album name \\
+  3 & {\tt 0x204} & Sorted by album, Arg 1 holds album ID, Label~2
+  holds album name \\
 
-    4 & {\tt 0xd04} & Sorted by BPM, Arg 1 holds BPM$\times$100, Label 2 empty \\
+  4 & {\tt 0xd04} & Sorted by BPM, Arg 1 holds BPM$\times$100, Label~2
+  empty \\
 
-    5 & {\tt 0xa04} & Sorted by rating, Arg 1 holds rating, Label 2 empty \\
+  5 & {\tt 0xa04} & Sorted by rating, Arg 1 holds rating, Label~2
+  empty \\
 
-    6 & {\tt 0x604} & Sorted by genre, Arg 1 holds genre ID, Label 2 holds genre name \\
+  6 & {\tt 0x604} & Sorted by genre, Arg 1 holds genre ID, Label~2
+  holds genre name \\
 
-    7 & {\tt 0x2304} & Sorted by comment, Arg 1 holds comment ID, Label 2 holds comment \\
+  7 & {\tt 0x2304} & Sorted by comment, Arg 1 holds comment ID,
+  Label~2 holds comment \\
 
-    8 & {\tt 0xb04} & Sorted by time, Arg 1 holds track length in seconds, Label 2 empty \\
+  8 & {\tt 0xb04} & Sorted by time, Arg 1 holds track length in
+  seconds, Label~2 empty \\
 
-    9 & {\tt 0x2904} & Sorted by remixer, Arg 1 holds remixer ID, Label 2 holds remixer \\
+  9 & {\tt 0x2904} & Sorted by remixer, Arg 1 holds remixer ID,
+  Label~2 holds remixer \\
 
-    10 & {\tt 0xe04} & Sorted by label, Arg 1 holds label ID, Label 2 holds label \\
+  10 & {\tt 0xe04} & Sorted by label, Arg 1 holds label ID, Label~2
+  holds label \\
 
-    11 & {\tt 0x2804} & Sorted by original artist, Arg 1 holds original artist ID, Label 2 holds original artist \\
+  11 & {\tt 0x2804} & Sorted by original artist, Arg 1 holds original
+  artist ID, Label~2 holds original artist \\
 
-    12 & {\tt 0xf04} & Sorted by key, Arg 1 holds key ID, Label 2 holds key text \\
+  12 & {\tt 0xf04} & Sorted by key, Arg 1 holds key ID, Label~2 holds
+  key text \\
 
-    13 & {\tt 0x1004} & Sorted by bit rate, Arg 1 holds bit rate, Label 2 empty \\
+  13 & {\tt 0x1004} & Sorted by bit rate, Arg 1 holds bit rate,
+  Label~2 empty \\
 
-    16 & {\tt 0x2a04} & Sorted by DJ play count, Arg 1 holds play count, Label 2 empty \\
+  16 & {\tt 0x2a04} & Sorted by DJ play count, Arg 1 holds play count,
+  Label~2 empty \\
 
-    17 & {\tt 0x2e04} & Sorted by date added, Arg 1 holds date ID, Label 2 holds date text \\
+  17 & {\tt 0x2e04} & Sorted by date added, Arg 1 holds date ID,
+  Label~2 holds date text \\
 
-    \bottomrule
-  \end{tabu}
-\end{center}
+\end{longtabu}
 
 To experiment with this, start up dysentery in a Clojure REPL and
 connect to a player as described in Section~\ref{sec:experimenting},
@@ -2791,41 +2841,41 @@ request, so you should follow the procedure outlined in
 Section~\ref{sec:allTracks} to request your results in smaller
 batches. The followup queries that you send are identical for
 playlists as they are described in that section. The actual menu items
-returned when you are asking for a folder have the following content:
+returned when you are asking for a folder have the content shown in
+Table~\ref{table:folderItems}.
 
-\begin{center}
-  \begin{tabu}{rcX}
-    \toprule
+\begin{longtabu}{rcX}
+  \toprule
+  {\bfseries Arg} & {\bfseries Type} & {\bfseries Meaning} \endhead
 
-    \bfseries{Arg} & \bfseries{Type} & \bfseries{Meaning} \\
+  \bottomrule \\
+  \caption{Folder List Entries} \endfoot
 
-    1 & number & parent folder id \\
+  1 & number & parent folder id \label{table:folderItems} \\
 
-    2 & number & id of playlist or folder \\
+  2 & number & id of playlist or folder \\
 
-    3 & number & length in bytes of Label 1 \\
+  3 & number & length in bytes of Label 1 \\
 
-    4 & string & Label 1, Name of playlist or folder \\
+  4 & string & Label 1, Name of playlist or folder \\
 
-    5 & number & length in bytes of Label 2 \\
+  5 & number & length in bytes of Label 2 \\
 
-    6 & string & Label 2, empty \\
+  6 & string & Label 2, empty \\
 
-    7 & number & type of this item, {\tt 0x1} for folder, {\tt 0x8} for playlist \\
+  7 & number & type of this item, {\tt 0x1} for folder, {\tt 0x8} for playlist \\
 
-    8 & number & unknown \\
+  8 & number & unknown \\
 
-    9 & number & unknown \\
+  9 & number & unknown \\
 
-    10 & number & playlist position \\
+  10 & number & playlist position \\
 
-    11 & number & unknown \\
+  11 & number & unknown \\
 
-    12 & number & unknown \\
+  12 & number & unknown \\
 
-    \bottomrule
-  \end{tabu}
-\end{center}
+\end{longtabu}
 
 When you have requested a playlist (by passing its $id$ and a value of
 0 for $folder?$) the responses you get are track list entries, just
@@ -2997,8 +3047,8 @@ reproduce that.
 \subsection{Mysterious Values}
 
 There are still many values with unknown meanings described above, and
-many menu types that have yet to be explored; I hav focused on the
-ones that will be immediately useful to Beat Link Trigger.
+undoubtedly menu types that have yet to be explored; I have focused on
+the ones that will be immediately useful to Beat Link Trigger.
 Contributions of additional research and insight are eagerly
 welcomed---I would have not gotten nearly this far without help!
 
@@ -3055,7 +3105,11 @@ can find the tool that is being used to perform this research at: \\
 
 \begin{appendix}
 
+  \addcontentsline{toc}{section}{\listfigurename}
   \listoffigures
+
+  \addcontentsline{toc}{section}{\listtablename}
+  \listoftables
 
   \begin{center}
     \begin{samepage}
