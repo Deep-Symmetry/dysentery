@@ -594,10 +594,11 @@ things as well.
 
 \subsection{CDJ Status Packets}
 
-Packets from a CDJ will have a length of 212 bytes and the content
-shown in Figure~\ref{fig:cdjStatus} for nexus players. Older players
-send 208-byte packets with slightly less information. Newer firmware
-and Nexus 2 players send packets that are 284 or 292~bytes long.
+Packets from a CDJ will have a length of {\tt d4} bytes and the
+content shown in Figure~\ref{fig:cdjStatus} for nexus players. Older
+players send {\tt d0}-byte packets with slightly less information.
+Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
+{\tt 124}~bytes long.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -690,33 +691,33 @@ a track.
 
 When a rekordbox track is loaded, the device holding the rekordbox
 database from which the track was loaded is reported in $D_r$ at
-byte~40 (if the track was loaded from the local device, this will be
-the same as $D$; if it was loaded over the Link, it will be the number
-of a different device) When no track is loaded, $D_r$ has the value
-{\tt 00}.
+byte~{\tt 28} (if the track was loaded from the local device, this
+will be the same as $D$; if it was loaded over the Link, it will be
+the number of a different device) When no track is loaded, $D_r$ has
+the value {\tt 00}.
 
-Similarly, $S_r$ at byte~41 reports the slot from which the track was
-loaded: The value {\tt 00} means no track is loaded, {\tt 01} means
-the CD drive, {\tt 02} means the SD slot, and {\tt 03} means the USB
-slot. When a track is loaded from a rekordbox collection on a laptop,
-$S_r$ has the value {\tt 04}. $t_r$ at byte~42 may be an indicator of
-whether the track came from rekordbox: It seems to have the value {\tt
-  00} when no track is loaded or an unanalyzed track is loaded, {\tt
-  01} when a rekordbox track is loaded, and {\tt 05} when an audio CD
-is loaded.
+Similarly, $S_r$ at byte~{\tt 29} reports the slot from which the
+track was loaded: The value {\tt 00} means no track is loaded, {\tt
+  01} means the CD drive, {\tt 02} means the SD slot, and {\tt 03}
+means the USB slot. When a track is loaded from a rekordbox collection
+on a laptop, $S_r$ has the value {\tt 04}. $t_r$ at byte~{\tt 2a} may
+be an indicator of whether the track came from rekordbox: It seems to
+have the value {\tt 00} when no track is loaded or an unanalyzed track
+is loaded, {\tt 01} when a rekordbox track is loaded, and {\tt 05}
+when an audio CD is loaded.
 
-The field $rekordbox$ at bytes~44--47 contains the rekordbox database
-ID of the loaded track when a rekordbox track is being played.
-Combined with the player number and slot information, this can be used
-to request the track metadata as described in
+The field $rekordbox$ at bytes~{\tt 2c}--{\tt 2f} contains the
+rekordbox database ID of the loaded track when a rekordbox track is
+being played. Combined with the player number and slot information,
+this can be used to request the track metadata as described in
 Section~\ref{sec:metadata}. When an audio CD is loaded, this just
 contains the track index on the disc.
 
 The track number being played (its position within a playlist or other
 scrolling list of tracks, as displayed on the CDJ) can be found at
-bytes~50 and 51, labeled $Track$. (It may be a 4-byte value and also
-include bytes~48 and 49, but that would seem an unmanageable number of
-tracks to search through.)
+bytes~{\tt 32} and {\tt 33}, labeled $Track$. (It may be a 4-byte
+value and also include bytes~{\tt 30} and {\tt 31}, but that would
+seem an unmanageable number of tracks to search through.)
 
 There are a number of bytes, labeled $t_2$ through $t_7$, whose
 purpose is as yet undetermined. They are all zero when there is no
@@ -725,25 +726,27 @@ track loaded, but take different values when a track is loaded.
 this, so they will probably be removed from the chart in a future
 version of this document.)
 
-Byte~106, labeled $U_a$ (for ``USB activity''), alternates between the
-values 4 and 6 when there is USB activity---it may even alternate in
-time with the flashing USB indicator LED on the player, although
-visual inspection suggests there is not a perfect correlation.
-Byte~107, $S_a$, is the same kind of activity indicator for the SD
-slot. Byte~111 ($U_l$ for ``USB local'') has the value 4 when there is
-no USB media loaded, 0 when USB is loaded, and 2 or 3 when the USB
+Byte~{\tt 6a}, labeled $U_a$ (for ``USB activity''), alternates
+between the values {\tt 04} and {\tt 06} when there is USB
+activity---it may even alternate in time with the flashing USB
+indicator LED on the player, although visual inspection suggests there
+is not a perfect correlation. Byte~{\tt 6b}, $S_a$, is the same kind
+of activity indicator for the SD slot. Byte~{\tt 6f} ($U_l$ for ``USB
+local'') has the value {\tt 04} when there is no USB media loaded,
+{\tt 00} when USB is loaded, and {\tt 02} or {\tt 03} when the USB
 Stop button has been pressed and the USB media is being unmounted.
 
-Byte~115 ($S_l$ for ``SD local'') has the value 4 when there is no SD
-media loaded, 0 when SD is loaded, and 2 or 3 when the SD door has
-been opened and the SD media is being unmounted.
+Byte~{\tt 73} ($S_l$ for ``SD local'') has the value {\tt 04} when
+there is no SD media loaded, {\tt 00} when SD is loaded, and {\tt 02}
+or {\tt 03} when the SD door has been opened and the SD media is being
+unmounted.
 
-Byte~117, labeled $L$ (for ``Link available''), appears to have the
-value 1 whenever USB, SD, or CD media is present in any player on the
-network, whether or not the Link option is chosen in the other
-players, and 0 otherwise.
+Byte~{\tt 75}, labeled $L$ (for ``Link available''), appears to have
+the value {\tt 01} whenever USB, SD, or CD media is present in any
+player on the network, whether or not the Link option is chosen in the
+other players, and {\tt 00} otherwise.
 
-Byte~123, labeled $P_1$, appears to describe the current play mode.
+Byte~{\tt 7b}, labeled $P_1$, appears to describe the current play mode.
 The values seen so far, and their apparent meanings, are shown in
 Table~\ref{table:p1Values}.
 
@@ -755,49 +758,49 @@ Table~\ref{table:p1Values}.
   \bottomrule \\
   \caption{Known $P_1$ Values} \endfoot
 
-  0 & No track is loaded \label{table:p1Values} \\
+  {\tt 00} & No track is loaded \label{table:p1Values} \\
 
-  2 & A track is in the process of loading \\
+  {\tt 02} & A track is in the process of loading \\
 
-  3 & Player is playing normally \\
+  {\tt 03} & Player is playing normally \\
 
-  4 & Player is playing a loop \\
+  {\tt 04} & Player is playing a loop \\
 
-  5 & Player is paused anywhere other than the cue point \\
+  {\tt 05} & Player is paused anywhere other than the cue point \\
 
-  6 & Player is paused at the cue point \\
+  {\tt 06} & Player is paused at the cue point \\
 
-  7 & Cue Play is in progress (playback while the cue button is
+  {\tt 07} & Cue Play is in progress (playback while the cue button is
   held down) \\
 
-  8 & Cue scratch is in progress \\
+  {\tt 08} & Cue scratch is in progress \\
 
-  9 & Player is searching forwards or backwards \\
+  {\tt 09} & Player is searching forwards or backwards \\
 
-  17 & Player reached the end of the track and stopped \\
+  {\tt 11} & Player reached the end of the track and stopped \\
 
 \end{longtabu}
 
-The $Firmware$ value at bytes~124--127 is an ASCII represenation of the
-firmware version running in the player.
+The $Firmware$ value at bytes~{\tt 7c}--{\tt 7f} is an ASCII
+represenation of the firmware version running in the player.
 
-The value $Sync_n$ at bytes~134--135 seems to increment whenever the
-player syncs to a new tempo master (another player or the mixer). I am
-assuming it is just a 2-byte value, because I tried syncing 256 times
-and saw the counter expand from byte~135 to include byte~134. It may
-actually be a 4-byte value and also involve bytes~132 and 133, but I
-wasn't going to try changing sync 65,536 times or more to find out.
-Perhaps we could write software to test that someday by forcing tempo
-master changes.
+The value $Sync_n$ at bytes~{\tt 86}--{\tt 87} seems to increment
+whenever the player syncs to a new tempo master (another player or the
+mixer). I am assuming it is just a 2-byte value, because I tried
+syncing 256 times and saw the counter expand from byte~{\tt 87} to
+include byte~{\tt 86} may actually be a 4-byte value and also involve
+bytes~{\tt 84} and {\tt 85}, but I wasn't going to try changing sync
+65,536 times or more to find out. Perhaps we could write software to
+test that someday by forcing tempo master changes.
 
-Byte~137, labeled $F$, is a bit field containing some very useful
+Byte~{\tt 89}, labeled $F$, is a bit field containing some very useful
 state flags, detailed in Figure~\ref{fig:cdjStateFlags}.\footnote{We
   have not yet seen any other values for bits 0, 1, 2, or 7 in $F$, so
   we're unsure if they also carry meaning. If you ever find different
   values for them, please let us know by filing an Issue at
   \url{https://github.com/brunchboy/dysentery/issues}} It seems to
-only be available on nexus players, and others always send 0 for this
-byte?
+only be available on nexus players, and others always send {\tt 00}
+for this byte?
 
 \begin{figure}
   \begin{bytefield}[endianness=big,bitwidth=4em]{8}
@@ -809,25 +812,24 @@ byte?
   \label{fig:cdjStateFlags}
 \end{figure}
 
-Byte~139, labeled $P_2$ seems to be another play state indicator,
-having the value 122 ({\tt 0x7a}) when playing and 126 ({\tt 0x7e})
-when stopped. When the CDJ is trying to play, but is being held in
-place by the DJ holding down on the jog wheel, $P_1$ considers it to
-be playing (value 3), while $P_2$ considers it to be stopped (value
-126). Non-nexus players seem to use the value 106 ({\tt 0x6a}) when
-playing and 110 ({\tt 0x6e}) when stopped, while nxs2 players use the
-values 250 and 254 ({\tt 0xfa} and {\tt 0xfe}) so this seems to be
-another bit field like $F$.
+Byte~{\tt 8b}, labeled $P_2$ seems to be another play state indicator,
+having the value {\tt 7a} when playing and {\tt 7e} when stopped. When
+the CDJ is trying to play, but is being held in place by the DJ
+holding down on the jog wheel, $P_1$ considers it to be playing (value
+{\tt 03}), while $P_2$ considers it to be stopped (value {\tt 7e}).
+Non-nexus players seem to use the value {\tt 6a} when playing and {\tt
+  6e} when stopped, while nxs2 players use the values {\tt fa} and
+{\tt fe}, so this seems to be another bit field like $F$.
 
 There are four different places where pitch information appears in
-these packets: $Pitch_1$ at bytes~141--143, $Pitch_2$ at
-bytes~153--155, $Pitch_3$ at bytes~193--195, and $Pitch_4$ at
-bytes~197--199.
+these packets: $Pitch_1$ at bytes~{\tt 8c}--{\tt 8f}, $Pitch_2$ at
+bytes~{\tt 98}--{\tt 9b}, $Pitch_3$ at bytes~{\tt c0}--{\tt c3}, and
+$Pitch_4$ at bytes~{\tt c4}--{\tt c7}.
 
-Each of these values represents a three-byte pitch adjustment
-percentage, where {\tt 0x100000} represents no adjustment ($0\%$),
-{\tt 0x000000} represents slowing all the way to a complete stop
-($-100\%$, reachable only in Wide tempo mode), and {\tt 0x200000}
+Each of these values represents a four-byte pitch adjustment
+percentage, where {\tt 00100000} represents no adjustment ($0\%$),
+{\tt 00000000} represents slowing all the way to a complete stop
+($-100\%$, reachable only in Wide tempo mode), and {\tt 00200000}
 represents playing at double speed ($+100\%$).
 
 Note that if playback is stopped by pushing the pitch fader all the
@@ -835,12 +837,13 @@ way to $-100\%$ in Wide mode, both $P_1$ and $P_2$ still show it as
 playing, which is different than when the jog wheel is held down,
 since $P_2$ shows a stop in the latter situation.
 
-Here is how the pitch adjustment percentage represented by $Pitch_1$
-would be calculated:
+The pitch adjustment percentage represented by $Pitch_1$ would be
+calculated by multiplying decimal 100 by the following hexadecimal
+equation:
 
 \begin{displaymath}
-  100 \times
-  \frac{(byte[141] \times 65536 + byte[142]  \times 256 + byte[143]) - 1048576}{1048576}
+  \frac{(byte[{\tt 8d}] \times {\tt 10000} + byte[{\tt 8e}] \times
+    {\tt 100} + byte[{\tt 8f}]) - {\tt 100000}}{{\tt 100000}}
 \end{displaymath}
 
 We don't know why there are so many copies of the pitch information,
@@ -851,14 +854,14 @@ whether it is due to the local pitch fader, or a synced tempo master.
 
 $Pitch_2$ and $Pitch_4$ are always tied to the position of the local
 pitch fader, unless Tempo Reset is active, effectively locking the
-pitch fader to 0\% and $Pitch_2$ and $Pitch_4$ to {\tt 0x100000}, or
+pitch fader to 0\% and $Pitch_2$ and $Pitch_4$ to {\tt 100000}, or
 the player is paused or the jog wheel is being held down, freezing
 playback and locking the local pitch to $-100\%$, in which case they
-both have the value {\tt 0x000000}.
+both have the value {\tt 000000}.
 
 When playback stops, either due to the play button being pressed or
 the jog wheel held down, the value of $Pitch_4$ drops to {\tt
-  0x000000} instantly, while the value of $Pitch_2$ drops over time,
+  000000} instantly, while the value of $Pitch_2$ drops over time,
 reflecting the gradual slowdown of playback which is controlled by the
 player's brake speed setting. When playback starts, again either due
 to the play button being pressed or the jog wheel being released, both
@@ -877,34 +880,36 @@ more complicated than it really needs to be...
 
 The current BPM of the track (the BPM at the point that is currently
 being played, or at the location where the player is currently paused)
-can be found at bytes~146--147 (labeled $BPM$). It is a two-byte
-integer representing one hundred times the current track BPM. So, the
-current track BPM value to two decimal places can be calculated as:
+can be found at bytes~{\tt 92}--{\tt 93} (labeled $BPM$). It is a
+two-byte integer representing one hundred times the current track BPM.
+So, the current track BPM value to two decimal places can be
+calculated as (only byte offsets are hexadecimal):
 
-\[ \frac{byte[146] \times 256 + byte[147]}{100} \]
+\[ \frac{byte[{\tt 92}] \times 256 + byte[{\tt 93}]}{100} \]
 
 In order to obtain the actual playing BPM (the value shown in the BPM
 display), this value must be multiplied by the current effective
 pitch, calculated from $Pitch_1$ as described above. Since calculating
 the effective BPM reported by a CDJ is a common operation, here a
-simplified equation that results in the effective BPM to two decimal
-places, by combinining the $BPM$ and $Pitch1$ values:
+simplified hexadecimal equation that results in the effective BPM to
+two decimal places, by combinining the $BPM$ and $Pitch1$ values:
 
-\[ \frac{(b[146] \times 256 + b[147]) \times (b[141] \times 65536 + b[142]  \times 256 + b[143])}
-     {104857600} \]
+\[ \frac{(b[{\tt 92}] \times {\tt 100} + b[{\tt 93}]) \times (b[{\tt 8d}]
+  \times {\tt 10000} + b[{\tt 8e}] \times {\tt 100} + b[{\tt 8f}])}
+   {{\tt 100000}} \]
 
 Because Rekordbox and the CDJs support tracks with variable BPM, this
 value can and does change over the course of playing such tracks. When
-no track is loaded, $BPM$ has the value {\tt 0xffff}.
+no track is loaded, $BPM$ has the value {\tt ffff}.
 
-The meaning of value $l_1$ (bytes~144--145) is not currently known. It
-may simply reflect whether a track is loaded or not: it seems to have
-the value {\tt 0x7fff} when no track is loaded, {\tt 0x8000} when a
-rekordbox track is loaded, and {\tt 0x0000} when a non-rekordbox track
-(like from a physical CD) is loaded.
+The meaning of value $l_1$ (bytes~{\tt 90}--{\tt 91}) is not currently
+known. It may simply reflect whether a track is loaded or not: it
+seems to have the value {\tt 7fff} when no track is loaded, {\tt 8000}
+when a rekordbox track is loaded, and {\tt 0000} when a non-rekordbox
+track (like from a physical CD) is loaded.
 
-Byte~157 (labeled $P_3$) seems to communicate additional information
-about the current play mode. The meanings that we have
+Byte~{\tt 9d} (labeled $P_3$) seems to communicate additional
+information about the current play mode. The meanings that we have
 found so far are listed in Table~\ref{table:p3Values}.
 
   \begin{longtabu}{rX}
@@ -914,24 +919,24 @@ found so far are listed in Table~\ref{table:p3Values}.
     \bottomrule \\
     \caption{Known $P_3$ Values} \endfoot
 
-    0 & No track is loaded \label{table:p3Values} \\
+    {\tt 00} & No track is loaded \label{table:p3Values} \\
 
-    1 & Player is paused or playing in Reverse mode \\
+    {\tt 01} & Player is paused or playing in Reverse mode \\
 
-    9 & Player is playing in Forward mode with jog mode set to Vinyl \\
+    {\tt 09} & Player is playing in Forward mode with jog mode set to Vinyl \\
 
-    13 & Player is playing in Forward mode with jog mode set to CDJ \\
+    {\tt 0d} & Player is playing in Forward mode with jog mode set to CDJ \\
 
   \end{longtabu}
 
 The 4-byte beat counter (which counts each beat from 1 through the end
-of the track) is found in bytes~160--163, labeled $Beat$. When the
-player is paused at the start of the track, this seems to hold the
-value 0, even though it is beat 1, and when no rekordbox-analyzed
-track is loaded, \emph{and in packets from non-nexus players}, this
-holds the value {\tt 0xffffffff}.
+of the track) is found in bytes~{\tt a0}--{\tt a3}, labeled $Beat$.
+When the player is paused at the start of the track, this seems to
+hold the value 0, even though it is beat 1, and when no
+rekordbox-analyzed track is loaded, \emph{and in packets from
+  non-nexus players}, this holds the value {\tt ffffffff}.
 
-The counter $B_b$ at byte~166 counts out the beat within each bar,
+The counter $B_b$ at byte~{\tt a6} counts out the beat within each bar,
 cycling $1\to2\to3\to4$ repeatedly, and can be used to identify the
 down beat (as is used in the Master Player display on the CDJs as a
 mixing aid). Again, when no reckordbox-analyzed track is loaded, this
@@ -942,27 +947,28 @@ Section~\ref{sec:beatPackets}) to determine when the beats are
 actually happening.
 
 A countdown timer to the next saved cue point is available in
-bytes~164--165 (labeled $Cue$). If there is no saved cue point after
-the current play location in the track, or if it is further than 64
-bars ahead, these bytes contain the value {\tt 0x01ff} and the CDJ
-displays ``-\,-.-~bars''. As soon as there are just 64 bars (256
-beats) to go before the next cue point, this value becomes {\tt
-  0x0100}. This is the point at which the CDJ starts to display a
+bytes~{\tt a4}--{\tt a5} (labeled $Cue$). If there is no saved cue
+point after the current play location in the track, or if it is
+further than 64 bars ahead, these bytes contain the value {\tt 01ff}
+and the CDJ displays ``-\,-.-~bars''. As soon as there are just 64
+bars (256 beats) to go before the next cue point, this value becomes
+{\tt 0100}. This is the point at which the CDJ starts to display a
 countdown, which it displays as ``63.4~bars''. As each beat goes by,
 this value decreases by 1, until the cue point is about to be reached,
-at which point the value is {\tt 0x0001} and the CDJ displays
+at which point the value is {\tt 0001} and the CDJ displays
 ``00.1~bars''. On the beat on which the cue point was saved the value
-is {\tt 0x0000} and the CDJ displays ``00.0~Bars''. On the next beat,
+is {\tt 0000} and the CDJ displays ``00.0~Bars''. On the next beat,
 the value becomes determined by the next cue point (if any) in the
 track.
 
-Bytes~200-203 seem to contain a 4-byte packet counter labeled
-$Packet$, which is incremented for each packet sent by the player. (I
-am just guessing it is four bytes long, I have not yet watched long
-enough for the count to need more than the last three bytes).
+Bytes~{\tt c8}-{\tt cb} seem to contain a 4-byte packet counter
+labeled $Packet$, which is incremented for each packet sent by the
+player. (I am just guessing it is four bytes long, I have not yet
+watched long enough for the count to need more than the last three
+bytes).
 
-Byte~204, labeled $nx$, seems to have the value {\tt 0x0f} for nexus
-players, and {\tt 0x05} for older players.
+Byte~{\tt cc}, labeled $nx$, seems to have the value {\tt 0f} for
+nexus players, and {\tt 05} for older players.
 
 \subsection{Rekordbox Status Packets}
 
