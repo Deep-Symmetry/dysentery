@@ -975,15 +975,14 @@ nexus players, and {\tt 05} for older players.
 Rekordbox sends status packets which appear to be essentially
 identical to those sent by a mixer, as shown in
 Figure~\ref{fig:mixerStatus}, sending ``rekordbox'' as its device
-name. The device number $D$ (bytes~33 and 36) seems to be 41 ({\tt
-  0x29}), although it will probably use conflict resolution to pick an
+name. The device number $D$ (bytes~{\tt 21} and {\tt 24}) seems to be
+{\tt 29}, although it will probably use conflict resolution to pick an
 unused number if multiple copies are running. The $F$ value we have
-seen remains consistent as a status flag, showing {\tt 0xc0} which
-would indicate that it is always ``playing'' but not synced, tempo
-master, nor on the air. The $BPM$ value seems to track that of the
-master player, and the same potential pitch values (fixed at {\tt
-  0x100000}, or +0\%) are present, as is $X$. $B_b$ always seems to be
-zero.
+seen remains consistent as a status flag, showing {\tt c0} which would
+indicate that it is always ``playing'' but not synced, tempo master,
+nor on the air. The $BPM$ value seems to track that of the master
+player, and the same potential pitch values (fixed at {\tt 100000}, or
++0\%) are present, as is $X$. $B_b$ always seems to be zero.
 
 \section{Track Metadata}
 \label{sec:metadata}
@@ -1051,18 +1050,18 @@ them, it represents the number 1 as a 4-byte integer.
 \subsection{Field Types}
 
 The first byte of a field identifies what type of field is coming. The
-values {\tt 0x0f}, {\tt 0x10}, and {\tt 0x11} are followed by 1, 2,
-and 4~byte fixed-length integer fields, while {\tt 0x14} and {\tt
-  0x26} introduce variable-length fields, a binary blob and a UTF-16
+values {\tt 0f}, {\tt 10}, and {\tt 11} are followed by 1, 2, and
+4~byte fixed-length integer fields, while {\tt 14} and {\tt 26}
+introduce variable-length fields, a binary blob and a UTF-16
 big-endian string respectively.
 
 \subsubsection{Number Fields}
 
-Number fields are indicated by an initial byte~{\tt 0x0f}, {\tt 0x10},
-or {\tt 0x11} which is followed by big-endian integer value of length
-1, 2, or 4~bytes respectively, as shown in Figure~\ref{fig:numFields}.
-So, as noted above, the initial greeting packet sent to and received
-back from the database server is a number field, four bytes long,
+Number fields are indicated by an initial byte~{\tt 0f}, {\tt 10}, or
+{\tt 11} which is followed by big-endian integer value of length 1, 2,
+or 4~bytes respectively, as shown in Figure~\ref{fig:numFields}. So,
+as noted above, the initial greeting packet sent to and received back
+from the database server is a number field, four bytes long,
 representing the value 1.
 
 \begin{figure}
@@ -1090,11 +1089,10 @@ representing the value 1.
 \subsubsection{Binary Fields}
 
 Variable-length binary (blob) fields are indicated by an initial
-byte~{\tt 0x14}, followed by a 4~byte big-endian integer which
-specifies the length of the field payload. The length is followed by
-the specified number of bytes (for example, an album art image,
-waveform or beat grid). This is illustrated in
-Figure~\ref{fig:blobField}.
+byte~{\tt 14}, followed by a 4~byte big-endian integer which specifies
+the length of the field payload. The length is followed by the
+specified number of bytes (for example, an album art image, waveform
+or beat grid). This is illustrated in Figure~\ref{fig:blobField}.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -1112,11 +1110,11 @@ Figure~\ref{fig:blobField}.
 \subsubsection{String Fields}
 
 Variable-length string fields are indicated by an initial byte~{\tt
-  0x26}, followed by a 4~byte big-endian integer which specifies the
+  26}, followed by a 4~byte big-endian integer which specifies the
 length of the string, in two-byte UTF-16 big-endian characters. So the
 length is folowed by $2 \times length$ bytes containing the actual
 string characters. The last character of the string is always NUL,
-represented by {\tt 0x0000}. This is illustrated in
+represented by {\tt 0000}. This is illustrated in
 Figure~\ref{fig:stringField}.
 
 \begin{figure}
@@ -1136,17 +1134,17 @@ Figure~\ref{fig:stringField}.
 \label{sec:dbServerMessages}
 
 Messages are introduced by a 4~byte Number field containing the magic
-value {\tt 0x872349ae}. This is followed by another 4~byte number
-field that contains a transaction ID, which starts at 1 and is
-incremented for each query sent, and all messages sent in response to
-that query will contain the same transaction ID. This is followed by a
-2~byte number field containing the message type, a 1~byte number field
+value {\tt 872349ae}. This is followed by another 4~byte number field
+that contains a transaction ID, which starts at 1 and is incremented
+for each query sent, and all messages sent in response to that query
+will contain the same transaction ID. This is followed by a 2~byte
+number field containing the message type, a 1~byte number field
 containing the number of argument fields present in the message, and a
 blob field containing a series of bytes which identify the types of
-each argument field. This blob is always 12~bytes long, regardless of
-how few arguments there are (and presumably this means no message ever
-has more than 12 arguments). Tag bytes past the actual argument count
-of the message are set to 0.
+each argument field. This blob is always twelve bytes long, regardless
+of how few arguments there are (and presumably this means no message
+ever has more than twelve arguments). Tag bytes past the actual
+argument count of the message are set to 0.
 
 The argument type tags use different values than the field type tags
 themselves, for some reason, and it is not clear why this redundant
@@ -1161,24 +1159,24 @@ lists the known tag values and their meanings.
   \bottomrule \\
   \caption{Argument Tag Values} \endfoot
 
-  {\tt 0x02} & A string in UTF-16 big-endian encoding, with trailing
+  {\tt 02} & A string in UTF-16 big-endian encoding, with trailing
   NUL (zero) character \label{table:argumentTags} \\
 
-  {\tt 0x03} & A binary blob \\
+  {\tt 03} & A binary blob \\
 
-  {\tt 0x06} & A 4~byte big-endian integer \\
+  {\tt 06} & A 4~byte big-endian integer \\
 \end{longtabu}
 
-I am guessing that if we ever see them, a tag of 4 would represent a
-1~byte integer, and 5 would represent a 2~byte integer. But so far no
-such messages have been seen.
+I am guessing that if we ever see them, a tag of {\tt 04} would
+represent a 1~byte integer, and {\tt 05} would represent a 2~byte
+integer. But so far no such messages have been seen.
 
 This header is followed by the fields that make up the message
 arguments, if any. The header structure is illustrated in
 Figure~\ref{fig:messageHeader}, where $TxID$ is the transaction ID,
 $n$ is the number of arguments found in the message, and $t_1$ through
-$t_{12}$ are the type tags for each argument, or 0 if there is no
-argument in that position.
+$t_{12}$ are the type tags for each argument, or {\tt 00} if there is
+no argument in that position.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -1216,8 +1214,8 @@ argument in that position.
 
 Before you can send your first actual query, you need to send a
 special message which seems to be necessary for establishing the
-context for queries. It has a $type$ of 0, a special $TxID$ value of
-{\tt 0xfffffffe}, and a single numeric argument, as shown in
+context for queries. It has a $type$ of {\tt 0000}, a special $TxID$
+value of {\tt fffffffe}, and a single numeric argument, as shown in
 Figure~\ref{fig:querySetupPacket}.
 
 The value $D$ is, like in the other packets we have seen, a player
@@ -1265,13 +1263,13 @@ actual CDJs on the network.
 \end{figure}
 
 
-The player will respond with a message of type {\tt 0x4000}, which is
+The player will respond with a message of type {\tt 4000}, which is
 the common ``success'' response when requested data is available. The
 response message has two numeric arguments, the first of which is the
-message type of the request we sent (which was 0), and the second
-usually tells you the number of items that are available in response
-to the query you made, but in this special setup query, it returns its
-own player number. The overall structure is illustrated in
+message type of the request we sent (which was {\tt 0000}), and the
+second usually tells you the number of items that are available in
+response to the query you made, but in this special setup query, it
+returns its own player number. The overall structure is illustrated in
 Figure~\ref{fig:querySetupResponse}.
 
 \begin{figure}
@@ -1401,23 +1399,22 @@ Figure~\ref{fig:trackSetupResponse}.
 We've seen this type of ``data available'' response already in
 Figure~\ref{fig:querySetupResponse}, but this one is a more typical
 example. As usual, $TxID$ matches the value we sent in our request,
-and the first argument, with value {\tt 0x2002}, reflects the $type$
+and the first argument, with value {\tt 2002}, reflects the $type$
 field of our request. The second argument reports that there are 11
-({\tt 0x0b}) entries of track metadata available to be retrieved for
-the track we asked about, and that the player is ready to send them to
-us.
+({\tt 0b}) entries of track metadata available to be retrieved for the
+track we asked about, and that the player is ready to send them to us.
 
 If there was no track with ID $rekordbox$ in that media slot, the
-second argument would have the value {\tt 0xffffffff} to let us know.
-If we messed up something else about the request, we will get a
-response with a $type$ other than {\tt 0x4000}. See
+second argument would have the value {\tt ffffffff} to let us know. If
+we messed up something else about the request, we will get a response
+with a $type$ other than {\tt 4000}. See
 Section~\ref{sec:experimenting} for instructions on how to explore
 these variations on your own.
 
 But assuming everything went well, we can get the player to send us
 all eleven of those metadata entries by telling it to render all of
-the current menu, using a ``render menu'' request with $type$ {\tt 0x3000} shown in
-Figure~\ref{fig:renderMenuRequest}.
+the current menu, using a ``render menu'' request with $type$ {\tt
+  3000} shown in Figure~\ref{fig:renderMenuRequest}.
 
 As always, the value of $TxID$ should be one higher than the one you
 sent in your setup packet, while the values of $D$ and $S_r$ should be
@@ -1540,11 +1537,11 @@ Figure~\ref{fig:renderTrackMetadata}:
 \end{figure}
 
 This causes the player to send us 13 messages: The 11 metadata items
-we requested are sent (with $type$ {\tt 0x4101},
+we requested are sent (with $type$ {\tt 4101},
 Figure~\ref{fig:trackMetadataMenuItem}), but they are preceded by a
-menu header message (with $type$ {\tt 0x4001},
+menu header message (with $type$ {\tt 4001},
 Figure~\ref{fig:trackMetadataMenuHeader}), and followed by a menu
-footer message (with $type$ {\tt 0x4201},
+footer message (with $type$ {\tt 4201},
 Figure~\ref{fig:trackMetadataMenuFooter}). This wrapping happens with
 all ``render menu'' requests, and the menu footer is an easy way to
 know you are done, although you can also count the messages.
@@ -1667,7 +1664,7 @@ in Table~\ref{table:menuItemArguments}.
 \label{sec:trackTitleItem}
 
 The first item returned after the menu header is the track title, so
-argument 7 has the value {\tt 0x04}. Argument 1, which may always be
+argument 7 has the value {\tt 04}. Argument 1, which may always be
 some kind of parent ID, holds the artist ID associated with the track.
 The second argument seems to always be the main ID, and for this
 response it holds the $rekordbox$ ID of the track. Argument 4 holds
@@ -1678,70 +1675,71 @@ actual album art image as described in Section~\ref{sec:albumArt}.
 \subsubsection{Track Metadata Item 2: Artist}
 
 The second item contains artist information so argument 7 has the
-value {\tt 0x07}. Argument 2 holds the artist ID, argument 4 contains
+value {\tt 07}. Argument 2 holds the artist ID, argument 4 contains
 the text of the artist name.
 
 \subsubsection{Track Metadata Item 3: Album Title}
 
 The third item contains album title information so argument 7 has the
-value {\tt 0x02}. Argument 4 contains the text of the album name.
+value {\tt 02}. Argument 4 contains the text of the album name.
 
 \subsubsection{Track Metadata Item 4: Duration}
 
 The fourth item contains track duration information so argument 7 has
-the value {\tt 0x0b}. Argument 2 contains the length, in seconds, of
+the value {\tt 0b}. Argument 2 contains the length, in seconds, of
 the track when played at normal tempo.
 
 \subsubsection{Track Metadata Item 5: Tempo}
 
 The fifth item contains tempo information so argument 7 has the value
-{\tt 0x0d}. Argument 2 contains the track's starting tempo, in BPM,
+{\tt 0d}. Argument 2 contains the track's starting tempo, in BPM,
 times 100, as reported in $BPM$ values in other packets described
 earlier.
 
 \subsubsection{Track Metadata Item 6: Comment}
 
 The sixth item contains comment information so argument 7 has the
-value {\tt 0x23}. Argument 4 contains the text of the track comment
+value {\tt 23}. Argument 4 contains the text of the track comment
 entered by the DJ in rekordbox.
 
 \subsubsection{Track Metadata Item 7: Key}
 
 The seventh item contains key information so argument 7 has the value
-{\tt 0x0f}. Argument 4 contains the text of the track's dominant key
+{\tt 0f}. Argument 4 contains the text of the track's dominant key
 signature.
 
 \subsubsection{Track Metadata Item 8: Rating}
 
 The eighth item contains rating information so argument 7 has the
-value {\tt 0x0a}. Argument 2 contains a value from 0 to 5
+value {\tt 0a}. Argument 2 contains a value from 0 to 5
 corresponding to the number of stars the DJ has assigned the track in
 rekordbox.
 
 \subsubsection{Track Metadata Item 9: Color}
 
 The ninth item contains color information so argument 7 has a value
-between 0x13 and 0x1b identifying the color, if any, assigned to the
-track (see Section~\ref{sec:menuItemTypes} for the color choices), and
-if the value is anything other than {\tt 0x13}, Argument 4 contains
-the text that the DJ has assigned for that color meaning in rekordbox.
+between {\tt 13} and {\tt 1b} identifying the color, if any, assigned
+to the track (see Section~\ref{sec:menuItemTypes} for the color
+choices), and if the value is anything other than {\tt 13}, Argument
+4 contains the text that the DJ has assigned for that color meaning in
+rekordbox.
 
 \subsubsection{Track Metadata Item 10: Genre}
 
 The tenth item contains genre information so argument 7 has the value
-{\tt 0x06}. Argument 2 contains the numeric genre ID, and argument 4
+{\tt 06}. Argument 2 contains the numeric genre ID, and argument 4
 contains the text of the genre name.
 
 \subsubsection{Track Metadata Item 11: Date Added}
 
 The eleventh and final item contains the date added information so
-argument 7 has the value {\tt 0x2e}. Argument 4 contains the date the
+argument 7 has the value {\tt 2e}. Argument 4 contains the date the
 track was added to the collection in the format ``yyyy-mm-dd''. This
 information seems to propagate into rekordbox from iTunes.
 
 \subsection{Menu Footer Response}
 
-The menu footer message has a $type$ of {\tt 0x4201} and no arguments,
+The menu footer message has a $type$ of {\tt 4201} and no arguments,
 so it has a header only, and is always made up of the exact same
 sequence of bytes (apart from the $TxID$), as shown in
 Figure~\ref{fig:trackMetadataMenuFooter}.
@@ -1790,87 +1788,87 @@ far are listed in Table~\ref{table:menuItemTypes}.
   \bottomrule \\
   \caption{Known Menu Item Types} \endfoot
 
-  {\tt 0x0001} & \label{table:menuItemTypes}Folder (such as in the
+  {\tt 0001} & \label{table:menuItemTypes}Folder (such as in the
   playlists menu)\footnote{A nested list of playlists rather than an
     individual playlist.} \\
 
-  {\tt 0x0002} & Album title \\
+  {\tt 0002} & Album title \\
 
-  {\tt 0x0003} & Disc \\
+  {\tt 0003} & Disc \\
 
-  {\tt 0x0004} & Track Title \\
+  {\tt 0004} & Track Title \\
 
-  {\tt 0x0006} & Genre \\
+  {\tt 0006} & Genre \\
 
-  {\tt 0x0007} & Artist \\
+  {\tt 0007} & Artist \\
 
-  {\tt 0x0008} & Playlist \\
+  {\tt 0008} & Playlist \\
 
-  {\tt 0x000a} & Rating \\
+  {\tt 000a} & Rating \\
 
-  {\tt 0x000b} & Duration (in seconds) \\
+  {\tt 000b} & Duration (in seconds) \\
 
-  {\tt 0x000d} & Tempo \\
+  {\tt 000d} & Tempo \\
 
-  {\tt 0x000e} & Label \\
+  {\tt 000e} & Label \\
 
-  {\tt 0x000f} & Key \\
+  {\tt 000f} & Key \\
 
-  {\tt 0x0013} & Color None \\
+  {\tt 0013} & Color None \\
 
-  {\tt 0x0014} & Color Pink \\
+  {\tt 0014} & Color Pink \\
 
-  {\tt 0x0015} & Color Red \\
+  {\tt 0015} & Color Red \\
 
-  {\tt 0x0016} & Color Orange \\
+  {\tt 0016} & Color Orange \\
 
-  {\tt 0x0017} & Color Yellow \\
+  {\tt 0017} & Color Yellow \\
 
-  {\tt 0x0018} & Color Green \\
+  {\tt 0018} & Color Green \\
 
-  {\tt 0x0019} & Color Aqua \\
+  {\tt 0019} & Color Aqua \\
 
-  {\tt 0x001a} & Color Blue \\
+  {\tt 001a} & Color Blue \\
 
-  {\tt 0x001b} & Color Purple \\
+  {\tt 001b} & Color Purple \\
 
-  {\tt 0x0023} & Comment \\
+  {\tt 0023} & Comment \\
 
-  {\tt 0x0028} & Original Artist \\
+  {\tt 0028} & Original Artist \\
 
-  {\tt 0x0029} & Remixer \\
+  {\tt 0029} & Remixer \\
 
-  {\tt 0x002e} & Date Added \\
+  {\tt 002e} & Date Added \\
 
-  {\tt 0x0204} & Track title and album \\
+  {\tt 0204} & Track title and album \\
 
-  {\tt 0x0604} & Track Title and Genre \\
+  {\tt 0604} & Track Title and Genre \\
 
-  {\tt 0x0704} & Track Title and Artist \\
+  {\tt 0704} & Track Title and Artist \\
 
-  {\tt 0x0a04} & Track Title and Rating \\
+  {\tt 0a04} & Track Title and Rating \\
 
-  {\tt 0x0b04} & Track Title and Time \\
+  {\tt 0b04} & Track Title and Time \\
 
-  {\tt 0x0d04} & Track Title and BPM \\
+  {\tt 0d04} & Track Title and BPM \\
 
-  {\tt 0x0e04} & Track Title and Label \\
+  {\tt 0e04} & Track Title and Label \\
 
-  {\tt 0x0f04} & Track Title and Key \\
+  {\tt 0f04} & Track Title and Key \\
 
-  {\tt 0x1004} & Track Title and Bit Rate \\
+  {\tt 1004} & Track Title and Bit Rate \\
 
-  {\tt 0x1a04} & Track Title and Color \\
+  {\tt 1a04} & Track Title and Color \\
 
-  {\tt 0x2304} & Track Title and Comment \\
+  {\tt 2304} & Track Title and Comment \\
 
-  {\tt 0x2804} & Track Title and Original Artist \\
+  {\tt 2804} & Track Title and Original Artist \\
 
-  {\tt 0x2904} & Track Title and Remixer \\
+  {\tt 2904} & Track Title and Remixer \\
 
-  {\tt 0x2a04} & Track Title and DJ Play Count \\
+  {\tt 2a04} & Track Title and DJ Play Count \\
 
-  {\tt 0x2e04} & Track Title and Date Added \\
+  {\tt 2e04} & Track Title and Date Added \\
 
 \end{longtabu}
 
@@ -1881,7 +1879,7 @@ Others are used in different kinds of menus and queries.
 \label{sec:albumArt}
 
 To request the artwork image associated with a track, send a message
-with $type$ {\tt 0x2003} containing the $artwork$ ID that was
+with $type$ {\tt 2003} containing the $artwork$ ID that was
 specified in the track title item (as described in
 Section~\ref{sec:trackTitleItem}), like the one shown in
 Figure~\ref{fig:artworkRequest}.
@@ -1932,9 +1930,9 @@ medatata response. As with other graphical requests, the value after
 $D$, which identifies the location of the menu for which data is being
 loaded, is 8.
 
-The response will be a message with $type$ {\tt 0x4002}, containing
+The response will be a message with $type$ {\tt 4002}, containing
 four arguments. The first argument echoes back our request type, which
-was {\tt 0x2003}. The second always seems to be 0. The third contains
+was {\tt 2003}. The second always seems to be 0. The third contains
 the length of the image in bytes, which seems redundant, because that
 is also conveyed in the fourth argument itself, which is a blob
 containing the actual bytes of the image data, as shown in
@@ -2017,7 +2015,7 @@ other software (such as video resources) to sync tightly with DJ
 playback.
 
 To request the beat grid of a track, send a message with $type$ {\tt
-  0x2204} containing the $rekordbox$ ID of the track, like the one
+  2204} containing the $rekordbox$ ID of the track, like the one
 shown in Figure~\ref{fig:beatGridRequest}.
 
 \begin{figure}
@@ -2066,11 +2064,11 @@ packet or playlist response. As with graphical requests, the value
 after $D$, which identifies the location of the menu for which data is
 being loaded, is 8.
 
-The response will be a message with $type$ {\tt 0x4602}, containing
-four arguments. The first argument echoes back our request type, which
-was {\tt 0x2204}. The second always seems to be 0. The third contains
-the length of the beat grid in bytes, which seems redundant, because
-that is also conveyed in the fourth argument itself, which is a blob
+The response will be a message with $type$ {\tt 4602}, containing four
+arguments. The first argument echoes back our request type, which was
+{\tt 2204}. The second always seems to be 0. The third contains the
+length of the beat grid in bytes, which seems redundant, because that
+is also conveyed in the fourth argument itself, which is a blob
 containing the actual bytes of the beat grid, as shown in
 Figure~\ref{fig:beatGridResponse}. However, if there is no beat grid
 available, this value will be 0, and the blob field will be completely
@@ -2122,16 +2120,17 @@ Figure~\ref{fig:cdjStatus}), followed by four-byte timing information,
 specifying the number of milliseconds after the start of the track
 (when played at its native tempo) at which that beat falls.
 
-The $B_b$ value of the first beat in the track is found at byte 20 of
-argument 4, and the time at which that beat occurs, in milliseconds,
-is encoded as a 4-byte little-endian\footnote{Yes, unlike almost all
-  numbers in the protocol, beat grid and cue point times are
-  little-endian.} integer at bytes 21--24. Subsequent beats are found
-at 16-byte intervals, so the second $B_b$ value is found at byte 36,
-and the second beat's time, in milliseconds from the start of the
-track, is the big-endian integer at bytes 37--40. The $B_b$ value for
-the third beat is at byte 52, and its millisecond time is at bytes
-53--56, and so on.
+The $B_b$ value of the first beat in the track is found at byte {\tt
+  0x14} of argument 4, and the time at which that beat occurs, in
+milliseconds, is encoded as a 4-byte little-endian\footnote{Yes,
+  unlike almost all numbers in the protocol, beat grid and cue point
+  times are little-endian.} integer at bytes {\tt 15}--{\tt 18}.
+Subsequent beats are found at {\tt 0x10}-byte intervals, so the second
+$B_b$ value is found at byte {\tt 24}, and the second beat's time, in
+milliseconds from the start of the track, is the big-endian integer at
+bytes {\tt 25}--{\tt 28}. The $B_b$ value for the third beat is at
+byte {\tt 34}, and its millisecond time is at bytes {\tt 35}--{\tt
+  38}, and so on.
 
 The purpose of the other bytes within the beat grid is so far
 undetermined. It looks like there may be some sort of monotonically
@@ -2147,7 +2146,7 @@ second of track content. (There is apparently another, more compact,
 not use it, I don't know the request and response types for that.
 
 To request the waveform preview of a track, send a message with $type$
-{\tt 0x2004} containing the $rekordbox$ ID of the track, like the one
+{\tt 2004} containing the $rekordbox$ ID of the track, like the one
 shown in Figure~\ref{fig:waveformPreviewRequest}.
 
 \begin{figure}
@@ -2221,9 +2220,9 @@ The second argument has an unknown purpose, but we have seen values of
 are supposedly going to send; since we are not sending a blob, we
 always send a 0 here.
 
-The response will be a message with $type$ {\tt 0x4402}, containing
+The response will be a message with $type$ {\tt 4402}, containing
 four arguments. The first argument echoes back our request type, which
-was {\tt 0x2004}. The second always seems to be 0. The third contains
+was {\tt 2004}. The second always seems to be 0. The third contains
 the length of the waveform preview in bytes. If this value is 0, the
 fourth argument will be omitted from the response. When present, the
 fourth argument is a blob containing the actual bytes of the waveform
@@ -2273,13 +2272,13 @@ For this kind of waveform preview request,\footnote{There is an even
   lower-resolution preview available, with 4 bits of height per
   segment, and no shading, and there is also a full-color preview, but
   we don't yet know the requests needed to obtain these.} there are
-900 bytes of waveform data returned. The first 800 of them contain 400
-columns of waveform data, in the form of two-byte pairs, where the
-first byte is the height of the waveform at that column (a value
-ranging from 0 to 31), and the second byte is the whiteness, as
-before, where 0 is blue and 7 is fully white. My players seem to only
-pay attention to the highest bit of whiteness, drawing the waveform as
-either very dark or light blue accordingly.
+900 (decimal) bytes of waveform data returned. The first 800 of them
+contain 400 columns of waveform data, in the form of two-byte pairs,
+where the first byte is the pixel height of the waveform at that
+column (a value ranging from 0 to 31), and the second byte is the
+whiteness, as before, where 0 is blue and 7 is fully white. My players
+seem to only pay attention to the highest bit of whiteness, drawing
+the waveform as either very dark or light blue accordingly.
 
 To experiment with this, start up dysentery in a Clojure REPL and
 connect to a player as described in Section~\ref{sec:experimenting},
@@ -2298,8 +2297,8 @@ showing the waveform preview.
   \label{fig:waveformPreviewExample}
 \end{figure}
 
-I don't yet know what the remaining 100 bytes mean; perhaps they are
-color information for players that support colored waveforms? More
+I don't yet know what the remaining hundred bytes mean; perhaps they
+are color information for players that support colored waveforms? More
 likely, however, color uses a different request and response pair, and
 we will have to wait for someone to take a packet capture of a nexus 2
 player to see them.
@@ -2307,7 +2306,7 @@ player to see them.
 Requesting the detailed waveform is very similar to requesting the
 preview, but the request type and arguments are slightly different.
 To request the detailed waveform of a track, send a message with $type$
-{\tt 0x2904} containing the $rekordbox$ ID of the track, like the one
+{\tt 2904} containing the $rekordbox$ ID of the track, like the one
 shown in Figure~\ref{fig:waveformDetailRequest}.
 
 \begin{figure}
@@ -2363,8 +2362,8 @@ is a mystery wrapped in an enigma.
 
 The waveform detail response is essentially identical to the waveform
 preview response, with just the type numbers changed. It will be a
-message with $type$ {\tt 0x4a02}, containing four arguments. The first
-argument echoes back our request type, which was {\tt 0x2904}. The
+message with $type$ {\tt 4a02}, containing four arguments. The first
+argument echoes back our request type, which was {\tt 2904}. The
 second always seems to be 0. The third contains the length of the
 waveform detail in bytes. If this value is 0, the fourth argument
 will be omitted from the response. When present, the fourth argument
@@ -2468,9 +2467,9 @@ asked about can be found, and has the same values used in CDJ status
 packets, as shown in Figure~\ref{fig:cdjStatus}, and as usual,
 $rekordbox$ is the database ID of the track you're interested in.
 
-The response will be a message with $type$ {\tt 0x4702}, containing
+The response will be a message with $type$ {\tt 4702}, containing
 nine arguments. The first argument echoes back our request type, which
-was {\tt 0x2104}. The second always seems to be 0. The third contains
+was {\tt 2104}. The second always seems to be 0. The third contains
 the length of the blob containing cue and loop points in bytes, which
 seems redundant, because that is also conveyed in the fourth argument
 itself, which is a blob containing the actual bytes of the cue and
@@ -2480,9 +2479,9 @@ the following blob field will be completely omitted from the response,
 so you \emph{must not} try to read it!
 
 The fifth argument is a number with uncertain purpose. It always seems
-to have the value 36, which may be telling us the size of each
-cue/loop point entry in argument 4 (they do seem to each take up 36
-bytes, as shown in Figure~\ref{fig:cuePointEntry}). The sixth
+to have the value {\tt 0x24}, which may be telling us the size of each
+cue/loop point entry in argument 4 (they do seem to each take up {\tt
+  24} bytes, as shown in Figure~\ref{fig:cuePointEntry}). The sixth
 argument, shown as $num_{hot}$, seems to contain the number of hot cue
 entries found in argument 4, and the seventh, $num_{cue}$ seems to
 contain the number of ordinary memory point cues. The eighth argument
@@ -2535,20 +2534,21 @@ follows it. We don't know the meaning of the final, binary, argument.
 \end{figure}
 
 As described above, the first binary field in the cue point response
-is divided up in to 36 byte entries, each of which potentially holds a
-cue or loop point. They are not in any particular order, with respect
-to the time at which they occur in the track. They each have the
-structure shown in Figure~\ref{fig:cuePointEntry}.
+is divided up in to {\tt 24}-byte entries, each of which potentially
+holds a cue or loop point. They are not in any particular order, with
+respect to the time at which they occur in the track. They each have
+the structure shown in Figure~\ref{fig:cuePointEntry}.
 
-The first byte, $F_l$, has the value $1$ if this entry specifies a
-loop, or $0$ otherwise. The second byte, $F_c$, has the value $1$ if
-this entry contains a cue point, and $0$ otherwise. Entries with loops
-have the value $1$ in both of these bytes, because loops also act as
-cue points. If both values are $0$, the entry is ignored (it is
-probably a leftover cue point that was deleted by the DJ). The third
-byte, labeled $H$, is $0$ for ordinary cue points, but has a value if
-this entry defines a hot cue. Hot cues A through C are represented by
-the values $1$, $2$, and $3$.
+The first byte, $F_l$, has the value {\tt 01} if this entry specifies
+a loop, or {\tt 00} otherwise. The second byte, $F_c$, has the value
+{\tt 01} if this entry contains a cue point, and {\tt 00} otherwise.
+Entries with loops have the value {\tt 01} in both of these bytes,
+because loops also act as cue points. If both values are {\tt 00}, the
+entry is ignored (it is probably a leftover cue point that was deleted
+by the DJ). The third byte, labeled $H$, is {\tt 00} for ordinary cue
+points, but has a value if this entry defines a hot cue. Hot cues A
+through C are represented by the values {\tt 01}, {\tt 02}, and {\tt
+  03}.
 
 The actual location of the cue and loop points are in the values $cue$
 and $loop$. These are both 4-byte integers, and like beat grid
@@ -2649,8 +2649,8 @@ mechanism that is used to request and draw scrollable menus on the
 CDJs. The player responds with a success indicator, saying it is ready
 to send these ``menu items'' and reporting how many of them are
 available, much like shown in Figure~\ref{fig:trackSetupResponse},
-although the first argument will be {\tt 0x1004} to reflect the
-message type we just sent, rather than {\tt 0x2002} as it was for the
+although the first argument will be {\tt 1004} to reflect the
+message type we just sent, rather than {\tt 2002} as it was for the
 metadata request.
 
 As with metadata, the next step is to send a ``render menu'' request
@@ -2670,10 +2670,10 @@ request until you have retrieved them all.
 
 As with metadata requests, you will get back two more messages than
 you ask for, because you first get a menu header message (with $type$
-{\tt 0x4001}, Figure~\ref{fig:trackMetadataMenuHeader}), then the
-requested menu items are sent (with $type$ {\tt 0x4101},
+{\tt 4001}, Figure~\ref{fig:trackMetadataMenuHeader}), then the
+requested menu items are sent (with $type$ {\tt 4101},
 Figure~\ref{fig:trackMetadataMenuItem}), and finally these are
-followed by a menu footer message (with $type$ {\tt 0x4201},
+followed by a menu footer message (with $type$ {\tt 4201},
 Figure~\ref{fig:trackMetadataMenuFooter}). This wrapping happens with
 all ``render menu'' requests, and the menu footer is an easy way to
 know you are done, although you can also count the messages.
@@ -2703,7 +2703,7 @@ Table~\ref{table:trackListWithArtists}.
 
   6 & string & Label 2, Artist Name \\
 
-  7 & number & type of this item, {\tt 0x704} for Title and Artist \\
+  7 & number & type of this item, {\tt 0704} for Title and Artist \\
 
   8 & number & some sort of flags field, details still unclear \\
 
@@ -2734,48 +2734,48 @@ items with the specified item type values in argument 7.
   \bottomrule \\
   \caption{Sort Orders} \endfoot
 
-  1 & {\tt 0x704} & Title and Artist sorted by
+  {\tt 01} & {\tt 0704} & Title and Artist sorted by
   title \label{table:sortOrders} \\
 
-  2 & {\tt 0x704} & Title and Artist sorted by artist \\
+  {\tt 02} & {\tt 0704} & Title and Artist sorted by artist \\
 
-  3 & {\tt 0x204} & Sorted by album, Arg 1 holds album ID, Label~2
-  holds album name \\
+  {\tt 03} & {\tt 0204} & Sorted by album, Arg 1 holds album ID,
+  Label~2 holds album name \\
 
-  4 & {\tt 0xd04} & Sorted by BPM, Arg 1 holds BPM$\times$100, Label~2
-  empty \\
+  {\tt 04} & {\tt 0d04} & Sorted by BPM, Arg 1 holds BPM$\times$100,
+  Label~2 empty \\
 
-  5 & {\tt 0xa04} & Sorted by rating, Arg 1 holds rating, Label~2
-  empty \\
+  {\tt 05} & {\tt 0a04} & Sorted by rating, Arg 1 holds rating,
+  Label~2 empty \\
 
-  6 & {\tt 0x604} & Sorted by genre, Arg 1 holds genre ID, Label~2
-  holds genre name \\
+  {\tt 06} & {\tt 0604} & Sorted by genre, Arg 1 holds genre ID,
+  Label~2 holds genre name \\
 
-  7 & {\tt 0x2304} & Sorted by comment, Arg 1 holds comment ID,
+  {\tt 07} & {\tt 2304} & Sorted by comment, Arg 1 holds comment ID,
   Label~2 holds comment \\
 
-  8 & {\tt 0xb04} & Sorted by time, Arg 1 holds track length in
+  {\tt 08} & {\tt 0b04} & Sorted by time, Arg 1 holds track length in
   seconds, Label~2 empty \\
 
-  9 & {\tt 0x2904} & Sorted by remixer, Arg 1 holds remixer ID,
+  {\tt 09} & {\tt 2904} & Sorted by remixer, Arg 1 holds remixer ID,
   Label~2 holds remixer \\
 
-  10 & {\tt 0xe04} & Sorted by label, Arg 1 holds label ID, Label~2
-  holds label \\
+  {\tt 0a} & {\tt 0e04} & Sorted by label, Arg 1 holds label ID,
+  Label~2 holds label \\
 
-  11 & {\tt 0x2804} & Sorted by original artist, Arg 1 holds original
-  artist ID, Label~2 holds original artist \\
+  {\tt 0b} & {\tt 2804} & Sorted by original artist, Arg 1 holds
+  original artist ID, Label~2 holds original artist \\
 
-  12 & {\tt 0xf04} & Sorted by key, Arg 1 holds key ID, Label~2 holds
-  key text \\
+  {\tt 0c} & {\tt 0f04} & Sorted by key, Arg 1 holds key ID, Label~2
+  holds key text \\
 
-  13 & {\tt 0x1004} & Sorted by bit rate, Arg 1 holds bit rate,
+  {\tt 0d} & {\tt 1004} & Sorted by bit rate, Arg 1 holds bit rate,
   Label~2 empty \\
 
-  16 & {\tt 0x2a04} & Sorted by DJ play count, Arg 1 holds play count,
-  Label~2 empty \\
+  {\tt 10} & {\tt 2a04} & Sorted by DJ play count, Arg 1 holds play
+  count, Label~2 empty \\
 
-  17 & {\tt 0x2e04} & Sorted by date added, Arg 1 holds date ID,
+  {\tt 11} & {\tt 2e04} & Sorted by date added, Arg 1 holds date ID,
   Label~2 holds date text \\
 
 \end{longtabu}
@@ -2880,7 +2880,7 @@ Table~\ref{table:folderItems}.
 
   6 & string & Label 2, empty \\
 
-  7 & number & type of this item, {\tt 0x1} for folder, {\tt 0x8} for playlist \\
+  7 & number & type of this item, {\tt 01} for folder, {\tt 08} for playlist \\
 
   8 & number & unknown \\
 
@@ -2901,8 +2901,8 @@ Section~\ref{sec:allTracks}. And just like in that section, you can
 get the results in a different order by specifying a value for $sort$.
 The supported values and corresponding item types returned seem to be
 the same as described there. Additionally, if you pass a $sort$ value
-of 9, the playlist entries will come back sorted by track title, Label
-2 will be empty, and the item type will be {\tt 0x2904}.
+of {\tt 09}, the playlist entries will come back sorted by track
+title, Label 2 will be empty, and the item type will be {\tt 2904}.
 
 To experiment with this, start up dysentery in a Clojure REPL and
 connect to a player as described in Section~\ref{sec:experimenting},
