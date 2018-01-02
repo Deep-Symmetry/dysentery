@@ -231,16 +231,19 @@
                            0 "Loaded"
                            "???")
               :link-status (if (pos? (get packet 117)) "Found" "Absent")
-              :p-1 (case (get packet 123)
+              :p-1 (case (get packet 0x7b)
                      0 "No Track"
+                     2 "Loading"
                      3 "Playing"
                      4 "Looping"
                      5 "Stopped"
                      6 "Cued"
+                     7 "Cue Play"
+                     8 "Cue Scratch"
                      9 "Search"
                      17 "Ended"
                      "???")
-              :p-2 (case (get packet 139)
+              :p-2 (case (get packet 0x8b)
                      0x6a "Play"
                      0x6e "Stop"
                      0x7a "nxs Play"
@@ -248,11 +251,11 @@
                      0xfa "nxs2 Play"
                      0xfe "nxs2 Stop"
                      "???")
-              :p-3 (case (get packet 157)
+              :p-3 (case (get packet 0x9d)
                      0 "No Track"
                      1 "Stop or Reverse"
                      9 "Forward Vinyl"
-                     13 "Forward CDJ"
+                     0x0d "Forward CDJ"
                      "???")
 
               :empty-f (zero? flag-bits)
@@ -375,8 +378,8 @@
     [hex (recognized-if (or (and (zero? value) (= 4 (get packet 111)) (= 4 (get packet 115)))
                             (pos? value)))]
 
-    (= index 123)  ; Play mode part 1
-    [hex (recognized-if (#{0 3 4 5 6 9 0x11} value))]
+    (= index 0x7b)  ; Play mode part 1
+    [hex (recognized-if (#{0 2 3 4 5 6 7 8 9 0x11} value))]
 
     (<= 124 index 127)  ; Firmware version, in ascii
     [(if (pos? value) (str (char value)) "") Color/green]
@@ -388,11 +391,11 @@
     [hex (recognized-if (or (= (bit-and value 2r10000111) 2r10000100)
                             (and (zero? value) (= 208 (count packet)))))]
 
-    (= index 139)  ; Play mode part 2?
+    (= index 0x8b)  ; Play mode part 2?
     [hex (recognized-if (#{0x6a 0x7a 0x6e 0x7e 0xfa 0xfe} value))]
 
     (#{141 153 193 197} index)  ; The first byte of the four pitch copies
-    [hex (recognized-if (< value 0x21))] ; Valid pitces range from 0x000000 to 0x200000
+    [hex (recognized-if (< value 0x80))] ; Valid pitces range from 0x000000 to 0x200000 but can scratch much faster
 
     (#{142 143 154 155 194 195 198 199} index)  ; Later bytes of the four pitch copies
     [hex (Color/green)]  ; All values are valid
