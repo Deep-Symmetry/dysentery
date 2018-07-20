@@ -2,9 +2,9 @@
   "Parses and builds the fields, messages, and workflows that support
   interacting with (or offering) a database server for track
   information."
-  (require [dysentery.finder :as finder]
-           [dysentery.util :as util])
-  (:require [taoensso.timbre :as timbre]))
+  (:require [dysentery.util :as util]
+            [dysentery.finder :as finder]
+            [taoensso.timbre :as timbre]))
 
 (defn send-bytes
   "Send a vector of byte values to an output stream."
@@ -822,4 +822,3 @@
                 player)
               (do (disconnect player)
                   (timbre/error "Did not receive message type 0x4000 in response to setup message, closed.")))))))))
-
