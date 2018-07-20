@@ -99,8 +99,6 @@
      :arg-list-tag 0x02
      :bytes  (into [0x26] (concat (number->bytes (/ (count bytes) 2) 4) bytes))}))
 
-;; TODO: Add string-field and a read-field implementation for it
-
 ;; TODO: These have to take the player object as well, so they can
 ;; read more data if needed, and return the buffer and offset where
 ;; reading of the next field should begin.
