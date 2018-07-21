@@ -111,7 +111,7 @@ address of the local network.
           {\tt 4c} {\tt \textbf{0a}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 02}}
   \end{bytefield}
@@ -144,7 +144,7 @@ port they are connected to?
           {\tt 4c} {\tt \textbf{00}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {$N$} {\tt 02}} &
     \bitbox{6}{MAC address}
@@ -179,7 +179,7 @@ Figure~\ref{fig:mixerStage2}.
           {\tt 4c} {\tt \textbf{02}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 32}} &
     \bitbox{4}{IP address} & \bitbox{6}{MAC address} &
@@ -215,7 +215,7 @@ the content shown in Figure~\ref{fig:mixerStage3}.
           {\tt 4c} {\tt \textbf{04}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 26}} &
     \bitbox{1}{$D$} & \bitbox{1}{$N$}
@@ -245,7 +245,7 @@ the content shown in Figure~\ref{fig:mixerKeepalive}.
           {\tt 4c} {\tt \textbf{06}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
     \bitbox{1}{$D$} & \bitbox{1}{\tt 02} &
@@ -274,7 +274,7 @@ for the mixer.
           {\tt 4c} {\tt \textbf{0a}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 01}}
   \end{bytefield}
@@ -297,7 +297,7 @@ is {\tt 01} for the CDJ, and was {\tt 02} for the mixer.
           {\tt 4f} {\tt 4c} {\tt \textbf{00}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {$N$} {\tt 01}} &
     \bitbox{6}{MAC address}
@@ -333,7 +333,7 @@ packets with the content shown in Figure~\ref{fig:cdjKeepalive}.
           {\tt 4c} {\tt \textbf{06}} {\tt 00}}
         & \bitbox[lrt]{4}{}
       \end{leftwordgroup} \\
-      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})} 
+      \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
     \bitbox{1}{$D$} & \bitbox{1}{\tt 01} &
@@ -391,11 +391,11 @@ Figure~\ref{fig:beatPacket}.
         {\tt 4c} {\tt \textbf{28}}}
       & \bitbox[lrt]{5}{}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 3c}} &
       \bitbox{4}{$nextBeat$} & \bitbox{4}{$2ndBeat$} & \bitbox{4}{$nextBar$}
@@ -530,17 +530,17 @@ content shown in Figure~\ref{fig:mixerStatus}.
         {\tt 4c} {\tt \textbf{29}}}
       & \bitbox[lrt]{5}{}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 14}} &
       \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{1}{$F$} &
       \bitbox{4}{$Pitch$}\bitboxes*{1}{{\tt 80} {\tt 00}} & \bitbox{2}{$BPM$}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 30}
       \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09}} &
       \bitbox{1}{$X$} & \bitbox{1}{$B_b$} & \bitbox[]{8}{}
@@ -609,11 +609,11 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
         {\tt 4c} {\tt \textbf{0a}}}
       & \bitbox[lrt]{5}{}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 03} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt b0}} &
       \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 01}} & \bitbox{1}{$A$} &
@@ -1008,11 +1008,11 @@ Figure~\ref{fig:dbServerQueryPacket}.
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 0f} {\tt R} {\tt e} {\tt m} {\tt o}
         {\tt t} {\tt e} {\tt D} {\tt B} {\tt S} {\tt e} {\tt r} {\tt v}}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \bitboxes*{1}{{\tt e} {\tt r} {\tt 00}} & \bitbox[]{13}{}
     \end{leftwordgroup}
-    
+
   \end{bytefield}
   \caption{DB Server query packet}
   \label{fig:dbServerQueryPacket}
@@ -1183,14 +1183,14 @@ no argument in that position.
     \hexhead \\
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
-      
+
       \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
       \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
       \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{$type$} &
       \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{$n$} &
       \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
       \colorbitbox[lbt]{lightpurple}{1}{$t_1$} & \colorbitbox[bt]{lightpurple}{1}{$t_2$} &
@@ -1256,7 +1256,7 @@ actual CDJs on the network.
     \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 11} & \bitbox{4}{$D_{ours}$} & \bitbox[]{11}{}
     \end{leftwordgroup}
-    
+
   \end{bytefield}
   \caption{Query context setup message}
   \label{fig:querySetupPacket}
@@ -1300,7 +1300,7 @@ Figure~\ref{fig:querySetupResponse}.
       \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000000}} & \bitbox{1}{\tt 11} & \bitbox{4}{$D_{theirs}$} &
       \bitbox[]{6}{}
     \end{leftwordgroup}
-    
+
   \end{bytefield}
   \caption{Query context setup response}
   \label{fig:querySetupResponse}
@@ -1339,7 +1339,7 @@ one shown in Figure~\ref{fig:trackSetupPacket}.
       \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
     \end{leftwordgroup}
-    
+
   \end{bytefield}
   \caption{Track metadata request message}
   \label{fig:trackSetupPacket}
@@ -1368,14 +1368,14 @@ Figure~\ref{fig:trackSetupResponse}.
     \messagehead \\
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
-      
+
       \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
       \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
       \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4000} &
       \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
       \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
       \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
@@ -1465,7 +1465,7 @@ final argument also has an unknown purpose, but 0 works.
       \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 06} &
       \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
       \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
@@ -1483,7 +1483,7 @@ final argument also has an unknown purpose, but 0 works.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 30}
-      \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{$limit_2$} & \bitbox{1}{\tt 11} & 
+      \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{$limit_2$} & \bitbox{1}{\tt 11} &
       \bitbox{4}{\tt 00000000} & \bitbox[]{2}{}
     \end{leftwordgroup}
 
@@ -1509,7 +1509,7 @@ Figure~\ref{fig:renderTrackMetadata}:
       \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 06} &
       \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
       \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
@@ -1527,7 +1527,7 @@ Figure~\ref{fig:renderTrackMetadata}:
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 30}
-      \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 0000000b} & \bitbox{1}{\tt 11} & 
+      \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 0000000b} & \bitbox{1}{\tt 11} &
       \bitbox{4}{\tt 00000000} & \bitbox[]{2}{}
     \end{leftwordgroup}
 
@@ -1552,14 +1552,14 @@ know you are done, although you can also count the messages.
     \messagehead \\
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
-      
+
       \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
       \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
       \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4001} &
       \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 02} &
       \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
       \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
@@ -1574,7 +1574,7 @@ know you are done, although you can also count the messages.
       \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000001} &
       \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} & \bitbox[]{6}{}
     \end{leftwordgroup}
-    
+
   \end{bytefield}
   \caption{Menu header response}
   \label{fig:trackMetadataMenuHeader}
@@ -1631,14 +1631,14 @@ in Table~\ref{table:menuItemArguments}.
     \messagehead \\
 
     \begin{leftwordgroup}{\tiny\bfseries 00}
-      
+
       \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
       \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
       \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4101} &
       \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 0c} &
       \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
       \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
@@ -1757,7 +1757,7 @@ Figure~\ref{fig:trackMetadataMenuFooter}.
       \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 00} &
       \colorbitbox{lightpurple}{1}{\tt 14}
     \end{leftwordgroup} \\
-    
+
     \begin{leftwordgroup}{\tiny\bfseries 10}
       \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
       \colorbitbox[lbt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
@@ -1912,7 +1912,7 @@ Figure~\ref{fig:artworkRequest}.
       \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{$artwork$} & \bitbox[]{6}{}
     \end{leftwordgroup}
-    
+
   \end{bytefield}
   \caption{Track artwork request message}
   \label{fig:artworkRequest}
@@ -3140,4 +3140,3 @@ can find the tool that is being used to perform this research at: \\
 \end{appendix}
 
 \end{document}
-
