@@ -617,7 +617,7 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
     \begin{leftwordgroup}{\tiny\bfseries 20}
       \bitbox{1}{\tt 03} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt b0}} &
       \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 01}} & \bitbox{1}{$A$} &
-      \bitbox{1}{$D_r$} & \bitbox{1}{$S_r$} & \bitbox{1}{$t_r$} & \bitbox{1}{\tt 00} &
+      \bitbox{1}{$D_r$} & \bitbox{1}{$S_r$} & \bitbox{1}{$T_r$} & \bitbox{1}{\tt 00} &
       \bitbox{4}{$rekordbox$}
     \end{leftwordgroup} \\
 
@@ -689,29 +689,30 @@ The activity flag $A$ at byte~{\tt 27} seems to be {\tt 00} when the
 player is idle, and {\tt 01} when it is playing, searching, or loading
 a track.
 
-When a rekordbox track is loaded, the device holding the rekordbox
-database from which the track was loaded is reported in $D_r$ at
-byte~{\tt 28} (if the track was loaded from the local device, this
-will be the same as $D$; if it was loaded over the Link, it will be
-the number of a different device) When no track is loaded, $D_r$ has
-the value {\tt 00}.
+When a track is loaded, the device from which the track was loaded is
+reported in $D_r$ at byte~{\tt 28} (if the track was loaded from the
+local device, this will be the same as $D$; if it was loaded over the
+Link, it will be the number of a different device) When no track is
+loaded, $D_r$ has the value {\tt 00}.
 
 Similarly, $S_r$ at byte~{\tt 29} reports the slot from which the
 track was loaded: The value {\tt 00} means no track is loaded, {\tt
   01} means the CD drive, {\tt 02} means the SD slot, and {\tt 03}
 means the USB slot. When a track is loaded from a rekordbox collection
-on a laptop, $S_r$ has the value {\tt 04}. $t_r$ at byte~{\tt 2a} may
-be an indicator of whether the track came from rekordbox: It seems to
-have the value {\tt 00} when no track is loaded or an unanalyzed track
-is loaded, {\tt 01} when a rekordbox track is loaded, and {\tt 05}
-when an audio CD is loaded.
+on a laptop, $S_r$ has the value {\tt 04}. $T_r$ at byte~{\tt 2a}
+indicates the track type. It has the value {\tt 00} when no track is
+loaded, {\tt 01} when a rekordbox track is loaded, {\tt 02} when an
+unanalyzed track is loaded (from a media slot without a rekordbox
+database), and {\tt 05} when an audio CD track is loaded.
 
 The field $rekordbox$ at bytes~{\tt 2c}--{\tt 2f} contains the
 rekordbox database ID of the loaded track when a rekordbox track is
-being played. Combined with the player number and slot information,
-this can be used to request the track metadata as described in
-Section~\ref{sec:metadata}. When an audio CD is loaded, this just
-contains the track index on the disc.
+being played. When a non-rekordbox media slot track is loaded, it is
+still a unique ID by which the track can be identified for metadata
+requests, and when an audio CD track is loaded, this is just the track
+number. In all cases, combined with the player number and slot
+information, this can be used to request the track metadata as
+described in Section~\ref{sec:metadata}.
 
 The track number being played (its position within a playlist or other
 scrolling list of tracks, as displayed on the CDJ) can be found at
@@ -776,6 +777,8 @@ Table~\ref{table:p1Values}.
   {\tt 08} & Cue scratch is in progress \\
 
   {\tt 09} & Player is searching forwards or backwards \\
+
+  {\tt 0e} & Audio CD has spun down due to lack of use \\
 
   {\tt 11} & Player reached the end of the track and stopped \\
 
@@ -1033,7 +1036,9 @@ received by a virtual CDJ as described in
 Section~\ref{sec:virtualCdj}), open a TCP connection to the device
 from which the track was loaded, using the port that it gave you in
 response to the DB Server query packet, then send the following four
-packets.
+packets. (You can also get metadata for non-rekordbox tracks, even for
+CD Audio tracks being played in the CD slot, using the variation
+described in Section~\ref{sec:nonRekordboxMetadata}.)
 
 The first packet sent to the database server contains the five bytes
 {\tt 11 00 00 00 01}, and results in the same five bytes being sent
@@ -1306,9 +1311,9 @@ Figure~\ref{fig:querySetupResponse}.
   \label{fig:querySetupResponse}
 \end{figure}
 
-\subsection{Track Metadata}
+\subsection{Rekordbox Track Metadata}
 
-To ask for metadata about a particular track, send a packet like the
+To ask for metadata about a particular rekordbox track, send a packet like the
 one shown in Figure~\ref{fig:trackSetupPacket}.
 
 \begin{figure}
@@ -1336,12 +1341,12 @@ one shown in Figure~\ref{fig:trackSetupPacket}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {$T_r$}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} & \bitbox[]{6}{}
     \end{leftwordgroup}
 
   \end{bytefield}
-  \caption{Track metadata request message}
+  \caption{Rekordbox track metadata request message}
   \label{fig:trackSetupPacket}
 \end{figure}
 
@@ -1351,8 +1356,10 @@ used in your initial query context setup packet, identifying the
 device that is asking the question. $S_r$ is the slot in which the
 track being asked about can be found, and has the same values used in
 CDJ status packets, as shown in Figure~\ref{fig:cdjStatus}. Similarly,
-$rekordbox$ identifies the local rekordbox database ID of the track
-being asked about, as found in the CDJ status packet.
+$T_r$ identifies the type of track we want information about; for
+rekordbox tracks this always has the value {\tt 01}. And $rekordbox$
+identifies the local rekordbox database ID of the track being asked
+about, as found in the CDJ status packet.
 
 Track metadata requests are built on the mechanism that is used to
 request and draw scrollable menus on the CDJs, so the request is
@@ -1433,9 +1440,7 @@ summary, which is drawn in a strip along the entire bottom of the
 display, is requested with a menu location number of 8 in this second
 byte.
 
-The byte after $S_r$ seems to always have the value 1. We've seen it
-described as ``source analyzed'' but don't know exactly what that
-means.
+As described above, $T_r$ has the value 1 for rekordbox tracks.
 
 The second argument, $offset$, specifies which menu entry is the first
 one you want to see, and the third argument, $limit$, specifies how
@@ -1477,7 +1482,7 @@ final argument also has an unknown purpose, but 0 works.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {$T_r$}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{$offset$} & \bitbox{1}{\tt 11} & \bitbox{4}{$limit$} &
       \bitbox{1}{\tt 11}
     \end{leftwordgroup} \\
@@ -1521,7 +1526,7 @@ Figure~\ref{fig:renderTrackMetadata}:
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {$T_r$}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 0000000b} &
       \bitbox{1}{\tt 11}
     \end{leftwordgroup} \\
@@ -1874,6 +1879,29 @@ far are listed in Table~\ref{table:menuItemTypes}.
 
 As noted above, track metadata responses use many of these types.
 Others are used in different kinds of menus and queries.
+
+\subsection{Non-Rekordbox Track Metadata}
+\label{sec:nonRekordboxMetadata}
+
+As noted in the introduction to this section, you can get metadata for
+non-rekordbox tracks as well (although they don't have beat grids,
+waveforms, or album art available). All you need to do is use a slight
+variant of the metadata request message shown in
+Figure~\ref{fig:trackSetupPacket}, using the value {\tt 2202} (instead
+of {\tt 2002}) for the message type, and a value of $T_r$ that is
+appropriate for the kind of track you are asking about ({\tt 02} for
+non-rekordbox tracks loaded from media slots, and {\tt 05} for CD
+audio tracks playing in the CD slot, which has a $S_r$ value of {\tt
+  01}). After the initial query setup message, the other message types
+are the same as in the above discussion, but you will continue using
+the $S_r$ and $T_r$ values appropriate for the slot and media type you
+are asking about.
+
+Since these tracks don't have rekordbox IDs, you will need to use the
+$recordbox$ value reported in CDJ status packets in order to find out
+the values used to request the metadata for tracks loaded from solid
+state media; CD tracks are requested using the simple track number as
+the $rekordbox$ value.
 
 \subsection{Album Art}
 \label{sec:albumArt}
@@ -2621,7 +2649,7 @@ one shown in Figure~\ref{fig:trackListSetupPacket}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 01} {$S_r$} {$T_r$}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{$sort$} & \bitbox[]{6}{}
     \end{leftwordgroup}
 
@@ -2634,14 +2662,15 @@ As always, $TxID$ should be 1 for the first query packet you send, 2
 for the next, and so on. $D$ should have the same value you used in
 your initial query context setup packet, identifying the device that
 is asking the question. $S_r$ is the slot in which the track being
-asked about can be found, and has the same values used in CDJ status
-packets, as shown in Figure~\ref{fig:cdjStatus}. The new $sort$
-parameter determines the order in which the tracks are sorted, and
-that also affects the item type returned, along with the secondary
-information (beyond the title) that it contains about the track, as
-described in Section~\ref{sec:trackListSorting}. We will start out
-assuming the tracks are being requested in title order, which can be
-done by sending a $sort$ argument value of 0 or 1, and that the DJ has
+asked about can be found, and $T_r$ is the type of the track; these
+two bytes have the same values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}. The new $sort$ parameter determines the
+order in which the tracks are sorted, and that also affects the item
+type returned, along with the secondary information (beyond the title)
+that it contains about the track, as described in
+Section~\ref{sec:trackListSorting}. We will start out assuming the
+tracks are being requested in title order, which can be done by
+sending a $sort$ argument value of 0 or 1, and that the DJ has
 configured the media device to show artists as the second column.
 
 Track list requests (just like metadata requests) are built on the

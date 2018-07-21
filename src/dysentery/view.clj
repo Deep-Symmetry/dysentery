@@ -195,86 +195,88 @@
   interpret the status of a CDJ given a packet sent to port 50002 and
   the panel in which that packet is being shown."
   [packet label]
-  (let [flag-bits (get packet cdj-status-flag-byte)
-        track-bpm (/ (build-int packet 146 2) 100.0)
-        no-track? (zero? (get packet 123))
+  (let [flag-bits    (get packet cdj-status-flag-byte)
+        track-bpm    (/ (build-int packet 146 2) 100.0)
+        no-track?    (zero? (get packet 123))
         rekordbox-id (build-int packet 44 4)
-        pitches (mapv (partial calculate-pitch packet) [141 153 193 197])
+        pitches      (mapv (partial calculate-pitch packet) [141 153 193 197])
         cue-distance (build-int packet 164 2)
-        raw-beat (build-int packet 160 4)
-        beat (if (= raw-beat 0xffffffff) "n/a" raw-beat)
-        args {:active (get packet 39)
-              :rekordbox-device (get packet 40)
-              :rekordbox-slot (case (get packet 41)
-                                0 "n/a"
-                                1 "CD"
-                                2 "SD"
-                                3 "USB"
-                                4 "collection"
-                                "???")
-              :rekordbox-type (case (get packet 42)
-                                0 "unanalyzed"
-                                1 "rekordbox"
-                                5 "CD-DA"
-                                "???")
-              :rekordbox-id (if (= (get packet 42) 1) rekordbox-id "n/a")
-              :track (build-int packet 50 2)
-              :usb-activity (get packet 106)
-              :usb-local (case (get packet 111)
-                           4 "Empty"
-                           2 "Unloading"
-                           0 "Loaded"
-                           "???")
-              :sd-local (case (get packet 115)
-                           4 "Empty"
-                           2 "Unloading"
-                           0 "Loaded"
-                           "???")
-              :link-status (if (pos? (get packet 117)) "Found" "Absent")
-              :p-1 (case (get packet 0x7b)
-                     0 "No Track"
-                     2 "Loading"
-                     3 "Playing"
-                     4 "Looping"
-                     5 "Stopped"
-                     6 "Cued"
-                     7 "Cue Play"
-                     8 "Cue Scratch"
-                     9 "Search"
-                     17 "Ended"
-                     "???")
-              :p-2 (case (get packet 0x8b)
-                     0x6a "Play"
-                     0x6e "Stop"
-                     0x7a "nxs Play"
-                     0x7e "nxs Stop"
-                     0xfa "nxs2 Play"
-                     0xfe "nxs2 Stop"
-                     "???")
-              :p-3 (case (get packet 0x9d)
-                     0 "No Track"
-                     1 "Stop or Reverse"
-                     9 "Forward Vinyl"
-                     0x0d "Forward CDJ"
-                     "???")
+        raw-beat     (build-int packet 160 4)
+        beat         (if (= raw-beat 0xffffffff) "n/a" raw-beat)
+        args         {:active           (get packet 39)
+                      :rekordbox-device (get packet 40)
+                      :rekordbox-slot   (case (get packet 41)
+                                          0 "n/a"
+                                          1 "CD"
+                                          2 "SD"
+                                          3 "USB"
+                                          4 "collection"
+                                          "???")
+                      :rekordbox-type   (case (get packet 42)
+                                          0 "unloaded"
+                                          1 "rekordbox"
+                                          2 "unanalyzed"
+                                          5 "CD-DA"
+                                          "???")
+                      :rekordbox-id     (if (#{1 2 5} (get packet 42)) rekordbox-id "n/a")
+                      :track            (build-int packet 50 2)
+                      :usb-activity     (get packet 106)
+                      :usb-local        (case (get packet 111)
+                                          4 "Empty"
+                                          2 "Unloading"
+                                          0 "Loaded"
+                                          "???")
+                      :sd-local         (case (get packet 115)
+                                          4 "Empty"
+                                          2 "Unloading"
+                                          0 "Loaded"
+                                          "???")
+                      :link-status      (if (pos? (get packet 117)) "Found" "Absent")
+                      :p-1              (case (get packet 0x7b)
+                                          0    "No Track"
+                                          2    "Loading"
+                                          3    "Playing"
+                                          4    "Looping"
+                                          5    "Stopped"
+                                          6    "Cued"
+                                          7    "Cue Play"
+                                          8    "Cue Scratch"
+                                          9    "Search"
+                                          0x0e "Spun Down"
+                                          0x11 "Ended"
+                                          "???")
+                      :p-2              (case (get packet 0x8b)
+                                          0x6a "Play"
+                                          0x6e "Stop"
+                                          0x7a "nxs Play"
+                                          0x7e "nxs Stop"
+                                          0xfa "nxs2 Play"
+                                          0xfe "nxs2 Stop"
+                                          "???")
+                      :p-3              (case (get packet 0x9d)
+                                          0    "No Track"
+                                          1    "Stop or Reverse"
+                                          9    "Forward Vinyl"
+                                          0x0d "Forward CDJ"
+                                          "???")
 
-              :empty-f (zero? flag-bits)
-              :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
-              :master-flag (pos? (bit-and flag-bits cdj-status-flag-master-bit))
-              :sync-flag (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
-              :on-air-flag (pos? (bit-and flag-bits cdj-status-flag-on-air-bit))
+                      :empty-f      (zero? flag-bits)
+                      :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
+                      :master-flag  (pos? (bit-and flag-bits cdj-status-flag-master-bit))
+                      :sync-flag    (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
+                      :on-air-flag  (pos? (bit-and flag-bits cdj-status-flag-on-air-bit))
 
-              :sync-n (build-int packet 134 2)
+                      :sync-n (build-int packet 134 2)
 
-              :bpm (if no-track? "---" (format "%.1f" track-bpm))
-              :effective-bpm (if no-track? "---" (format "%.1f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
-              :pitches (mapv (partial format "%+.2f%%") pitches)
-              :beat beat
-              :bar-beat (get packet 166)
-              :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 166) ".png"))
-              :mem (format-cue-countdown cue-distance)
-              :near-cue (< cue-distance 17)
-              :packet (build-int packet 200 4)}]
+                      :bpm           (if no-track? "---" (format "%.1f" track-bpm))
+                      :effective-bpm (if no-track? "---" (format "%.1f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
+                      :pitches       (mapv (partial format "%+.2f%%") pitches)
+                      :beat          beat
+                      :bar-beat      (get packet 166)
+                      :bar-image     (clojure.java.io/resource (str "images/Bar" (get packet 166) ".png"))
+                      :mem           (format-cue-countdown cue-distance)
+                      :near-cue      (< cue-distance 17)
+                      :packet        (build-int packet 200 4)}]
     (.setText label (parser/render-file "templates/cdj-50002.tmpl" args)))
   label)
 
@@ -353,8 +355,8 @@
     (= index 41)  ; Slot from which track was loaded
     [hex (recognized-if (#{0 1 2 3 4} value))]
 
-    (= index 42)  ; Track type? 1 = rekordbox, 5 = audio CD
-    [hex (recognized-if (#{0 1 5} value))]
+    (= index 42)  ; Track type? 0= none, 1 = rekordbox, 2 = unanalyzed, 5 = audio CD
+    [hex (recognized-if (#{0 1 2 5} value))]
 
     (<= 44 index 47)  ; Rekordbox ID of the track
     [hex (Color/green)]
@@ -379,7 +381,7 @@
                             (pos? value)))]
 
     (= index 0x7b)  ; Play mode part 1
-    [hex (recognized-if (#{0 2 3 4 5 6 7 8 9 0x11} value))]
+    [hex (recognized-if (#{0 2 3 4 5 6 7 8 9 0x0e 0x11} value))]
 
     (<= 124 index 127)  ; Firmware version, in ascii
     [(if (pos? value) (str (char value)) "") Color/green]
@@ -403,11 +405,11 @@
     (= 144 index)  ; First byte of some kind of loaded indicator?
     [hex (recognized-if (or (and (= value 0x7f) (= (get packet (inc index)) 0xff))
                             (and (#{0x00 0x80} value) (zero? (get packet (inc index))))))]
-    
+
     (= 145 index)  ; Second byte of some kind of loaded indicator?
     [hex (recognized-if (or (and (= value 0xff) (= (get packet (dec index)) 0x7f))
                             (and (zero? value) (#{0x00 0x80} (get packet (dec index))))))]
-    
+
     (#{146 147} index)  ; The BPM
     [hex (Color/green)]  ; All values are valid for now
 

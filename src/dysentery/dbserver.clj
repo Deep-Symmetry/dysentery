@@ -326,46 +326,46 @@
   know something about."
   {0x0001 {:type "invalid data"}
    0x1000 {:type      "load root menu"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "sort order"
                        "magic constant?"]}
    0x1002 {:type "request artist list"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "sort order?"]}
    0x1004 {:type "request track list"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "sort order?"]}
    0x1105 {:type      "request playlist or playlist folder"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "sort order"
                        "playlist or folder ID"
                        "0=playlist, 1=folder"]}
    0x2002 {:type      "request track metadata"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "rekordbox ID"]}
    0x2003 {:type      "request album art"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "art ID"]}
    0x2004 {:type      "request track waveform preview"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "unknown (4)"
                        "rekordbox ID"
                        "unknown (0)"
                        "required declared but missing blob"]}
    0x2104 {:type      "request track cue points"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "rekordbox ID"]}
-   0x2202 {:type      "request CD track data"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+   0x2202 {:type      "request non-rekordbox track data"
+           :arguments ["requesting player, for menu, media, track type"
                        "track number"]}
    0x2204 {:type      "request beat grid information"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "rekordbox ID"]}
    0x2904 {:type      "request track waveform detail"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "rekordbox ID"]}
    0x3000 {:type      "render menu"
-           :arguments ["requesting player, for menu, media, analyzed (1)"
+           :arguments ["requesting player, for menu, media, track type"
                        "offset"
                        "limit"
                        "unknown (0)?"
@@ -495,30 +495,33 @@
 (defn request-metadata
   "Sends the sequence of messages that request the metadata for a
   track in a media slot on the player."
-  [player slot track]
-  (let [id (swap! (:counter player) inc)
-        menu-field (number-field [(:number player) 1 slot 1])
-        setup (build-message id 0x2002 menu-field (number-field track 4))]
-    (print "Sending > ")
-    (describe-message setup)
-    (send-message player setup)
-    (when-let [response (read-message player)]
-      (print "Received > ")
-      (describe-message response)
-      (when (= 0x4000 (get-message-type response))
-        (let [item-count (get-in response [:arguments 1 :number])]
-          (cond
-            (= item-count 0xffffffff)
-            (timbre/error "No track with id" track "in slot" slot "on player" (:target player))
+  ([player slot track]
+   (request-metadata player slot track 1))
+  ([player slot track track-type]
+   (let [id           (swap! (:counter player) inc)
+         message-type (if (= 1 track-type) 0x2002 0x2202)
+         menu-field   (number-field [(:number player) 1 slot track-type])
+         setup        (build-message id message-type menu-field (number-field track 4))]
+     (print "Sending > ")
+     (describe-message setup)
+     (send-message player setup)
+     (when-let [response (read-message player)]
+       (print "Received > ")
+       (describe-message response)
+       (when (= 0x4000 (get-message-type response))
+         (let [item-count (get-in response [:arguments 1 :number])]
+           (cond
+             (= item-count 0xffffffff)
+             (timbre/error "No track with id" track "in slot" slot "on player" (:target player))
 
-            (pos? item-count)
-            (let [metadata (read-menu-responses player menu-field item-count)]
-              ;; TODO build and return more compact structure.
-              )
+             (pos? item-count)
+             (let [metadata (read-menu-responses player menu-field item-count)]
+               ;; TODO build and return more compact structure.
+               )
 
-            :else
-            (timbre/error "No metadata available from player" (:target player) "slot" slot "track" track
-                          "(are you using a valid, unused player number?)")))))))
+             :else
+             (timbre/error "No metadata available from player" (:target player) "slot" slot "track" track
+                           "(are you using a valid, unused player number?)"))))))))
 
 (defn request-track-list
   "Sends the sequence of messages that request the track list for a
