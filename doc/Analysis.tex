@@ -622,12 +622,12 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 30}
-      \bitboxes*{1}{{\tt 00} {\tt 00}} \bitbox{2}{$Track$} \bitboxes*{1}{{\tt 00} {\tt 00} {$t_2$} {$t_3$}
-        {\tt 00} {\tt 00} {$t_4$} {$t_5$} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \bitboxes*{1}{{\tt 00} {\tt 00}} \bitbox{2}{$Track$} \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {$d_l$}
+        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 40}
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {$t_6$} {$t_7$}
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {$d_n$}
         {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
@@ -720,12 +720,18 @@ bytes~{\tt 32} and {\tt 33}, labeled $Track$. (It may be a 4-byte
 value and also include bytes~{\tt 30} and {\tt 31}, but that would
 seem an unmanageable number of tracks to search through.)
 
-There are a number of bytes, labeled $t_2$ through $t_7$, whose
-purpose is as yet undetermined. They are all zero when there is no
-track loaded, but take different values when a track is loaded.
-(Actually, there are many other bytes than these which behave like
-this, so they will probably be removed from the chart in a future
-version of this document.)
+The field~$d_l$ at byte~{\tt 37} appears to indicate when a disc is
+loaded. It has the value~{\tt 00} when the disc slot is empty, and
+seems to have the value~{\tt 1e} when a CD Audio disc is loaded, and
+{\tt 11} when a data disc containing files in MP3, AAC, WAV or AIFF
+format is loaded. Similarly, when a disc is loaded, the field~$d_n$ at
+byte~{\tt 47} changes from {\tt 00} to the number of tracks on the
+disc (a data disc will generally have one track).
+
+Some of the fields shown as having value {\tt 00} in this region will
+sometimes have other values in them; their meanings are simply not yet
+known. If you notice any patterns or figure anything out {\em please}
+open a pull request and let us know!
 
 Byte~{\tt 6a}, labeled $U_a$ (for ``USB activity''), alternates
 between the values {\tt 04} and {\tt 06} when there is USB

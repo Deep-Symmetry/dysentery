@@ -364,6 +364,9 @@
     (#{50 51} index)  ; Track index
     [hex (Color/green)]  ; All values are valid
 
+    (= index 0x37)  ; CD slot status
+    [hex (recognized-if (#{0 0x11 0x1e} value))]
+
     (= index 106)  ; USB actvity. Alternates between 4 and 6 when USB in use.
     [hex (recognized-if (#{4 6} value))]
 
