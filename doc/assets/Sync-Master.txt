@@ -1,0 +1,36 @@
+Interesting packets in Sync-Master.pcapng
+=========================================
+
+This capture was running while the DJM-2000 nexus mixer was used to
+send commands to the players (with device numbers 2 and 3) to turn
+Sync on and off, and then to assign the Tempo Master role to player 2,
+then 3, then 2 again, and finally to the mixer itself.
+
+Only traffic to and from player 2 is seen, since that connection was
+run through spanned switch ports.
+
+Packet  Type  Path   Meaning
+------  ----  -----  -------
+15320   0x2a  M>P2   Turn on Sync  (last byte 0x10)
+19853   0x2a  M>P2   Turn off Sync (last byte 0x20)
+26459   0x2a  M>P2   Turn on Sync
+
+32213   0x2a  M>P2   Become Master (last byte 0x01)
+32235   0x26  P2>P3  Announce new Master (with P2's # as last byte)
+32249   0x27  P3>P2  Ack new Master (last byte 0x01)
+
+40076   0x26  P3>P2  Announce new Master (with P3's # as last byte)
+40090   0x27  P2>P3  Ack new Master
+
+46245   0x2a  M>P2   Become new Master
+46266   0x26  P2>P3  Announce new Master
+46280   0x27  P3>P2  Ack new Master
+
+51026   0x26  M>P2   Announce new Master (with M's # as last byte)
+51060   0x27  P2>M   Ack new master
+
+Note that the new master announcement seems to be sent only from the
+device taking over the Master role to the current Master, and this
+is then acked. The mixer only sends a Become Master command when it
+is not taking over the Master role itself; to do that it just sends
+a normal Announce new Master message.
