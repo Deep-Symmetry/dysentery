@@ -110,6 +110,32 @@
         datagram (DatagramPacket. packet (count packet) (:destination @state) finder/announce-port)]
     (.send (:socket @state) datagram)))
 
+(defn send-direct-packet
+  "Create and send a packet to port 50001 of the specified device, with
+  the specified `header-type` value at byte 10, and specified payload
+  bytes following our device name."
+  [device-number header-type payload]
+  (if-let [device (finder/device-given-number device-number)]
+    (let [packet (byte-array (concat header-bytes [header-type] (:device-name @state) payload))
+        datagram (DatagramPacket. packet (count packet) (:address device) 50001)]
+    (.send (:socket @state) datagram))
+    (throw (ex-info (str "No device found with number " device-number) {}))))
+
+(defn set-sync
+  "Turn the specified player's sync mode on or off."
+  [device-number sync?]
+  (let [us        (:player-number @state)
+        sync-byte (if sync? 0x10 0x20)
+        payload   [0x01 0x00 us 0x00 0x08 0x00 0x00 0x00 us 0x00 0x00 0x00 sync-byte]]
+    (send-direct-packet device-number 0x2a payload)))
+
+(defn appoint-master
+  "Tell the specified player to take over the tempo master role."
+  [device-number]
+  (let [us        (:player-number @state)
+        payload   [0x01 0x00 us 0x00 0x08 0x00 0x00 0x00 us 0x00 0x00 0x00 01]]
+    (send-direct-packet device-number 0x2a payload)))
+
 (defn- send-keep-alive
   "Send a packet which keeps us marked as present and active on the DJ
   Link network."
@@ -151,4 +177,3 @@
     (catch Exception e
       (timbre/error e "Failed while trying to set up virtual CDJ.")
       (shut-down))))
-
