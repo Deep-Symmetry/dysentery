@@ -21,27 +21,38 @@
                :watcher nil
                :keep-alive nil}))
 
+(defn stop-sending-status
+  "Shut down the thread which is sending status packets to all players
+  on the network."
+  []
+  (swap! state update :status-sender #(when %
+                                        (try (future-cancel %)
+                                             (catch Exception e
+                                               (timbre/warn e "Problem stopping DJ-Link player status sender.")))
+                                        nil)))
+
 (defn shut-down
   "Close the UDP server socket and terminate the packet processing
   thread, if they are active."
   []
+  (stop-sending-status)
   (swap! state (fn [current]
                  (-> current
-                     (update-in [:socket] #(when %
-                                             (try (.close %)
-                                                  (catch Exception e
-                                                    (timbre/warn e "Problem closing DJ-Link player socket.")))
-                                             nil))
-                     (update-in [:watcher] #(when %
-                                              (try (future-cancel %)
-                                                   (catch Exception e
-                                                     (timbre/warn e "Problem stopping DJ-Link player receiver.")))
-                                              nil))
-                     (update-in [:keep-alive] #(when %
-                                              (try (future-cancel %)
-                                                   (catch Exception e
-                                                     (timbre/warn e "Problem stopping DJ-Link player keep-alive.")))
-                                              nil)))))
+                     (update :socket #(when %
+                                        (try (.close %)
+                                             (catch Exception e
+                                               (timbre/warn e "Problem closing DJ-Link player socket.")))
+                                        nil))
+                     (update :watcher #(when %
+                                         (try (future-cancel %)
+                                              (catch Exception e
+                                                (timbre/warn e "Problem stopping DJ-Link player receiver.")))
+                                         nil))
+                     (update :keep-alive #(when %
+                                            (try (future-cancel %)
+                                                 (catch Exception e
+                                                   (timbre/warn e "Problem stopping DJ-Link player keep-alive.")))
+                                            nil)))))
   nil)
 
 (defn- receive
@@ -97,6 +108,11 @@
   maintain our presence on the network."
   1500)
 
+(def status-interval
+  "How often, in milliseconds, should we send status packets to the
+  other devices on the network."
+  200)
+
 (def header-bytes
   "The constant bytes which always form the start of a packet that we
   send."
@@ -113,15 +129,20 @@
 (defn send-direct-packet
   "Create and send a packet to port 50001 of the specified device, with
   the specified `header-type` value at byte 10, and specified payload
-  bytes following our device name."
-  [device-number header-type payload]
-  (if-let [device (finder/device-given-number device-number)]
-    (let [packet (byte-array (concat header-bytes [header-type] (:device-name @state) payload))
-        datagram (DatagramPacket. packet (count packet) (:address device) 50001)]
-    (.send (:socket @state) datagram))
-    (throw (ex-info (str "No device found with number " device-number) {}))))
+  bytes following our device name. `device` can either be a device
+  number to be looked up, or an actual device details map. Packets can
+  be sent to a different port (e.g. 50002 for status packets) by
+  specifying the port number as an optional fourth argument."
+  ([device header-type payload]
+   (send-direct-packet device header-type payload 50001))
+  ([device header-type payload port]
+   (if-let [device (if (number? device) (finder/device-given-number device) device)]
+     (let [packet (byte-array (concat header-bytes [header-type] (:device-name @state) payload))
+           datagram (DatagramPacket. packet (count packet) (:address device) port)]
+       (.send (:socket @state) datagram))
+     (throw (ex-info (str "No device found with number " device) {})))))
 
-(defn set-sync
+(defn set-player-sync
   "Turn the specified player's sync mode on or off."
   [device-number sync?]
   (let [us        (:player-number @state)
@@ -136,6 +157,32 @@
         payload   [0x01 0x00 us 0x00 0x08 0x00 0x00 0x00 us 0x00 0x00 0x00 01]]
     (send-direct-packet device-number 0x2a payload)))
 
+(defn- build-status-payload
+  "Constructs the bytes which follow the device name in a status packet
+  describing our current state."
+  []
+  (let [{:keys [player-number playing? master? sync? tempo beat]} @state
+        tempo                                                     (math/round (* tempo 100))
+        tempo-hi                                                  (util/make-byte (/ tempo 256))
+        tempo-lo                                                  (util/make-byte (mod tempo 256))
+        f                                                         (+ 0x80
+                                                                     (if playing? 0x40 0)
+                                                                     (if master? 0x20 0)
+                                                                     (if sync? 0x10 0))]
+    [0x01 0x00 player-number 0x00 0x14 player-number 0x00 0x00 f 0x00 0x10 0x00 0x00 0x80 0x00 tempo-hi tempo-lo
+     0x00 0x10 0x00 0x00 0x00 0x09 0xff (util/make-byte (inc (mod (dec beat) 4)))]))
+
+(defn- send-status
+  "Sends a status packet reporting our current state directly to all
+  players on the network."
+  []
+  (let [payload (build-status-payload)]
+    (doseq [target (finder/current-dj-link-devices #{(.getLocalAddress (:socket @state))})]
+      (try
+        (send-direct-packet target 0x29 payload 50002)
+        (catch Exception e
+          (timbre/error e "Problem sending status packet to" target))))))
+
 (defn- send-keep-alive
   "Send a packet which keeps us marked as present and active on the DJ
   Link network."
@@ -147,6 +194,17 @@
       (catch Exception e
         (timbre/error e "Unable to send keep-alive packet to DJ-Link announcement port, shutting down.")
         (shut-down)))))
+
+(defn start-sending-status
+  "Starts the thread that sends status updates to all players on the
+  network, if it is not already running."
+  []
+  (swap! state update :status-sender
+         (fn [sender] (or sender
+                          (future (loop []
+                                    (send-status)
+                                    (Thread/sleep status-interval)
+                                    (recur)))))))
 
 (defn start
   "Create a virtual CDJ on the specified address and interface, with
@@ -172,8 +230,53 @@
              :keep-alive (future (loop []
                                    (Thread/sleep keep-alive-interval)
                                    (send-keep-alive)
-                                   (recur)))))
+                                   (recur)))
+             :tempo 120.0
+             :beat 0
+             :master? false
+             :playing? false
+             :sync? false))
 
     (catch Exception e
       (timbre/error e "Failed while trying to set up virtual CDJ.")
       (shut-down))))
+
+(defn yield-master-to
+  "Called when we have been told that another player is becoming master
+  so we should give up that role."
+  [player]
+  (when (not= player (:player-number @state))
+    (swap! state assoc :master? false)))
+
+(defn master-yield-response
+  "Called when a player we have told to yield the master role to us has
+  responsed. If the answer byte is non-zero, we are now the master."
+  [answer]
+  (timbre/info "Received master yield response:" answer)
+  (when-not (zero? answer)
+    (swap! state (fn [current]
+                   (let [us (:player-number current)]
+                     (assoc current :master-number us
+                            :master? true))))))
+
+(defn set-sync-mode
+  "Change our sync mode; we will be synced if `sync?` is truthy."
+  [sync?]
+  (swap! state assoc :sync? (boolean sync?)))
+
+(defn saw-master-packet
+  "Record the current notion of the master player based on the device
+  number found in a packet that identifies itself as the master."
+  [player]
+  (swap! state assoc :master-number player))
+
+(defn become-master
+  "Attempt to become the tempo master by sending a command to the
+  existing tempo master telling it to yield to us. We will change
+  state upon receiving an proper acknowledgement message."
+  []
+  (let [us      (:player-number @state)
+        master  (:master-number @state)
+        payload [0x01 0x00 us 0x00 0x04 0x00 0x00 0x00 us]]
+    (timbre/info "Sending master yield packet to" master "payload:" payload)
+    (send-direct-packet master 0x26 payload)))

@@ -277,7 +277,9 @@
                       :mem           (format-cue-countdown cue-distance)
                       :near-cue      (< cue-distance 17)
                       :packet        (build-int packet 200 4)}]
-    (.setText label (parser/render-file "templates/cdj-50002.tmpl" args)))
+    (.setText label (parser/render-file "templates/cdj-50002.tmpl" args))
+    (when (:master-flag args)
+      (vcdj/saw-master-packet (get packet 0x21))))
   label)
 
 (def timestamp-formatter
@@ -326,7 +328,9 @@
               :sync-flag (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
               :bar-beat (get packet 55)
               :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 55) ".png"))}]
-    (.setText label (parser/render-file "templates/mixer-50002.tmpl" args)))
+    (.setText label (parser/render-file "templates/mixer-50002.tmpl" args))
+    (when (:master-flag args)
+      (vcdj/saw-master-packet (get packet 0x21))))
   label)
 
 (defn- create-mixer-50002-details-label
@@ -685,8 +689,7 @@
   number to port 50001, and returns a function to be called to update
   the frame when a new packet is received for that device."
   [device-number packet]
-  (let [original-packet-type (get packet 10)
-        frame (JFrame. (str "Player " device-number ", port 50001"))
+  (let [frame (JFrame. (str "Player " device-number ", port 50001"))
         panel (JPanel.)
         byte-labels (create-byte-labels packet (partial packet-50001-byte-format device-number))
         timestamp-label (create-timestamp-label panel)
@@ -770,6 +773,34 @@
     (frame nil))
   (reset! packet-frames {}))
 
+(defn- handle-sync-command
+  "Reacts to a packet commanding us to change sync state."
+  [command]
+  (case command
+    0x10 (vcdj/set-sync-mode true)
+    0x20 (vcdj/set-sync-mode false)
+    0x01 (vcdj/become-master)
+    (timbre/warn "Unrecognized sync command value received:" command)))
+
+(defn- handle-sync-or-master-command
+  "Checks whether a packet sent to port 50001 is actually a sync/master
+  instruction, and if so reacts appropriately and returns a truthy
+  value."
+  [packet]
+  (let [packet-type (get packet 10)]
+    #_(timbre/info "packet-type" packet-type)
+    (case packet-type
+      0x2a (do
+             (handle-sync-command (last packet))
+             true)
+      0x26 (do
+             (vcdj/yield-master-to (last packet))
+             true)
+      0x27 (do
+             (vcdj/master-yield-response (last packet))
+             true)
+      false)))
+
 (defn- receive
   "Block until a UDP message is received on the given DatagramSocket, and
   return the payload packet."
@@ -802,9 +833,11 @@
                           (future (loop []
                                     (let [packet (receive socket)
                                           data (vec (map util/unsign (take (.getLength packet) (.getData packet))))]
-                                      ;; Check packet length; we only want ones with interesting data
-                                      (when (= 96 (.getLength packet))
-                                        (handle-device-packet 50001 (get data 33) data)))
+                                      (if (= 96 (.getLength packet))  ; A beat packet to display
+                                        (handle-device-packet 50001 (get data 33) data)
+                                        (when-not (handle-sync-or-master-command data)
+                                          #_(timbre/warn "Unrecognized port 50001 packet received, type:"
+                                                         (get data 33)))))
                                     (recur))))))))
     (catch Exception e
       (timbre/warn e "Failed while trying to set up DJ-Link reception.")

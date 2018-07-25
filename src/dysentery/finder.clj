@@ -111,12 +111,19 @@
   (when-not (:socket @state) (start)))
 
 (defn current-dj-link-devices
-  "Returns the set of DJ Link devices which are currently visible on
-  the network."
-  []
-  (start-if-needed)
-  (remove-stale-devices)
-  (set (for [[k v] (:devices-seen @state)] (:device v))))
+  "Returns the set of DJ Link devices which are currently visible on the
+  network. If `ignore-addresses` is supplied, any devices whose
+  addresses are present in that set will be filtered out of the
+  results (this allows the Virtual CDJ to avoid trying to talk to
+  itself)."
+  ([]
+   (current-dj-link-devices #{}))
+  ([ignore-addresses]
+   (start-if-needed)
+   (remove-stale-devices)
+   (let [{:keys [devices-seen socket]} @state
+         all-devices                   (for [[k v] devices-seen] (:device v))]
+     (set (filter #(not (ignore-addresses (:address %))) all-devices)))))
 
 (defn device-given-number
   "Returns what we know about the DJ Link device with the specified
