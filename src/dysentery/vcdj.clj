@@ -137,9 +137,13 @@
    (send-direct-packet device header-type payload 50001))
   ([device header-type payload port]
    (if-let [device (if (number? device) (finder/device-given-number device) device)]
-     (let [packet (byte-array (concat header-bytes [header-type] (:device-name @state) payload))
+     (let [data     (vec (concat header-bytes [header-type] (:device-name @state) payload))
+           packet   (byte-array data)
            datagram (DatagramPacket. packet (count packet) (:address device) port)]
-       (.send (:socket @state) datagram))
+       (.send (:socket @state) datagram)
+       (when (= port 50002)
+         (require 'dysentery.view)
+         ((resolve 'dysentery.view/handle-device-packet) port 0 data)))
      (throw (ex-info (str "No device found with number " device) {})))))
 
 (defn set-player-sync
@@ -161,16 +165,50 @@
   "Constructs the bytes which follow the device name in a status packet
   describing our current state."
   []
-  (let [{:keys [player-number playing? master? sync? tempo beat]} @state
-        tempo                                                     (math/round (* tempo 100))
-        tempo-hi                                                  (util/make-byte (/ tempo 256))
-        tempo-lo                                                  (util/make-byte (mod tempo 256))
-        f                                                         (+ 0x80
-                                                                     (if playing? 0x40 0)
-                                                                     (if master? 0x20 0)
-                                                                     (if sync? 0x10 0))]
-    [0x01 0x00 player-number 0x00 0x14 player-number 0x00 0x00 f 0x00 0x10 0x00 0x00 0x80 0x00 tempo-hi tempo-lo
-     0x00 0x10 0x00 0x00 0x00 0x09 0xff (util/make-byte (inc (mod (dec beat) 4)))]))
+  (swap! state update :packet-count (fnil inc 0))
+  (let [{:keys [player-number playing? master? sync? tempo beat sync-n packet-count]} @state
+
+        tempo (math/round (* tempo 100))
+        a     (if playing? 0x01 0x00)
+        b-b   (util/make-byte (inc (mod (dec beat) 4)))
+        d-r   player-number
+        f     (+ 0x80
+                 (if playing? 0x40 0)
+                 (if master? 0x20 0)
+                 (if sync? 0x10 0))
+        p-1   (if playing? 3 5)
+        p-2   (if playing? 0x7a 0x7e)
+        p-3   (if playing? 9 1)
+        s-r   0x02
+        t-r   0x01]
+    (concat [0x01
+             0x04 player-number 0x00 0x00 player-number 0x00 0x01 a  ; 0x20
+             d-r  s-r  t-r  0x00 0x00 0x00 0x00 0x01  ; 0x28
+             0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00  ; 0x30
+             0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0x38
+             0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0x40
+             0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0x48
+             0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0x50
+             0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0x58
+             0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0x60
+             0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x04  ; 0x68
+             0x00 0x00 0x00 0x04 0x00 0x00 0x00 0x00  ; 0x70
+             0x00 0x00 0x00 p-1  0x31 0x2e 0x34 0x30  ; 0x78
+             0x00 0x00 0x00 0x00]                     ; 0x80
+            (util/decompose-int sync-n 4)             ; 0x84
+            [0x00 f    0xff p-2  0x00 0x10 0x00 0x00  ; 0x88
+             0x00 0x00] (util/decompose-int tempo 2)  ; 0x90
+            [0x7f 0xff 0xff 0xff]                     ; 0x94
+            [0x00 0x10 0x00 0x00 0x00 p-3  0x00 0xff] ; 0x98
+            (util/decompose-int beat 4)               ; 0xa0
+            [0x01 0xff b-b 0x00]                      ; 0xa4
+            [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0xa8
+             0x00 0x00 0x00 0x00 0x00 0x00 0x10 0x00  ; 0xb0
+             0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0xb8
+             0x00 0x10 0x00 0x00 0x00 0x10 0x00 0x00] ; 0xc0
+            (util/decompose-int packet-count 4)       ; 0xc8
+            [0x0f 0x00 0x00 0x00                      ; 0xcc
+             0x00 0x00 0x00 0x00])))                  ; 0xd0
 
 (defn- send-status
   "Sends a status packet reporting our current state directly to all
@@ -179,7 +217,7 @@
   (let [payload (build-status-payload)]
     (doseq [target (finder/current-dj-link-devices #{(.getLocalAddress (:socket @state))})]
       (try
-        (send-direct-packet target 0x29 payload 50002)
+        (send-direct-packet target 0x0a payload 50002)
         (catch Exception e
           (timbre/error e "Problem sending status packet to" target))))))
 
@@ -224,7 +262,7 @@
              :destination (.getBroadcast address)
              :watcher (future (loop []
                                 (let [packet (receive socket)
-                                      data (vec (map util/unsign (take (.getLength packet) (.getData packet))))]
+                                      data   (vec (map util/unsign (take (.getLength packet) (.getData packet))))]
                                   (process-packet packet data))
                                 (recur)))
              :keep-alive (future (loop []
@@ -232,10 +270,11 @@
                                    (send-keep-alive)
                                    (recur)))
              :tempo 120.0
-             :beat 0
+             :beat 1
              :master? false
              :playing? false
-             :sync? false))
+             :sync? false
+             :sync-n 0))
 
     (catch Exception e
       (timbre/error e "Failed while trying to set up virtual CDJ.")
@@ -256,8 +295,10 @@
   (when-not (zero? answer)
     (swap! state (fn [current]
                    (let [us (:player-number current)]
-                     (assoc current :master-number us
-                            :master? true))))))
+                     (assoc current
+                            :master-number us
+                            :master? true
+                            :sync-n (inc (:sync-n current))))))))
 
 (defn set-sync-mode
   "Change our sync mode; we will be synced if `sync?` is truthy."
@@ -267,8 +308,8 @@
 (defn saw-master-packet
   "Record the current notion of the master player based on the device
   number found in a packet that identifies itself as the master."
-  [player]
-  (swap! state assoc :master-number player))
+  [player sync-n]
+  (swap! state assoc :master-number player :sync-n sync-n))
 
 (defn become-master
   "Attempt to become the tempo master by sending a command to the

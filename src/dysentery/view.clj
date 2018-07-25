@@ -154,23 +154,11 @@
   playing to the master output."
   2r00001000)
 
-(defn build-int
-  "Given a packet, the index of the first byte of an integer value,
-  and the number of bytes that make it up, calculates the integer that
-  the bytes represent."
-  [packet index size]
-  (loop [i (inc index)
-         left (dec size)
-         result (get packet index)]
-    (if (pos? left)
-      (recur (inc i) (dec left) (+ (* result 256) (get packet i)))
-      result)))
-
 (defn calculate-pitch
   "Given a packet and the index of the first byte of a pitch value,
   calculate the pitch shift percentage that it represents."
   [packet index]
-  (* 100.0 (/ (- (build-int packet index 3) 0x100000)
+  (* 100.0 (/ (- (util/build-int packet index 3) 0x100000)
               0x100000)))
 
 (defn format-cue-countdown
@@ -196,12 +184,12 @@
   the panel in which that packet is being shown."
   [packet label]
   (let [flag-bits    (get packet cdj-status-flag-byte)
-        track-bpm    (/ (build-int packet 146 2) 100.0)
+        track-bpm    (/ (util/build-int packet 146 2) 100.0)
         no-track?    (zero? (get packet 123))
-        rekordbox-id (build-int packet 44 4)
+        rekordbox-id (util/build-int packet 44 4)
         pitches      (mapv (partial calculate-pitch packet) [141 153 193 197])
-        cue-distance (build-int packet 164 2)
-        raw-beat     (build-int packet 160 4)
+        cue-distance (util/build-int packet 164 2)
+        raw-beat     (util/build-int packet 160 4)
         beat         (if (= raw-beat 0xffffffff) "n/a" raw-beat)
         args         {:active           (get packet 39)
                       :rekordbox-device (get packet 40)
@@ -219,7 +207,7 @@
                                           5 "CD-DA"
                                           "???")
                       :rekordbox-id     (if (#{1 2 5} (get packet 42)) rekordbox-id "n/a")
-                      :track            (build-int packet 50 2)
+                      :track            (util/build-int packet 50 2)
                       :usb-activity     (get packet 106)
                       :usb-local        (case (get packet 111)
                                           4 "Empty"
@@ -266,7 +254,7 @@
                       :sync-flag    (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
                       :on-air-flag  (pos? (bit-and flag-bits cdj-status-flag-on-air-bit))
 
-                      :sync-n (build-int packet 134 2)
+                      :sync-n (util/build-int packet 134 2)
 
                       :bpm           (if no-track? "---" (format "%.1f" track-bpm))
                       :effective-bpm (if no-track? "---" (format "%.1f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
@@ -276,10 +264,10 @@
                       :bar-image     (clojure.java.io/resource (str "images/Bar" (get packet 166) ".png"))
                       :mem           (format-cue-countdown cue-distance)
                       :near-cue      (< cue-distance 17)
-                      :packet        (build-int packet 200 4)}]
+                      :packet        (util/build-int packet 200 4)}]
     (.setText label (parser/render-file "templates/cdj-50002.tmpl" args))
     (when (:master-flag args)
-      (vcdj/saw-master-packet (get packet 0x21))))
+      (vcdj/saw-master-packet (get packet 0x21) (util/build-int packet 0x84 4))))
   label)
 
 (def timestamp-formatter
@@ -321,7 +309,7 @@
   and the panel in which that packet is being shown."
   [packet label]
   (let [flag-bits (get packet mixer-status-flag-byte)
-        args {:bpm (format "%.1f" (/ (build-int packet 46 2) 100.0))
+        args {:bpm (format "%.1f" (/ (util/build-int packet 46 2) 100.0))
               :empty-f (zero? flag-bits)
               :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
               :master-flag (pos? (bit-and flag-bits cdj-status-flag-master-bit))
@@ -598,7 +586,9 @@
   the frame when a new packet is received for that device."
   [device-number packet]
   (let [original-packet-type (get packet 10)
-        frame (JFrame. (str "Player " device-number ", port 50002"))
+        frame (JFrame. (if (zero? device-number)
+                         "We sent to port 50002"
+                         (str "Player " device-number ", port 50002")))
         panel (JPanel.)
         num-byte-rows (inc (quot (dec (count packet)) 16))
         byte-labels (create-byte-labels packet (partial packet-50002-byte-format device-number original-packet-type))
@@ -648,7 +638,7 @@
   "Interprets 4 bytes at the specified packet offset as an integer,
   but returns an indication when no beat is forthcoming."
   [packet offset]
-  (let [result (build-int packet offset 4)]
+  (let [result (util/build-int packet offset 4)]
     (if (= result 0xffffffff)
       "---"
       result)))
@@ -659,7 +649,7 @@
   and the panel in which that packet is being shown."
   [packet label]
   (let [pitch (calculate-pitch packet 85)
-        track-bpm (/ (build-int packet 90 2) 100.0)
+        track-bpm (/ (util/build-int packet 90 2) 100.0)
         args {:bpm (format "%.1f" track-bpm)
               :effective-bpm (format "%.1f" (+ track-bpm (* track-bpm 1/100 pitch)))
               :pitch (format "%+.2f%%" pitch)
@@ -736,7 +726,7 @@
     50001 (create-player-50001-frame device-number packet)
     50002 (create-player-50002-frame device-number packet)))
 
-(defn- handle-device-packet
+(defn handle-device-packet
   "Find and update or create the frame used to display packets on the
   specified port from the specified device."
   [port device-number packet]
