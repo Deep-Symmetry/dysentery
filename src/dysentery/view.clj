@@ -318,7 +318,7 @@
               :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 55) ".png"))}]
     (.setText label (parser/render-file "templates/mixer-50002.tmpl" args))
     (when (:master-flag args)
-      (vcdj/saw-master-packet (get packet 0x21))))
+      (vcdj/saw-master-packet (get packet 0x21) nil)))
   label)
 
 (defn- create-mixer-50002-details-label

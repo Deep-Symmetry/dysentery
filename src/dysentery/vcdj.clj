@@ -309,7 +309,10 @@
   "Record the current notion of the master player based on the device
   number found in a packet that identifies itself as the master."
   [player sync-n]
-  (swap! state assoc :master-number player :sync-n sync-n))
+  (swap! state merge
+         {:master-number player}
+         (when sync-n
+           {:sync-n sync-n})))
 
 (defn become-master
   "Attempt to become the tempo master by sending a command to the
