@@ -267,7 +267,7 @@
                       :packet        (util/build-int packet 200 4)}]
     (.setText label (parser/render-file "templates/cdj-50002.tmpl" args))
     (when (:master-flag args)
-      (vcdj/saw-master-packet (get packet 0x21) (util/build-int packet 0x84 4))))
+      (vcdj/saw-master-packet (get packet 0x21) (util/build-int packet 0x84 4) (get packet 0x9f))))
   label)
 
 (def timestamp-formatter
@@ -318,7 +318,7 @@
               :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 55) ".png"))}]
     (.setText label (parser/render-file "templates/mixer-50002.tmpl" args))
     (when (:master-flag args)
-      (vcdj/saw-master-packet (get packet 0x21) nil)))
+      (vcdj/saw-master-packet (get packet 0x21) nil (get packet 0x36))))
   label)
 
 (defn- create-mixer-50002-details-label
@@ -787,7 +787,7 @@
              (vcdj/yield-master-to (last packet))
              true)
       0x27 (do
-             (vcdj/master-yield-response (last packet))
+             (vcdj/master-yield-response (last packet) (get packet 0x21))
              true)
       false)))
 

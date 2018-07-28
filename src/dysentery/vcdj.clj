@@ -166,7 +166,7 @@
   describing our current state."
   []
   (swap! state update :packet-count (fnil inc 0))
-  (let [{:keys [player-number playing? master? sync? tempo beat sync-n packet-count]} @state
+  (let [{:keys [player-number playing? master? master-yielding-to sync? tempo beat sync-n packet-count]} @state
 
         tempo (math/round (* tempo 100))
         a     (if playing? 0x01 0x00)
@@ -183,7 +183,8 @@
         t-r   0x01
         ;; TODO: The byte following this one changes from 0xff to the device number we are handing off to for
         ;;       a single message during master change, it seems. Investigate other traffic around this point.
-        m     (if master? 1 0)]
+        m     (if master? 1 0)
+        y     (or master-yielding-to 0xff)]
     (concat [0x01
              0x04 player-number 0x00 0xf8 player-number 0x00 0x01 a  ; 0x20
              d-r  s-r  t-r  0x00 0x00 0x00 0x00 0x0d  ; 0x28
@@ -202,13 +203,13 @@
             [0x00 f    0xff p-2  0x00 0x10 0x00 0x00  ; 0x88
              0x00 0x00] (util/decompose-int tempo 2)  ; 0x90
             [0x7f 0xff 0xff 0xff]                     ; 0x94
-            [0x00 0x00 0x00 0x00 0x00 p-3  m    0xff] ; 0x98
+            [0x00 0x10 0x00 0x00 0x00 p-3  m    y]    ; 0x98
             (util/decompose-int beat 4)               ; 0xa0
             [0x01 0xff b-b 0x00]                      ; 0xa4
             [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0xa8
              0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00  ; 0xb0
              0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00  ; 0xb8
-             0x00 0x10 0x00 0x00 0x00 0x00 0x00 0x00] ; 0xc0
+             0x00 0x10 0x00 0x00 0x00 0x10 0x00 0x00] ; 0xc0
             (util/decompose-int packet-count 4)       ; 0xc8
             [0x0f 0x01 0x00 0x00                      ; 0xcc
              0x12 0x34 0x56 0x78 0x00 0x00 0x00 0x01  ; 0xd0  ; TODO: Can we shorten this back up?
@@ -294,23 +295,22 @@
 
 (defn yield-master-to
   "Called when we have been told that another player is becoming master
-  so we should give up that role."
+  so we should give up that role. Start announcing that we are
+  yielding master to that player."
   [player]
   (when (not= player (:player-number @state))
-    (swap! state assoc :master? false)))
+    (swap! state assoc :master-yielding-to player)))
 
 (defn master-yield-response
   "Called when a player we have told to yield the master role to us has
-  responsed. If the answer byte is non-zero, we are now the master."
-  [answer]
-  (timbre/info "Received master yield response:" answer)
-  (when-not (zero? answer)
-    (swap! state (fn [current]
-                   (let [us (:player-number current)]
-                     (assoc current
-                            :master-number us
-                            :master? true
-                            :sync-n (inc (:sync-n current))))))))
+  responded. If the answer byte is non-zero, we are becoming the
+  master. The final handoff will take place using the master and yield
+  bytes in the status packets of both devices."
+  [answer from-player]
+  (timbre/info "Received master yield response" answer "from player" from-player)
+  (when (not= 1 answer)
+    (timbre/warn "Strange, received master yield packet with answer of" answer "from player" from-player))
+  (swap! state assoc :master-yielded-from from-player))  ; Note we expect status announcing our master state now
 
 (defn set-sync-mode
   "Change our sync mode; we will be synced if `sync?` is truthy."
@@ -319,12 +319,43 @@
 
 (defn saw-master-packet
   "Record the current notion of the master player based on the device
-  number found in a packet that identifies itself as the master."
-  [player sync-n]
-  (swap! state merge
-         {:master-number player}
-         (when sync-n
-           {:sync-n sync-n})))
+  number found in a packet that identifies itself as the master. If
+  `yielding` is not `0xff` this master is handing off its role to the
+  specified player number. If it is us, it is finally time for us to
+  really become master. Assert that state, and the yielding player
+  should respond by dropping their master state, and setting their
+  `sync-n` value to one greater than any other seen on the network.
+  Also keep track of the highest sync-n value seen for any master
+  packet on the network."
+  [player sync-n yielding]
+  (when (not= player (:player-number @state))  ; Ignore packets we are sending
+    (when sync-n
+      (swap! state update :max-sync-n #(max sync-n (or % 0))))
+    (if (= yielding 0xff)
+      ;; This is a normal, non-yielding master packet. Update our notion of the current master, and if we
+      ;; were yielding, finish that process, and update our sync-n appropriately. If we were master and not
+      ;; yielding, still give up our master state but log a warning at this unexpected situation.
+      (let [{:keys [max-sync-n master-number master? master-yielding-to]} @state]
+        (when master?
+          (if master-yielding-to
+            (if (= player master-yielding-to)
+              (swap! state assoc :sync-n (inc max-sync-n))
+              (timbre/warn "Expected to yield to player" master-yielding-to "but saw master asserted by player" player))
+            (timbre/warn "Saw master asserted by player" player "when we were not yielding")))
+        (swap! state (fn [current]
+                       (-> current
+                           (assoc :master? false :master-number player)
+                           (dissoc :master-yielding-to)))))
+      ;; This is a yielding master packet. If it is us that is being yielded to, take over master if we are expecting
+      ;; to, otherwise log a warning.
+      (let [{:keys [player-number master-yielded-from]} @state]
+        (when (= player-number yielding)
+          (when (not= player master-yielded-from)
+            (timbre/warn "Expected player" master-yielded-from "to yield master to us, but player" player "did"))
+          (swap! state (fn [current]
+                         (-> current
+                             (assoc :master? true :master-number player-number)
+                             (dissoc :master-yielded-from)))))))))
 
 (defn become-master
   "Attempt to become the tempo master by sending a command to the
