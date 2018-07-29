@@ -365,8 +365,13 @@
   (let [us      (:player-number @state)
         master  (:master-number @state)
         payload [0x01 0x00 us 0x00 0x04 0x00 0x00 0x00 us]]
-    (timbre/info "Sending master yield packet to" master "payload:" payload)
-    (send-direct-packet master 0x26 payload)))
+    (if master
+      (do
+        (timbre/info "Sending master yield packet to" master "payload:" payload)
+        (send-direct-packet master 0x26 payload))
+      (do
+        (timbre/info "No current master; simply becoming it")
+        (swap! state assoc :master? true :master-number us)))))
 
 (defn set-tempo
   "Set our internal notion of tempo, for use when we are master."
