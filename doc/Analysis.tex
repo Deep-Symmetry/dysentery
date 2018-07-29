@@ -3208,6 +3208,46 @@ response messages containing track metadata were omitted for brevity;
 you will get more meaningful results trying it with your own tracks,
 and then you can see all the details.
 
+\section{Fader Start}
+
+Thanks to @ErikMinekus\footnote{\url{https://github.com/ErikMinekus}}
+we know that we can cause players to start or stop playing by sending
+a packet like the one shown in Figure~\ref{fig:faderStart} to port
+50001 of the players, with appropriate command values for $C_1$
+through $C_4$ telling that player what to do. A command value of {\tt
+  00} tells the corresponding player to start playing if it isn't
+already. The command {\tt 01} tells that player to stop playing if it
+is, and a value of {\tt 02} tells this player to stay in its current
+state. (It also seems to work to broadcast the packet on port 50001,
+which makes sense, since it can be interpreted individually by each
+player, so a single packet can be used to affect the states of all
+four players if desired.)
+
+\begin{figure}[h]
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+        {\tt 4c} {\tt \textbf{02}}}
+      & \bitbox[lrt]{5}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 04}} &
+      \bitbox{1}{$C_1$} & \bitbox{1}{$C_2$} & \bitbox{1}{$C_3$} & \bitbox{1}{$C_4$} & \bitbox[]{8}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Fader start packet}
+  \label{fig:faderStart}
+\end{figure}
+
+
 \section{What's Missing?}
 
 We know this analysis isn't complete. Here are some loose ends to

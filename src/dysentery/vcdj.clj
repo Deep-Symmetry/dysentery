@@ -161,6 +161,22 @@
         payload   [0x01 0x00 us 0x00 0x08 0x00 0x00 0x00 us 0x00 0x00 0x00 01]]
     (send-direct-packet device-number 0x2a payload)))
 
+(defn send-fader-start
+  "Send a message which will start or stop a set of players. The
+  arguments are sets of player numbers to start and stop; if you try
+  to both start and stop the same player, only the stop will be sent."
+  [start stop]
+  (let [us       (:player-number @state)
+        commands (for [player (map inc (range 4))]
+                   (if (stop player)
+                     0x01
+                     (if (start player)
+                       0x00
+                       0x02)))
+        payload  (concat [0x01 0x00 us 0x00 0x04] commands)]
+    (doseq [device-number (clojure.set/union start stop)]
+      (send-direct-packet device-number 0x02 payload))))
+
 (defn- build-status-payload
   "Constructs the bytes which follow the device name in a status packet
   describing our current state."
