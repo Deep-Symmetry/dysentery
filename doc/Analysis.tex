@@ -3248,6 +3248,47 @@ four players if desired.)
 \end{figure}
 
 
+\section{Channels On Air}
+
+Thanks to @jan2000\footnote{\url{https://github.com/jan2000}} we know
+how the mixer reports which channels are currently on-air, and we can
+simulate this feature ourselves when there is no DJM on the network.
+(If there is a DJM present, it will quickly reassert its own on-air
+state for all the channels.)
+
+The mixer broadcasts a packet like the one shown in
+Figure~\ref{fig:onAirFlags} to port 50001, with appropriate flag
+values for $F_1$ through $F_4$ telling each player whether its channel
+is on-air. A flag value of {\tt 00} tells the corresponding player it
+is off the air (silenced, either due to the cross fader, channel
+fader, or input source switch for that channel), while {\tt 01} means
+the player's channel is on the air.
+
+\begin{figure}[h]
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+        {\tt 4c} {\tt \textbf{03}}}
+      & \bitbox[lrt]{5}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 09}} &
+      \bitbox{1}{$F_1$} & \bitbox{1}{$F_2$} & \bitbox{1}{$F_3$} & \bitbox{1}{$F_4$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{3}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{On Air flags packet}
+  \label{fig:onAirFlags}
+\end{figure}
+
 \section{What's Missing?}
 
 We know this analysis isn't complete. Here are some loose ends to

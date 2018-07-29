@@ -174,15 +174,34 @@
                        0x00
                        0x02)))
         payload  (concat [0x01 0x00 us 0x00 0x04] commands)]
+    ;; We would really want to send this as a broadcast to port 50001, instead of to the affected players
+    ;; individually, but there isn't infrastructure to support that in dysentery, and this works for testing.
+    ;; Do it the efficient way when implementing the real support in Beat Link.
     (doseq [device-number (clojure.set/union start stop)]
       (send-direct-packet device-number 0x02 payload))))
+
+(defn send-on-air
+  "Send a message which will set the on-air status of the players. The
+  argument is the set of player numbers that are currently on-air."
+  [players]
+  (let [us       (:player-number @state)
+        flags (for [player (map inc (range 4))]
+                   (if (players player)
+                     0x01
+                     0x00))
+        payload  (concat [0x01 0x00 us 0x00 0x09] flags [0x00 0x00 0x00 0x00 0x00])]
+    ;; We would really want to send this as a broadcast to port 50001, instead of to the players
+    ;; individually, but there isn't infrastructure to support that in dysentery, and this works for testing.
+    ;; Do it the efficient way when implementing the real support in Beat Link.
+    (doseq [device-number (filter #(< % 5) (map :player (finder/current-dj-link-devices)))]
+      (send-direct-packet device-number 0x03 payload))))
 
 (defn- build-status-payload
   "Constructs the bytes which follow the device name in a status packet
   describing our current state."
   []
   (swap! state update :packet-count (fnil inc 0))
-  (let [{:keys [player-number playing? master? master-yielding-to sync? tempo beat sync-n packet-count]} @state
+  (let [{:keys [player-number playing? on-air? master? master-yielding-to sync? tempo beat sync-n packet-count]} @state
 
         tempo (math/round (* tempo 100))
         a     (if playing? 0x01 0x00)
@@ -191,7 +210,8 @@
         f     (+ 0x84
                  (if playing? 0x40 0)
                  (if master? 0x20 0)
-                 (if sync? 0x10 0))
+                 (if sync? 0x10 0)
+                 (if on-air? 0x08 0))
         p-1   (if playing? 3 5)
         p-2   (if playing? 0x7a 0x7e)
         p-3   (if playing? 9 1)
@@ -332,6 +352,16 @@
   "Change our sync mode; we will be synced if `sync?` is truthy."
   [sync?]
   (swap! state assoc :sync? (boolean sync?)))
+
+(defn handle-on-air-packet
+  "If our device number is one of the standard four, update our on-air
+  status appropriately in response to the packet."
+  [packet]
+  (let [us (:player-number @state)]
+    (when (<= 1 us 4)
+      (let [flag (get packet (+ 0x23 us))]
+        #_(timbre/info "on-air flag" flag)
+        (swap! state assoc :on-air? (boolean (= 1 flag)))))))
 
 (defn saw-master-packet
   "Record the current notion of the master player based on the device

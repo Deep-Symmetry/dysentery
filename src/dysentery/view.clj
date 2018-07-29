@@ -762,14 +762,22 @@
     0x01 (vcdj/become-master)
     (timbre/warn "Unrecognized sync command value received:" command)))
 
-(defn- handle-sync-or-master-command
+(defn- handle-on-air-command
+  "Reacts to a packet setting the on-air status of players."
+  [packet]
+  (vcdj/handle-on-air-packet packet))
+
+(defn- handle-special-command
   "Checks whether a packet sent to port 50001 is actually a sync/master
-  instruction, and if so reacts appropriately and returns a truthy
-  value."
+  or on-air instruction, and if so reacts appropriately and returns a
+  truthy value."
   [packet]
   (let [packet-type (get packet 10)]
     #_(timbre/info "packet-type" packet-type)
     (case packet-type
+      0x03 (do
+             (handle-on-air-command packet)
+             true)
       0x2a (do
              (handle-sync-command (last packet))
              true)
@@ -815,7 +823,7 @@
                                           data (vec (map util/unsign (take (.getLength packet) (.getData packet))))]
                                       (if (= 96 (.getLength packet))  ; A beat packet to display
                                         (handle-device-packet 50001 (get data 33) data)
-                                        (when-not (handle-sync-or-master-command data)
+                                        (when-not (handle-special-command data)
                                           #_(timbre/warn "Unrecognized port 50001 packet received, type:"
                                                          (get data 33)))))
                                     (recur))))))))
