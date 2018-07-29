@@ -76,13 +76,6 @@
         (timbre/warn "Received packet with unrecognized type:" current-type))
       (timbre/warn "Expecting packet of type" expected-type "but received type" current-type))))
 
-(def ^:private mixer-unknown
-  "The bytes which we think come at the end of a mixer status packet,
-  so we can make them red if we find something unexpected. The device
-  number bytes are left as zero because they have already been
-  colored."
-  [0 0 0 0x14 0 0 0 0xd0 0 0x10 0 0 0x80 0 0x2e 0xe0 0 0x10 0 0 0 9 0])
-
 (defn recognized-if
   "If `recognized` is truthy, returns green, otherwise red."
   [recognized]
@@ -94,13 +87,13 @@
   if it seems to be one that we expect, or something more surprising."
   [packet index value hex]
   (cond
-    (#{46 47} index)  ; This is the current BPM
+    (#{0x2e 0x2f} index)  ; This is the current BPM
     [hex Color/green]
 
-    (= index 54)  ; We don't know what this is, so far we have seen values 00 and FF
-    [hex (recognized-if (#{0x00 0xff} value))]
+    (= index 0x36)  ; Master handoff packet; 00 when there is no master, ff when no handoff taking place, player #
+    [hex (recognized-if (#{0x00 0xff 1 2 3 4} value))]
 
-    (= index 55)  ; We think this is a beat number ranging from 1 to 4
+    (= index 0x37)  ; Beat number ranging from 1 to 4
     [hex (recognized-if (<= 1 value 4))]
 
     :else
