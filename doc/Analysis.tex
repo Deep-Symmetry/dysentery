@@ -1023,7 +1023,134 @@ control which players are synced and which is the tempo master, and of
 course individual players can take over being master as well. This
 section describes the packets used to implement these features.
 
+\subsection{Sync Control}
 
+To tell a player to turn Sync mode on or off, send a packet like the
+one shown in Figure~\ref{fig:syncControlPacket} to port 50001 of the
+target device, with the player number that you are pretending to be as
+the value of $D$, and set the value of $S$ to {\tt 0x10} if you want
+the player to turn on Sync, and {\tt 0x20} if you want it to leave
+Sync mode.
+
+\begin{figure}[h]
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+        {\tt 4c} {\tt \textbf{2a}}}
+      & \bitbox[lrt]{5}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 08} {\tt 00} {\tt 00} {\tt 00}} &
+      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$S$} & \bitbox[]{4}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Sync control packet}
+  \label{fig:syncControlPacket}
+\end{figure}
+
+\subsection{Tempo Master Assignment}
+
+To tell a player to become tempo master, the same type of packet shown
+in Figure~\ref{fig:syncControlPacket} is used, with a value of {\tt
+  01} for $S$. This will cause the player to behave as if the DJ had
+pressed its Master button, following the steps described in the next
+section. This packet can be sent to a CDJ or DJM mixer.
+
+\subsection{Tempo Master Handoff}
+
+When a player or mixer is to become tempo master, regardless of
+whether this was initiated by pressing its Master button or by receipt
+of the packet described in the preceding section, the same process is
+followed.
+
+If there is currently no tempo master, the device simply becomes
+master, and starts sending status packets with appropriate values of
+$F$ and $M_m$ (mixer status packets only have $F$ in them).
+
+If another player is currently tempo master, however, a coordinated
+handoff takes place. The device that wants to become tempo master
+first sends a takeover request packet like the one shown in
+Figure~\ref{fig:tempoTakeoverRequest} to port 50001 of the current
+tempo master, with the player number of the device wanting to become
+master as the value of $D$.
+
+\begin{figure}[h]
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+        {\tt 4c} {\tt \textbf{26}}}
+      & \bitbox[lrt]{5}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 04} {\tt 00} {\tt 00} {\tt 00}} &
+      \bitbox{1}{$D$} & \bitbox[]{8}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Tempo master takeover request packet}
+  \label{fig:tempoTakeoverRequest}
+\end{figure}
+
+The current tempo master will agree to the handoff by sending a packet like the one shown in
+Figure~\ref{fig:tempoTakeoverResponse} to port 50001 of the device that sent the takeover request,
+with the its own device number as the value of $D$.
+
+\begin{figure}[h]
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+        {\tt 4c} {\tt \textbf{27}}}
+      & \bitbox[lrt]{5}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 08} {\tt 00} {\tt 00} {\tt 00}} &
+      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 01}} & \bitbox[]{4}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Tempo master takeover response packet}
+  \label{fig:tempoTakeoverResponse}
+\end{figure}
+
+Once that is done, the outgoing master will continue to report itself
+as the master according to its status packets (bit 5 of $F$, and for
+CDJs, the value of $M_m$) but it will announce to the world that the
+handoff is taking place by sending the device number of the device
+that is about to become tempo master as the value of $M_h$. (See
+Figures~\ref{fig:mixerStatus} and ~\ref{fig:cdjStatus} for the
+locations of these bytes.)
+
+As soon as the device becoming tempo master sees its device number in
+$M_h$ in the status packets from the outgoing tempo master, it starts
+reporting itself as the tempo master using $F$ and, for CDJs, $M_m$ in
+its own status packets.
+
+And as soon as the outgoing tempo master sees the new master has
+asserted this role in its status packets, it stops reporting itself as
+tempo master in its own status packets, and goes back to sending the
+value {\tt ff} in $M_h$. This concludes the (rather baroque) handoff.
 
 \section{Track Metadata}
 \label{sec:metadata}
