@@ -404,14 +404,11 @@
     (= index 157)  ; Play mode part 3?
     [hex (recognized-if (#{0 1 9 13} value))]
 
-    ;; The logic below turned out to be wrong; we have no idea what byte 158 is yet, but it is clearly up
-    ;; to something.
-    #_(= 158 index)  ; A combined loaded/master flag? 0=unloaded, 1=loaded but not master, 2=loaded and master
-    #_[hex (recognized-if (or (and (zero? value) (zero? (get packet 123)))
-                            (and (= 1 value) (pos? (get packet 123))
-                                 (zero? (bit-and cdj-status-flag-master-bit (get packet cdj-status-flag-byte))))
-                            (and (= 2 value) (pos? (get packet 123))
-                                 (pos? (bit-and cdj-status-flag-master-bit (get packet cdj-status-flag-byte))))))]
+    (= index 0x9e)  ; Master mode
+    [hex (recognized-if (#{0 1 2} value))]
+
+    (= index 0x9f)  ; Master handoff
+    [hex (recognized-if (#{1 2 3 4 0xff} value))]
 
     (<= 160 index 163)  ; The beat number within the track
     [hex (Color/green)]
@@ -503,7 +500,7 @@
       (#{90 91} index)  ; This is the current BPM
       [hex Color/green]
 
-      (= index 92)  ; We think this is a beat number ranging from 1 to 4
+      (= index 92)  ; Beat number ranging from 1 to 4
       [hex (recognized-if (<= 1 current 4))]
 
       :else

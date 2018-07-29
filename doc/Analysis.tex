@@ -543,7 +543,7 @@ content shown in Figure~\ref{fig:mixerStatus}.
 
     \begin{leftwordgroup}{\tiny\bfseries 30}
       \bitboxes*{1}{{\tt 00} {\tt 10} {\tt 00} {\tt 00} {\tt 00} {\tt 09}} &
-      \bitbox{1}{$X$} & \bitbox{1}{$B_b$} & \bitbox[]{8}{}
+      \bitbox{1}{$M_h$} & \bitbox{1}{$B_b$} & \bitbox[]{8}{}
     \end{leftwordgroup}
   \end{bytefield}
   \caption{Mixer status packets}
@@ -587,10 +587,13 @@ is not useful for much. The beat number should be determined, when
 needed, from beat packets (described in Section~\ref{sec:beatPackets})
 that are sent by the master player.
 
-The value at $byte[{\tt 36}]$, labeled $X$, has an unknown meaning. It
-seems to start out with the value {\tt 00}, and then change when a
-player starts playing to the value {\tt ff}, but it may well do other
-things as well.
+The value at $byte[{\tt 36}]$, labeled $M_h$ (master handoff), is used
+to hand off the tempo master role. It starts out with the value~{\tt
+  00} when there is no Master player, but as soon as one appears it
+becomes~{\tt ff}. If the mixer has been the tempo master and it is
+currently yielding this role to another player, this value will be the
+player number that is becoming tempo master during that handoff, as
+described in Section~\ref{sec:sync}.
 
 \subsection{CDJ Status Packets}
 
@@ -654,7 +657,7 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
 
     \begin{leftwordgroup}{\tiny\bfseries 90}
       \bitbox{2}{$l_1$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff}} &
-      \bitbox{4}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{\tt 00} & \bitbox{1}{\tt ff}
+      \bitbox{4}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{$M_m$} & \bitbox{1}{$M_h$}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries a0}
@@ -939,6 +942,24 @@ found so far are listed in Table~\ref{table:p3Values}.
 
   \end{longtabu}
 
+Byte~{\tt 9e} (labeled $M_m$) is another representation of whether
+this player is currently the tempo master (in addition to bit~5 of
+$F$, as shown in Figure~\ref{fig:cdjStateFlags}). It has the value
+{\tt 00} when the player is not the master, the value {\tt 01} when it
+is tempo master and is playing a rekordbox-analyzed track, so that
+actually has a meaningful effect, and the value {\tt 02} when it is
+supposed to be the master (and the value of $F$ still indicates that
+it is), but it is playing a non-rekordbox track, so it is unable to
+send tempo and beat information to other players.
+
+The following byte, {\tt 9f} (labeled $M_h$), is related. As described
+in Section~\ref{sec:sync}, this normally has the value {\tt ff}. But
+when this player is giving up the role of tempo master in response to
+a request from another player that wants to take over, it holds that
+player's device number until it sees that device announce itself as
+the new master, at which point it turns off its own master flags, and
+this value goes back to {\tt ff}.
+
 The 4-byte beat counter (which counts each beat from 1 through the end
 of the track) is found in bytes~{\tt a0}--{\tt a3}, labeled $Beat$.
 When the player is paused at the start of the track, this seems to
@@ -993,6 +1014,16 @@ indicate that it is always ``playing'' but not synced, tempo master,
 nor on the air. The $BPM$ value seems to track that of the master
 player, and the same potential pitch values (fixed at {\tt 100000}, or
 +0\%) are present, as is $X$. $B_b$ always seems to be zero.
+
+\section{Sync and Tempo Master}
+\label{sec:sync}
+
+The DJM has a mode for its touchscreen which allows you to see and
+control which players are synced and which is the tempo master, and of
+course individual players can take over being master as well. This
+section describes the packets used to implement these features.
+
+
 
 \section{Track Metadata}
 \label{sec:metadata}
