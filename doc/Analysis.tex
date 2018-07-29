@@ -656,7 +656,7 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 90}
-      \bitbox{2}{$l_1$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff}} &
+      \bitbox{2}{$M_v$} & \bitbox{2}{$BPM$} & \bitboxes*{1}{{\tt 7f} {\tt ff} {\tt ff} {\tt ff}} &
       \bitbox{4}{$Pitch_2$} & \bitbox{1}{\tt 00} & \bitbox{1}{$P_3$} & \bitbox{1}{$M_m$} & \bitbox{1}{$M_h$}
     \end{leftwordgroup} \\
 
@@ -915,11 +915,14 @@ Because Rekordbox and the CDJs support tracks with variable BPM, this
 value can and does change over the course of playing such tracks. When
 no track is loaded, $BPM$ has the value {\tt ffff}.
 
-The meaning of value $l_1$ (bytes~{\tt 90}--{\tt 91}) is not currently
-known. It may simply reflect whether a track is loaded or not: it
-seems to have the value {\tt 7fff} when no track is loaded, {\tt 8000}
-when a rekordbox track is loaded, and {\tt 0000} when a non-rekordbox
-track (like from a physical CD) is loaded.
+$M_v$ (bytes~{\tt 90}--{\tt 91}) seems to control whether the $BPM$
+value is accepted when this player is the master. It has the value
+{\tt 7fff} when no track is loaded, {\tt 8000} when a rekordbox track
+is loaded, and {\tt 0000} when a non-rekordbox track (like from a
+physical CD) is loaded, and only when the value is {\tt 8000} are
+tempos from this player accepted when it is acting as master
+(otherwise the mixer shows the master to have a tempo of ``-\,-\,-.-''
+and other players do not respond to its tempo changes).
 
 Byte~{\tt 9d} (labeled $P_3$) seems to communicate additional
 information about the current play mode. The meanings that we have
