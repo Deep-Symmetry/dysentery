@@ -8,12 +8,31 @@ This change log follows the conventions of
 
 ### Added
 
-- Initial work on obtaining metadata.
+- Ability to tell devices to turn sync on or off.
+- Ability to appoint a device as tempo master.
+- Ability to tell devices they are on or off air when there is no DJM
+  on the network.
+- Ability to use Fader Start packets to tell devices to start or stop
+  playing.
+- Ability to send status updates from the virtual CDJ so it can become
+  tempo master and control the tempo.
+
+## [0.2.1] - 2018-07-21
+
+### Added
+
+- Ability to retrieve metadata for non-rekordbox tracks.
+
+## [0.2.0] - 2017-06-24
+
+Many thanks to [code shared](https://bitbucket.org/awwright/libpdjl/src)
+by Austin Wright, [@awwright](https://github.com/awwright) for enabling
+this breakthrough release!
+
+### Added
+
 - Support for 292-byte CDJ status updates sent by newer Pioneer
   firmware.
-- New beat packet interpretations, the first of many things to come
-  thanks to [code shared](https://bitbucket.org/awwright/libpdjl/src)
-  by Austin Wright, [@awwright](https://github.com/awwright)!
 - Much more robust metadata queries and interpretation.
 - Album art retrieval.
 - Beat grid retrieval.
@@ -101,10 +120,11 @@ This change log follows the conventions of
 - Intial early release.
 
 
-[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.1.5...HEAD
+[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/brunchboy/dysentery/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/brunchboy/dysentery/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/brunchboy/dysentery/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/brunchboy/dysentery/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/brunchboy/dysentery/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/brunchboy/dysentery/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/brunchboy/dysentery/compare/v0.1.0...v0.1.1
-
