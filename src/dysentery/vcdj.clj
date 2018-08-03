@@ -215,10 +215,8 @@
         p-1   (if playing? 3 5)
         p-2   (if playing? 0x7a 0x7e)
         p-3   (if playing? 9 1)
-        s-r   3 #_0x02  ; TODO: Can we change this back to a local non-rekordbox track?
+        s-r   3
         t-r   0x01
-        ;; TODO: The byte following this one changes from 0xff to the device number we are handing off to for
-        ;;       a single message during master change, it seems. Investigate other traffic around this point.
         m     (if master? 1 0)
         y     (or master-yielding-to 0xff)]
     (concat [0x01
