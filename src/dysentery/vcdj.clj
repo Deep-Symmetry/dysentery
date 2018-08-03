@@ -409,10 +409,15 @@
   (let [us      (:player-number @state)
         master  (:master-number @state)
         payload [0x01 0x00 us 0x00 0x04 0x00 0x00 0x00 us]]
+    (when-not (<= 1 us 4)
+      (throw (IllegalStateException.
+              (str "Our player number " us " is not in the range 1 to 4; cannot be tempo master."))))
     (if master
-      (do
-        (timbre/info "Sending master yield packet to" master "payload:" payload)
-        (send-direct-packet master 0x26 payload))
+      (if (= master us)
+        (timbre/info "We are already master, nothing to do.")
+        (do
+          (timbre/info "Sending master yield packet to" master "payload:" payload)
+          (send-direct-packet master 0x26 payload)))
       (do
         (timbre/info "No current master; simply becoming it")
         (swap! state assoc :master? true :master-number us)))))
