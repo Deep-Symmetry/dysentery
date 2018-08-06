@@ -165,7 +165,7 @@ REPL-y 0.3.7, nREPL 0.2.12
 Clojure 1.8.0
 Java HotSpot(TM) 64-Bit Server VM 1.8.0_77-b03
 dysentery loaded.
-dysentery.core=> 
+dysentery.core=>
 ```
 
 At that point, you can evalute Clojure expressions:
@@ -258,7 +258,7 @@ have a hard time resisting forced puns. Let's hope none of us see:
 
 <img align="right" alt="Deep Symmetry" src="doc/assets/DS-logo-bw-200-padded-left.png">
 
-Copyright © 2016&ndash;17 [Deep Symmetry, LLC](http://deepsymmetry.org)
+Copyright © 2016&ndash;2018 [Deep Symmetry, LLC](http://deepsymmetry.org)
 
 Distributed under the
 [Eclipse Public License 1.0](http://opensource.org/licenses/eclipse-1.0.php),
