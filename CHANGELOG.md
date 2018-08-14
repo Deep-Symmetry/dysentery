@@ -14,6 +14,7 @@ This change log follows the conventions of
   on the network.
 - Ability to use Fader Start packets to tell devices to start or stop
   playing.
+- Ability to tell players to load tracks like rekordbox does.
 - Ability to send status updates from the virtual CDJ so it can become
   tempo master and control the tempo.
 
