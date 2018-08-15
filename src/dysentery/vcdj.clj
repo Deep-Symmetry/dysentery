@@ -196,6 +196,21 @@
     (doseq [device-number (filter #(< % 5) (map :player (finder/current-dj-link-devices)))]
       (send-direct-packet device-number 0x03 payload))))
 
+(defn send-load-track
+  "Send a message which will cause the target player to load the
+  specified track. Players are identified by their device number, and
+  slot and track types are byte values described in the CDJ Status
+  section of the protocol analysis paper."
+  [target-player rekordbox-id source-player source-slot source-type]
+  (let [us       (:player-number @state)
+        payload  (concat [0x01
+                          0x00 us 0x00 0x34 us 0x00 0x00 0x00 source-player source-slot source-type 0x00]
+                         (util/decompose-int rekordbox-id 4)
+                         [0x00 0x00 0x00 0x32  0x00 0x00 0x00 0x00   0x00 0x00 0x00 0x00  0x00 0x00 0x00 0x00
+                          0x00 0x00 0x00 0x00  0x00 0x00 0x00 0x00   0x00 0x00 0x00 0x00  0x00 0x00 0x00 0x00
+                          0x00 0x00 0x00 0x00  0x00 0x00 0x00 0x00])]
+    (send-direct-packet target-player 0x19 payload 50002)))
+
 (defn- build-status-payload
   "Constructs the bytes which follow the device name in a status packet
   describing our current state."

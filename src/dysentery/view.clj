@@ -73,6 +73,7 @@
       (case expected-type
         0x0a (correct-length? packet #{208 212 284 292})
         0x29 (correct-length? packet #{56})
+        0x19 (correct-length? packet #{0x58})
         (timbre/warn "Received packet with unrecognized type:" current-type))
       (timbre/warn "Expecting packet of type" expected-type "but received type" current-type))))
 
@@ -619,7 +620,7 @@
             (update-timestamp-label timestamp-label)
             (update-byte-labels packet byte-labels
                                 (partial packet-50002-byte-format device-number original-packet-type))
-            (when details-label
+            (when (and details-label (= original-packet-type (get packet 10)))
               (case original-packet-type
                 0x0a (update-cdj-50002-details-label packet details-label)
                 0x29 (update-mixer-50002-details-label packet details-label)))))))))
