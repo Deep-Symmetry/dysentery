@@ -1156,6 +1156,19 @@ the $Sync_n$ value reported by any other player on the network
 (although mixers do not report this value at all). This concludes the
 (rather Baroque) handoff.
 
+\subsection{Unsolicited Handoff}
+
+While working on synchronizing Pro DJ Link devices with Ableton Link,
+I accidentally discovered that there is another way the tempo master
+role can be handed off. If the device that is currently tempo master
+is stopped (not playing a track), and it sees another device that is
+both synced and playing, it will set $M_h$ to the device number of
+synced, playing device, telling it to become the new master. As soon
+as the device named by $M_h$ sees that status packet, it should take
+over the role as described in the second-to-last paragraph of
+Section~\ref{sec:masterHandoff} above, even though it did not start
+the process.
+
 \section{Track Metadata}
 \label{sec:metadata}
 
