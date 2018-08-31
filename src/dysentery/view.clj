@@ -10,7 +10,8 @@
   (:import [java.awt Color Font]
            [java.awt.event WindowAdapter]
            [javax.swing JFrame JPanel JLabel SwingConstants]
-           [java.net DatagramPacket DatagramSocket InetAddress]))
+           [java.net DatagramPacket DatagramSocket InetAddress]
+           [java.util.concurrent TimeUnit]))
 
 (def byte-font
   "The font to use for rendering byte values."
@@ -625,6 +626,26 @@
                 0x0a (update-cdj-50002-details-label packet details-label)
                 0x29 (update-mixer-50002-details-label packet details-label)))))))))
 
+(defonce ^{:private true
+           :doc "Used to log beats from a specific player for more detailed analysis."}
+  beat-log-config
+  (atom {}))
+
+(defn log-beats
+  "Start logging details about the beat packets being received by the
+  specified device, including timing information and unexpected
+  differences, or, when called with no arguments or a `nil` device
+  number, stop doing so."
+  ([]
+   (reset! beat-log-config {}))
+  ([device-number ^String file-path]
+   (if (not device-number)
+     (log-beats)
+     (do
+       (spit file-path (str "Starting beat log for device " device-number " at " (java.util.Date.) "\n\n")
+             :append true)
+       (reset! beat-log-config {:device-number (byte device-number) :file-path file-path :start (System/nanoTime)})))))
+
 (defn- format-upcoming-beat-time
   "Interprets 4 bytes at the specified packet offset as an integer,
   but returns an indication when no beat is forthcoming."
@@ -634,24 +655,52 @@
       "---"
       result)))
 
+(defn format-arrival-time
+  "Given a beat timestamp in nanoseconds, and the time at which logging
+  began, format the beat arrival time as a number of seconds and
+  milliseconds."
+  [timestamp start]
+  (let [ms (.toMillis TimeUnit/NANOSECONDS (- timestamp start))]
+    (str (format "%d" (.toSeconds TimeUnit/MILLISECONDS ms)) "."
+         (format "%03d" (mod ms 1000)))))
+
+(defn- log-beat
+  "Add a beat entry to the detailed beat log."
+  [packet args config]
+  (let [timestamp (System/nanoTime)
+        log       (fn [text] (spit (:file-path config) text :append true))]
+    (log (str "Beat at " (format-arrival-time timestamp (:start config))))
+    (when-let [prev (:last-beat config)]
+      (let [interval (.toMillis TimeUnit/NANOSECONDS (- timestamp (:timestamp prev)))
+            skew     (- interval (get-in prev [:args :next-beat]))]
+        (log (str ", skew: " (format "%3d" skew) "ms"))))
+    (log (str ", B_b: " (:bar-beat args) ", BPM: " (:effective-bpm args) ", pitch: " (:pitch args) "\n"))
+    ;; TODO: Shriek about any bytes from 0c3c to 0x53 that are not 0xff, and if 0x58, 0x59, 0x5d, or 0x5e are not 0x00.
+    (swap! beat-log-config assoc :last-beat {:timestamp timestamp
+                                             :packet    packet
+                                             :args      args})))
+
 (defn- update-player-50001-details-label
   "Updates the label that gives a detailed explanation of how we
   interpret the status of a player given a packet sent to port 50001
   and the panel in which that packet is being shown."
   [packet label]
-  (let [pitch (calculate-pitch packet 85)
+  (let [pitch     (calculate-pitch packet 85)
         track-bpm (/ (util/build-int packet 90 2) 100.0)
-        args {:bpm (format "%.1f" track-bpm)
-              :effective-bpm (format "%.1f" (+ track-bpm (* track-bpm 1/100 pitch)))
-              :pitch (format "%+.2f%%" pitch)
-              :bar-beat (get packet 92)
-              :next-beat (format-upcoming-beat-time packet 0x24)
-              :2nd-beat (format-upcoming-beat-time packet 0x28)
-              :next-bar (format-upcoming-beat-time packet 0x2c)
-              :4th-beat (format-upcoming-beat-time packet 0x30)
-              :2nd-bar (format-upcoming-beat-time packet 0x34)
-              :8th-beat (format-upcoming-beat-time packet 0x38)
-              :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 92) ".png"))}]
+        args      {:bpm           (format "%.1f" track-bpm)
+                   :effective-bpm (format "%.1f" (+ track-bpm (* track-bpm 1/100 pitch)))
+                   :pitch         (format "%+.2f%%" pitch)
+                   :bar-beat      (get packet 92)
+                   :next-beat     (format-upcoming-beat-time packet 0x24)
+                   :2nd-beat      (format-upcoming-beat-time packet 0x28)
+                   :next-bar      (format-upcoming-beat-time packet 0x2c)
+                   :4th-beat      (format-upcoming-beat-time packet 0x30)
+                   :2nd-bar       (format-upcoming-beat-time packet 0x34)
+                   :8th-beat      (format-upcoming-beat-time packet 0x38)
+                   :bar-image     (clojure.java.io/resource (str "images/Bar" (get packet 92) ".png"))}
+        config    @beat-log-config]
+    (when (= (get packet 0x21) (:device-number config))
+      (log-beat packet (dissoc args :bar-image) config))
     (.setText label (parser/render-file "templates/player-50001.tmpl" args)))
   label)
 
