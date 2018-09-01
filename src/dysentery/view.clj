@@ -149,6 +149,81 @@
   playing to the master output."
   2r00001000)
 
+(defonce ^{:private true
+           :doc "Used to log beats from a specific player for more detailed analysis."}
+  beat-log-config
+  (atom {}))
+
+(defn log-beats
+  "Start logging details about the beat packets being received by the
+  specified device, including timing information and unexpected
+  differences, or, when called with no arguments or a `nil` device
+  number, stop doing so."
+  ([]
+   (reset! beat-log-config {}))
+  ([device-number ^String file-path]
+   (if (not device-number)
+     (log-beats)
+     (do
+       (spit file-path (str "Starting beat log for device " device-number " at " (java.util.Date.) "\n\n")
+             :append true)
+       (reset! beat-log-config {:device-number (byte device-number) :file-path file-path :start (System/nanoTime)})))))
+
+(defn- format-upcoming-beat-time
+  "Interprets 4 bytes at the specified packet offset as an integer,
+  but returns an indication when no beat is forthcoming."
+  [packet offset]
+  (let [result (util/build-int packet offset 4)]
+    (if (= result 0xffffffff)
+      "---"
+      result)))
+
+(defn- format-arrival-time
+  "Given a beat timestamp in nanoseconds, and the time at which logging
+  began, format the beat arrival time as a number of seconds and
+  milliseconds."
+  [timestamp start]
+  (let [ms (.toMillis TimeUnit/NANOSECONDS (- timestamp start))]
+    (str (format "%3d" (.toSeconds TimeUnit/MILLISECONDS ms)) "."
+         (format "%03d" (mod ms 1000)))))
+
+(defn- scan-range
+  "Makes sure that a range of bytes within a packet has an expected
+  value, otherwise logs the fact that it did not, and the range
+  itself."
+  [packet start end expected log]
+  (let [region (subvec packet start end)]
+    (when (some #(not= expected %) region)
+      (log (str "  *** Expected bytes " (format "%x" start) "-" (format "%x" (dec end))
+                " to equal " (format "%02x" expected) ", got: "
+                (clojure.string/join " " (map #(format "%02x" %) region)) " ***\n")))))
+
+(defn- log-beat
+  "Add a beat entry to the detailed beat log."
+  [packet args config]
+  (try
+    (let [timestamp (System/nanoTime)
+          log       (fn [text] (spit (:file-path config) text :append true))
+          status    (when-let [prev (:last-status config)]
+                      (let [interval (.toMillis TimeUnit/NANOSECONDS (- timestamp (:timestamp prev)))
+                            s-args   (:args prev)
+                            beat     (if (= :cdj (:type prev)) (format "%4d" (:beat s-args)) " n/a")]
+                        (str " [" (:bar-beat s-args) " @status +" (format "%3d" interval) ", beat: " beat "]")))
+          skew      (if-let [prev (:last-beat config)]
+                      (let [interval (.toMillis TimeUnit/NANOSECONDS (- timestamp (:timestamp prev)))]
+                        (str (format "%3d" (- interval (get-in prev [:args :next-beat]))) "ms"))
+                      "  n/a")]
+      (log (str "Beat at " (format-arrival-time timestamp (:start config)) ", skew: " skew))
+      (log (str ", B_b: " (:bar-beat args) status ", BPM: " (:effective-bpm args) ", pitch: " (:pitch args) "\n"))
+      (scan-range packet 0x3c 0x54 0xff log)
+      (scan-range packet 0x58 0x5a 0x00 log)
+      (scan-range packet 0x5d 0x5f 0x00 log)
+      (swap! beat-log-config assoc :last-beat {:timestamp timestamp
+                                               :packet    packet
+                                               :args      args}))
+    (catch Throwable t
+      (timbre/warn t "Problem logging beat."))))
+
 (defn calculate-pitch
   "Given a packet and the index of the first byte of a pitch value,
   calculate the pitch shift percentage that it represents."
@@ -252,7 +327,8 @@
                       :sync-n (util/build-int packet 134 2)
 
                       :bpm           (if no-track? "---" (format "%.1f" track-bpm))
-                      :effective-bpm (if no-track? "---" (format "%.1f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
+                      :effective-bpm (if no-track? "---"
+                                         (format "%.1f" (+ track-bpm (* track-bpm 1/100 (first pitches)))))
                       :pitches       (mapv (partial format "%+.2f%%") pitches)
                       :beat          beat
                       :bar-beat      (get packet 166)
@@ -262,7 +338,12 @@
                       :packet        (util/build-int packet 200 4)}]
     (.setText label (parser/render-file "templates/cdj-50002.tmpl" args))
     (when (:master-flag args)
-      (vcdj/saw-master-packet (get packet 0x21) (util/build-int packet 0x84 4) (get packet 0x9f))))
+      (vcdj/saw-master-packet (get packet 0x21) (util/build-int packet 0x84 4) (get packet 0x9f)))
+    (when (= (get packet 0x21) (:device-number @beat-log-config))
+      (swap! beat-log-config assoc :last-status {:type      :cdj
+                                                 :timestamp (System/nanoTime)
+                                                 :packet    packet
+                                                 :args      (dissoc args :bar-image)})))
   label)
 
 (def timestamp-formatter
@@ -304,16 +385,21 @@
   and the panel in which that packet is being shown."
   [packet label]
   (let [flag-bits (get packet mixer-status-flag-byte)
-        args {:bpm (format "%.1f" (/ (util/build-int packet 46 2) 100.0))
-              :empty-f (zero? flag-bits)
-              :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
-              :master-flag (pos? (bit-and flag-bits cdj-status-flag-master-bit))
-              :sync-flag (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
-              :bar-beat (get packet 55)
-              :bar-image (clojure.java.io/resource (str "images/Bar" (get packet 55) ".png"))}]
+        args      {:bpm          (format "%.1f" (/ (util/build-int packet 46 2) 100.0))
+                   :empty-f      (zero? flag-bits)
+                   :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
+                   :master-flag  (pos? (bit-and flag-bits cdj-status-flag-master-bit))
+                   :sync-flag    (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
+                   :bar-beat     (get packet 55)
+                   :bar-image    (clojure.java.io/resource (str "images/Bar" (get packet 55) ".png"))}]
     (.setText label (parser/render-file "templates/mixer-50002.tmpl" args))
     (when (:master-flag args)
-      (vcdj/saw-master-packet (get packet 0x21) nil (get packet 0x36))))
+      (vcdj/saw-master-packet (get packet 0x21) nil (get packet 0x36)))
+    (when (= (get packet 0x21) (:device-number @beat-log-config))
+      (swap! beat-log-config assoc :last-status {:type      :mixer
+                                                 :timestamp (System/nanoTime)
+                                                 :packet    packet
+                                                 :args      (dissoc args :bar-image)})))
   label)
 
 (defn- create-mixer-50002-details-label
@@ -625,60 +711,6 @@
               (case original-packet-type
                 0x0a (update-cdj-50002-details-label packet details-label)
                 0x29 (update-mixer-50002-details-label packet details-label)))))))))
-
-(defonce ^{:private true
-           :doc "Used to log beats from a specific player for more detailed analysis."}
-  beat-log-config
-  (atom {}))
-
-(defn log-beats
-  "Start logging details about the beat packets being received by the
-  specified device, including timing information and unexpected
-  differences, or, when called with no arguments or a `nil` device
-  number, stop doing so."
-  ([]
-   (reset! beat-log-config {}))
-  ([device-number ^String file-path]
-   (if (not device-number)
-     (log-beats)
-     (do
-       (spit file-path (str "Starting beat log for device " device-number " at " (java.util.Date.) "\n\n")
-             :append true)
-       (reset! beat-log-config {:device-number (byte device-number) :file-path file-path :start (System/nanoTime)})))))
-
-(defn- format-upcoming-beat-time
-  "Interprets 4 bytes at the specified packet offset as an integer,
-  but returns an indication when no beat is forthcoming."
-  [packet offset]
-  (let [result (util/build-int packet offset 4)]
-    (if (= result 0xffffffff)
-      "---"
-      result)))
-
-(defn format-arrival-time
-  "Given a beat timestamp in nanoseconds, and the time at which logging
-  began, format the beat arrival time as a number of seconds and
-  milliseconds."
-  [timestamp start]
-  (let [ms (.toMillis TimeUnit/NANOSECONDS (- timestamp start))]
-    (str (format "%d" (.toSeconds TimeUnit/MILLISECONDS ms)) "."
-         (format "%03d" (mod ms 1000)))))
-
-(defn- log-beat
-  "Add a beat entry to the detailed beat log."
-  [packet args config]
-  (let [timestamp (System/nanoTime)
-        log       (fn [text] (spit (:file-path config) text :append true))]
-    (log (str "Beat at " (format-arrival-time timestamp (:start config))))
-    (when-let [prev (:last-beat config)]
-      (let [interval (.toMillis TimeUnit/NANOSECONDS (- timestamp (:timestamp prev)))
-            skew     (- interval (get-in prev [:args :next-beat]))]
-        (log (str ", skew: " (format "%3d" skew) "ms"))))
-    (log (str ", B_b: " (:bar-beat args) ", BPM: " (:effective-bpm args) ", pitch: " (:pitch args) "\n"))
-    ;; TODO: Shriek about any bytes from 0c3c to 0x53 that are not 0xff, and if 0x58, 0x59, 0x5d, or 0x5e are not 0x00.
-    (swap! beat-log-config assoc :last-beat {:timestamp timestamp
-                                             :packet    packet
-                                             :args      args})))
 
 (defn- update-player-50001-details-label
   "Updates the label that gives a detailed explanation of how we
