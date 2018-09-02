@@ -183,6 +183,34 @@ At that point, you can evalute Clojure expressions:
 nil
 ```
 
+To log details about beat packets from a particular player (this was
+built to help get the details of Beat Link's `BeatSender`
+implementation correct), bring up the device windows using
+`(view/find-devices)` from the REPL as shown above, then evaluate an
+expression like:
+
+```clojure
+(view/log-beats 3 "/Users/james/Desktop/beats.txt")
+```
+
+> This causes all beats from the player 3 to be logged to the
+> specified file, producing output like this:
+
+```
+Starting beat log for device 3 at Sat Sep 01 15:17:23 CDT 2018
+
+Beat at   0.444, skew:   n/a, B_b: 2 [1 @status +117, beat:  285], BPM: 129.0, pitch: +0.00%
+Beat at   0.910, skew:   1ms, B_b: 3 [2 @status + 76, beat:  286], BPM: 129.0, pitch: +0.00%
+Beat at   1.375, skew:   0ms, B_b: 4 [3 @status + 53, beat:  287], BPM: 129.0, pitch: +0.00%
+Beat at   1.841, skew:   0ms, B_b: 1 [4 @status + 55, beat:  288], BPM: 129.0, pitch: +0.00%
+```
+
+To stop the beat logger (without having to exit dysentery):
+
+```clojure
+(view/log-beats)
+```
+
 To build the executable jar:
 
 ```

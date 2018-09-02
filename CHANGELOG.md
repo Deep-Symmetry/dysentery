@@ -17,6 +17,8 @@ This change log follows the conventions of
 - Ability to tell players to load tracks like rekordbox does.
 - Ability to send status updates from the virtual CDJ so it can become
   tempo master and control the tempo.
+- A beat logging tool in order to help debug and fine-tune the beat
+  sending code in Beat Link
 
 ## [0.2.1] - 2018-07-21
 
