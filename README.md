@@ -271,6 +271,15 @@ work, and to gain access to things like beat grid information (and
 eventually track waveform images). This is the current area of active
 research.
 
+#### Sync control and tempo mastery
+
+In the summer of 2018 I dug into implementing more of the protocol, so
+that the virtual CDJ could send its own status updates and beat
+packets, become tempo master and control the tempo and beat grid, as
+well as telling other devices to turn sync on or off, or become tempo
+master. Also figured out how to respond correctly when the nexus mixer
+told the virtual CDJ to do those things.
+
 ### Why Dysentery?
 
 The name of this project is a reference to one of the infamous hazards faced in
