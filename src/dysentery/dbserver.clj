@@ -349,7 +349,7 @@
    0x1003 {:type "request album menu"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"]}
-   0x1004 {:type "request track list"
+   0x1004 {:type "request track menu"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order?"]}
    0x1006 {:type "request bpm menu"
@@ -358,23 +358,71 @@
    0x1007 {:type "request rating menu"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"]}
-   0x100c {:type "request key menu"
+   0x1011 {:type "request folder menu"  ; TODO: Figure out how to navigate this.
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"]}
-   0x1011 {:type "request folder menu"
+   0x1012 {:type "request history menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order?"]}
+   0x1014 {:type "request key menu"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"]}
-   0x1012 {:type "request search menu"
+   0x1101 {:type "request artist menu for genre"
            :arguments ["requesting player, for menu, media, track type"
-                       "sort order"]}
-   0x1016 {:type "request history menu"
+                       "sort order"
+                       "genre ID"]}
+   0x1102 {:type "request album menu for artist"
            :arguments ["requesting player, for menu, media, track type"
-                       "sort order"]}
+                       "sort order"
+                       "artist ID"]}
+   0x1103 {:type "request track menu for album"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"
+                       "artist ID"]}
    0x1105 {:type      "request playlist or playlist folder"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"
                        "playlist or folder ID"
                        "0=playlist, 1=folder"]}
+   0x1107 {:type      "request track menu for rating"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"
+                       "rating ID"]}
+   0x1112 {:type      "request track menu for history entry"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order?"
+                       "history ID"]}
+   0x1114 {:type      "request key distance menu for key"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order?"
+                       "key ID"]}
+   0x1201 {:type      "request album menu for genre and artist"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order?"
+                       "genre ID"
+                       "artist ID, -1 for ALL"]}
+   0x1206 {:type      "request track menu for bpm and distance (+/- %)"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order?"
+                       "key ID"
+                       "distance (+/- %, can be 0-6)"]}
+   0x1214 {:type      "request track menu for key and distance"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order?"
+                       "key ID"
+                       "distance"]}
+   0x1300 {:type      "search by substring"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order?"
+                       "search string byte size"
+                       "search string (must be uppercase)"
+                       "unknown"]}
+   0x1301 {:type      "request track menu for genre, artist, and album"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order?"
+                       "genre ID"
+                       "artist ID, -1 for ALL"
+                       "album ID, -1 for ALL"]}
    0x2002 {:type      "request track metadata"
            :arguments ["requesting player, for menu, media, track type"
                        "rekordbox ID"]}
@@ -773,6 +821,27 @@
       (if (= 0x4a02 (get-message-type response))
         response  ;; TODO: Parse
         (timbre/error "No waveform detail for track" track "available for slot" slot "on player" (:target player))))))
+
+(defn search
+  "Sends a substring search query and displays the matching tracks."
+  [player slot query]
+  (let [id (swap! (:counter player) inc)
+        menu-field (number-field [(:number player) 1 slot 1])
+        setup (build-message id 0x1300 menu-field (number-field 0 4) (number-field (* 2 (inc (count query))) 4)
+                             (string-field (clojure.string/upper-case query)) (number-field 0 4))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (when (= 0x4000 (get-message-type response))
+        (let [item-count (get-in response [:arguments 1 :number])]
+          (if (pos? item-count)
+            (let [results (read-menu-responses player menu-field item-count)]
+              ;; TODO build and return more compact structure.
+              )
+            (timbre/error "No results available for this experiment.")))))))
 
 (defn experiment
   "Sends a sequence of messages like those requesting metadata, but
