@@ -299,6 +299,17 @@
    0x28   "Original Artist"
    0x29   "Remixer"
    0x2e   "Date Added"
+   0x80   "Genre menu"
+   0x81   "Artist menu"
+   0x82   "Album menu"
+   0x83   "Track menu"
+   0x84   "Playlist menu"
+   0x85   "BPM menu"
+   0x86   "Rating menu"
+   0x8b   "Key menu"
+   0x90   "Folder menu"
+   0x91   "Search menu"
+   0x95   "History menu"
    0x204  "Track title and album"
    0x604  "Track title and genre"
    0x704  "Track title and artist"
@@ -329,12 +340,36 @@
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"
                        "magic constant?"]}
-   0x1002 {:type "request artist list"
+   0x1001 {:type "request genre menu"
            :arguments ["requesting player, for menu, media, track type"
-                       "sort order?"]}
+                       "sort order"]}
+   0x1002 {:type "request artist menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"]}
+   0x1003 {:type "request album menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"]}
    0x1004 {:type "request track list"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order?"]}
+   0x1006 {:type "request bpm menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"]}
+   0x1007 {:type "request rating menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"]}
+   0x100c {:type "request key menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"]}
+   0x1011 {:type "request folder menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"]}
+   0x1012 {:type "request search menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"]}
+   0x1016 {:type "request history menu"
+           :arguments ["requesting player, for menu, media, track type"
+                       "sort order"]}
    0x1105 {:type      "request playlist or playlist folder"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"
@@ -744,7 +779,7 @@
   using a different message kind, and with a variable list of argument
   fields. For example, to retrieve the root menu, invoke as:
   (experiment player slot 0x1000 (number-field 0 4)
-              (number-field 0x00ff 4))"
+              (number-field 0x00ffffff 4))"
   [player slot kind & args]
   (let [id (swap! (:counter player) inc)
         menu-field (number-field [(:number player) 1 slot 1])
