@@ -351,7 +351,7 @@
                        "sort order"]}
    0x1004 {:type "request track menu"
            :arguments ["requesting player, for menu, media, track type"
-                       "sort order?"]}
+                       "sort order"]}
    0x1006 {:type "request bpm menu"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"]}
@@ -378,7 +378,7 @@
    0x1103 {:type "request track menu for album"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"
-                       "artist ID"]}
+                       "album ID"]}
    0x1105 {:type      "request playlist or playlist folder"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order"
@@ -404,7 +404,7 @@
    0x1206 {:type      "request track menu for bpm and distance (+/- %)"
            :arguments ["requesting player, for menu, media, track type"
                        "sort order?"
-                       "key ID"
+                       "bpm ID"
                        "distance (+/- %, can be 0-6)"]}
    0x1214 {:type      "request track menu for key and distance"
            :arguments ["requesting player, for menu, media, track type"

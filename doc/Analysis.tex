@@ -13,6 +13,8 @@
 \usepackage{tabu, booktabs}
 \usepackage{longtable}
 
+\newcommand{\rmst}{{\it\small rmst}}
+
 \title{DJ Link Packet Analysis}
 \author{James Elliott\\Deep Symmetry, LLC}
 
@@ -1581,7 +1583,7 @@ Figure~\ref{fig:trackSetupResponse}.
     \end{leftwordgroup}
 
   \end{bytefield}
-  \caption{Track metadata ready response}
+  \caption{Track metadata available response}
   \label{fig:trackSetupResponse}
 \end{figure}
 
@@ -2028,6 +2030,28 @@ far are listed in Table~\ref{table:menuItemTypes}.
   {\tt 0029} & Remixer \\
 
   {\tt 002e} & Date Added \\
+
+  {\tt 0080} & Genre menu \\
+
+  {\tt 0081} & Artist menu \\
+
+  {\tt 0082} & Album menu \\
+
+  {\tt 0083} & Track menu \\
+
+  {\tt 0084} & Playlist menu \\
+
+  {\tt 0085} & BPM menu \\
+
+  {\tt 0086} & Rating menu \\
+
+  {\tt 008b} & Key menu \\
+
+  {\tt 0090} & Folder menu \\
+
+  {\tt 0091} & Search ``menu'' \\
+
+  {\tt 0095} & History menu \\
 
   {\tt 0204} & Track title and album \\
 
@@ -2859,12 +2883,12 @@ configured the media device to show artists as the second column.
 
 Track list requests (just like metadata requests) are built on the
 mechanism that is used to request and draw scrollable menus on the
-CDJs. The player responds with a success indicator, saying it is ready
-to send these ``menu items'' and reporting how many of them are
-available, much like shown in Figure~\ref{fig:trackSetupResponse},
-although the first argument will be {\tt 1004} to reflect the
-message type we just sent, rather than {\tt 2002} as it was for the
-metadata request.
+CDJs, explored in more breadth in Section~\ref{sec:menuRequests}. The
+player responds with a success indicator, saying it is ready to send
+these ``menu items'' and reporting how many of them are available,
+much like shown in Figure~\ref{fig:trackSetupResponse}, although the
+first argument will be {\tt 1004} to reflect the message type we just
+sent, rather than {\tt 2002} as it was for the metadata request.
 
 As with metadata, the next step is to send a ``render menu'' request
 like that in Figure~\ref{fig:renderMenuRequest} to get the actual
@@ -3006,6 +3030,7 @@ by BPM:
 
 
 \subsection{Playlists}
+\label{sec:playlists}
 
 If you want to be more selective about the metadata that you are
 caching, you can navigate the playlist folder hierarchy and deal with
@@ -3223,6 +3248,164 @@ source for the {\tt dysentery.dbserver} namespace. Most of the
 response messages containing track metadata were omitted for brevity;
 you will get more meaningful results trying it with your own tracks,
 and then you can see all the details.
+
+\section{Menu Requests}
+\label{sec:menuRequests}
+
+We have already seen many examples of the menu mechanism in action,
+most clearly with metadata requests (Section~\ref{sec:metadata}), track
+list requests (Section~\ref{sec:allTracks}), and playlist requests
+(Section~\ref{sec:playlists}). We'll round out what is known about the
+other types of menu request here.
+
+The overall flow starts off by sending a menu request message whose
+type identifies the kind of menu desired (in the message $type$
+field), along with some parameters that control the specific content
+to be shown, and perhaps establishing a sort order. See, for example,
+Figure~\ref{fig:playlistSetupPacket}. If all goes well, the player
+responds with a packet with $type$ {\tt 4000} like the one in
+Figure~\ref{fig:trackSetupResponse}, containing two numeric fields
+that contain the original menu $type$ value you requested, followed by
+the number of menu entries that are available for you to load.
+
+To actually obtain those menu entries, you send one or more ``menu
+render'' request messages with $type$ {\tt 3000} as shown in
+Figure~\ref{fig:renderMenuRequest} and described below it, allowing
+you to paginate through the results. This gets you a number of
+responses: a menu header message (with $type$ {\tt 4001},
+Figure~\ref{fig:trackMetadataMenuHeader}), followed by the number of
+menu item messages you requested (with $type$ {\tt 4101},
+Figure~\ref{fig:trackMetadataMenuItem}), and finally a menu footer
+message (with $type$ {\tt 4201},
+Figure~\ref{fig:trackMetadataMenuFooter}). The menu item types we have
+identified so far are listed in Section~\ref{sec:menuItemTypes}.
+
+\subsection{Known Menu Request Types}
+
+Table~\ref{table:menuRequests} shows the menu requests we have figured
+out so far. Not all menus are available in all rekordbox databaes; the
+DJ can decide what indices and categories to include, and that will
+determine which of these requests succeed. To find out what is
+available, you can request the root menu, which gives you access to
+all available menus. That is what a player will do when you use the
+Link button to connect to media mounted on another player. The menus
+available to you will be returned as entries in the root menu
+response, with Item Type values in the range {\tt 80}--{\tt 95}, as
+shown in Table~\ref{table:menuItemTypes}.
+
+The first argument to every menu request is a four-byte number where
+each byte means something different. This byte is referred to as
+{\it r:m:s:t} in the Beat Link code because of the function of its
+component bytes:
+
+The first byte is always the device number $D$ of the player making
+the {\it request}.
+
+The second byte of the first argument identifies which {\it menu
+  location} on the player will be used to display the result (for
+example, the screen is sometimes split with the user scrolling down
+the left, which is menu location 1, while displaying the contents of
+the selected item on the right, which is menu location 2), and the
+response format can be different in these cases. When showing metadata
+preview for a selected track, the menu ``location'' value is 3, and
+when loading non-text data like waveforms, album art or beat grid, the
+value of this byte is 8.
+
+The third byte of this argument identifies the media {\it slot},
+$S_r$, that information is being requested from. The values are as
+described in the discussion of Figure~\ref{fig:cdjStatus}.
+
+And the final byte identifies the media {\it type}, $T_r$ being asked
+about, with values also describe in the discussion of
+Figure~\ref{fig:cdjStatus}.
+
+To save space in Table~\ref{table:menuRequests}, this always-present
+argument will be simply shown as \rmst.
+
+\begin{longtabu}{rlX}
+  \toprule
+  {\bfseries Type} & {\bfseries Meaning} & {\bfseries Arguments} \endhead
+
+  \bottomrule \\
+  \caption{Menu Request Types} \endfoot
+
+  {\tt 1000} & Root Menu &
+  \rmst, sort, {\tt 00ffffff} \label{table:menuRequests} \\
+
+  {\tt 1001} & Genre Menu &
+  \rmst, sort \\
+
+  {\tt 1002} & Artist Menu &
+  \rmst, sort \\
+
+  {\tt 1003} & Album Menu &
+  \rmst, sort \\
+
+  {\tt 1004} & Track Menu\footnote{See Figure~\ref{fig:trackListSetupPacket}.} &
+  \rmst, sort \\
+
+  {\tt 1006} & BPM Menu &
+  \rmst, sort \\
+
+  {\tt 1007} & Rating Menu &
+  \rmst, sort \\
+
+  {\tt 1011} & Folder Menu &
+  \rmst, sort \\
+
+  {\tt 1012} & History Menu &
+  \rmst, sort? \\
+
+  {\tt 1014} & Key Menu &
+  \rmst, sort? \\
+
+  {\tt 1101} & Artists for Genre &
+  \rmst, sort, genre ID \\
+
+  {\tt 1102} & Albums for Artist &
+  \rmst, sort, artist ID \\
+
+  {\tt 1103} & Tracks for Album &
+  \rmst, sort, genre ID \\
+
+  {\tt 1105} & Playlist Menu\footnote{See Section~\ref{sec:playlists}.} &
+  \rmst, sort, playlist or folder ID, type~(0:playlist; 1:folder) \\
+
+  {\tt 1107} & Tracks for Rating &
+  \rmst, sort, rating ID \\
+
+  {\tt 1112} & Tracks for History &
+  \rmst, sort, history ID \\
+
+  {\tt 1114} & Distances for Key &
+  \rmst, sort, key ID \\
+
+  {\tt 1201} & Albums for Genre+Artist &
+  \rmst, sort, genre ID, artist ID\footnote{Use -1 for ``all.''\label{footnote:minus1forAll}} \\
+
+  {\tt 1206} & Tracks for BPM+Distance &
+  \rmst, sort, bpm ID, distance (+/- \%; can be 0--6) \\
+
+  {\tt 1214} & Tracks for Key+Distance &
+  \rmst, sort, key ID, distance \\
+
+  {\tt 1300} & Search by substring &
+  \rmst, sort, search string byte size, search string (uppercase), unknown (0) \\
+
+  {\tt 1301} & Tracks for (see args) &
+  \rmst, sort, genre ID, artist ID\textsuperscript{\ref{footnote:minus1forAll}},
+  album ID\textsuperscript{\ref{footnote:minus1forAll}} \\
+
+\end{longtabu}
+
+\subsection{Search}
+
+As noted in Table~\ref{table:menuRequests} there is a search ``menu''.
+This is how the text-search feature of CDJs with touch-strips is
+implemented. By passing an uppercase string argument (in UTF-16 with a
+trailing {\tt 0000} character), preceded by its byte length, you can
+obtain a list of all matching database entries (tracks, albums,
+artists, etc.)
 
 \section{Fader Start}
 
