@@ -1635,9 +1635,11 @@ exact limit is, but getting 64 at a time seems to work on Nexus 2
 players.
 
 We don't know the purpose of the fourth argument, but sending a value
-of 0 works. The fifth argument, $limit_2$, is also poorly understood,
-but sending a second copy of $limit$ here works. And the sixth and
-final argument also has an unknown purpose, but 0 works.
+of 0 works. The fifth argument, $total$, seems to usually contain the
+total number of items reported in the intial menu response, but
+sending a second copy of $limit$ here works too; it may not matter
+much. And the sixth and final argument also has an unknown purpose,
+but 0 works.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -1670,7 +1672,7 @@ final argument also has an unknown purpose, but 0 works.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 30}
-      \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{$limit_2$} & \bitbox{1}{\tt 11} &
+      \bitbox{4}{\tt 00000000} & \bitbox{1}{\tt 11} & \bitbox{4}{$total$} & \bitbox{1}{\tt 11} &
       \bitbox{4}{\tt 00000000} & \bitbox[]{2}{}
     \end{leftwordgroup}
 

@@ -555,8 +555,8 @@
          zero-field (number-field 0 4)
          offset-field (number-field offset 4)
          count-field (number-field count 4)
-         ;; TODO: Based on LinkInfo-tracklist.txt looks like the last count-field should be item-count instead!
-         request (build-message id 0x3000 menu-field offset-field count-field zero-field count-field zero-field)]
+         total-field (number-field item-count 4)
+         request (build-message id 0x3000 menu-field offset-field count-field zero-field total-field zero-field)]
      (print "Sending > ")
      (describe-message request)
      (send-message player request)
