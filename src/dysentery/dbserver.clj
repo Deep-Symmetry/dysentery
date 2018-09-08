@@ -824,24 +824,26 @@
 
 (defn search
   "Sends a substring search query and displays the matching tracks."
-  [player slot query]
-  (let [id (swap! (:counter player) inc)
-        menu-field (number-field [(:number player) 1 slot 1])
-        setup (build-message id 0x1300 menu-field (number-field 0 4) (number-field (* 2 (inc (count query))) 4)
-                             (string-field (clojure.string/upper-case query)) (number-field 0 4))]
-    (print "Sending > ")
-    (describe-message setup)
-    (send-message player setup)
-    (when-let [response (read-message player)]
-      (print "Received > ")
-      (describe-message response)
-      (when (= 0x4000 (get-message-type response))
-        (let [item-count (get-in response [:arguments 1 :number])]
-          (if (pos? item-count)
-            (let [results (read-menu-responses player menu-field item-count)]
-              ;; TODO build and return more compact structure.
-              )
-            (timbre/error "No results available for this experiment.")))))))
+  ([player slot query]
+   (search player slot query 0))
+  ([player slot query unknown]
+   (let [id (swap! (:counter player) inc)
+         menu-field (number-field [(:number player) 1 slot 1])
+         setup (build-message id 0x1300 menu-field (number-field 0 4) (number-field (* 2 (inc (count query))) 4)
+                              (string-field (clojure.string/upper-case query)) (number-field unknown 4))]
+     (print "Sending > ")
+     (describe-message setup)
+     (send-message player setup)
+     (when-let [response (read-message player)]
+       (print "Received > ")
+       (describe-message response)
+       (when (= 0x4000 (get-message-type response))
+         (let [item-count (get-in response [:arguments 1 :number])]
+           (if (pos? item-count)
+             (let [results (read-menu-responses player menu-field item-count)]
+               ;; TODO build and return more compact structure.
+               )
+             (timbre/error "No results available for this experiment."))))))))
 
 (defn experiment
   "Sends a sequence of messages like those requesting metadata, but
