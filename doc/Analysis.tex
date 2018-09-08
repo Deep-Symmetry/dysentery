@@ -3381,7 +3381,7 @@ argument will be simply shown as \rmst.
   \rmst, sort, key id \\
 
   {\tt 1201} & Albums for Genre+Artist &
-  \rmst, sort, genre id, artist id\footnote{Use -1 for ``all.''\label{footnote:minus1forAll}} \\
+  \rmst, sort, genre id, artist id\textsuperscript{*} \\
 
   {\tt 1206} & Tracks for BPM +/- \% &
   {\raggedright{}\rmst, sort, bpm id, distance (+/- \%; can be 0--6)} \\
@@ -3393,8 +3393,10 @@ argument will be simply shown as \rmst.
   {\raggedright{}\rmst, sort, search string byte size, search string (uppercase), unknown (0)} \\
 
   {\tt 1301} & Tracks for (see args) &
-  \rmst, sort, genre id, artist id\textsuperscript{\ref{footnote:minus1forAll}},
-  album id\textsuperscript{\ref{footnote:minus1forAll}} \\
+  \rmst, sort, genre id, artist id,\textsuperscript{*}
+  album id\textsuperscript{*} \\
+
+  & & {\tiny\textsuperscript{*}Use -1 for ``all''.} \\
 
 \end{longtabu}
 
