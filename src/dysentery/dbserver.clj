@@ -296,6 +296,7 @@
    0x1a   "Color Blue"
    0x1b   "Color Purple"
    0x23   "Comment"
+   0x24   "History Playlist"
    0x28   "Original Artist"
    0x29   "Remixer"
    0x2e   "Date Added"
