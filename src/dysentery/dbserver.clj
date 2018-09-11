@@ -311,6 +311,7 @@
    0x90   "Folder menu"
    0x91   "Search menu"
    0x95   "History menu"
+   0xa0   "Genre All Artists"
    0x204  "Track title and album"
    0x604  "Track title and genre"
    0x704  "Track title and artist"
