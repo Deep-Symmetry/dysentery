@@ -75,8 +75,9 @@
         0x0a (correct-length? packet #{208 212 284 292})
         0x29 (correct-length? packet #{56})
         0x19 (correct-length? packet #{0x58})
+        0x05 (correct-length? packet #{48})
         (timbre/warn "Received packet with unrecognized type:" current-type))
-      (timbre/warn "Expecting packet of type" expected-type "but received type" current-type))))
+      (timbre/warn "Expecting packet of type" expected-type "but received type" current-type packet))))
 
 (defn recognized-if
   "If `recognized` is truthy, returns green, otherwise red."

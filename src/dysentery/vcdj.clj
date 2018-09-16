@@ -437,6 +437,14 @@
         (timbre/info "No current master; simply becoming it")
         (swap! state assoc :master? true :master-number us)))))
 
+(defn send-media-query
+  "Asks the specified player to report details about the media mounted
+  in the specified slot."
+  [player slot]
+  (let [us      (:player-number @state)
+        payload (concat [0x01 0x00 us 0x00 0x0c] (:ip-address @state) [0x00 0x00 0x00 player 0x00 0x00 0x00 slot])]
+    (send-direct-packet player 0x05 payload 50002)))
+
 (defn set-tempo
   "Set our internal notion of tempo, for use when we are master."
   [tempo]
