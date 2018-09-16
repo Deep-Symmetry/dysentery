@@ -853,11 +853,11 @@
   "Sends a sequence of messages like those requesting metadata, but
   using a different message kind, and with a variable list of argument
   fields. For example, to retrieve the root menu, invoke as:
-  (experiment player slot 0x1000 (number-field 0 4)
+  (experiment player slot 1 0x1000 (number-field 0 4)
               (number-field 0x00ffffff 4))"
-  [player slot kind & args]
+  [player slot track-type kind & args]
   (let [id (swap! (:counter player) inc)
-        menu-field (number-field [(:number player) 1 slot 1])
+        menu-field (number-field [(:number player) 1 slot track-type])
         setup (apply build-message (concat [id kind menu-field] args))]
     (print "Sending > ")
     (describe-message setup)
