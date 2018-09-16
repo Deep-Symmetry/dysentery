@@ -2149,7 +2149,7 @@ Figure~\ref{fig:artworkRequest}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {$T_r$}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{$artwork$} & \bitbox[]{6}{}
     \end{leftwordgroup}
 
@@ -2161,14 +2161,14 @@ Figure~\ref{fig:artworkRequest}.
 As usual, $seq$ should be incremented each time you send a query, and
 will be used to identify the response messages. $D$ should have the
 same value you used in your initial query context setup packet,
-identifying the device that is asking the question. $S_r$ is the slot
-in which the track being asked about can be found, and has the same
-values used in CDJ status packets, as shown in
-Figure~\ref{fig:cdjStatus}. Finally, $artwork$ identifies the specific
-artwork image you are requesting, as it was specified in the track
-medatata response. As with other graphical requests, the value after
-$D$, which identifies the location of the menu for which data is being
-loaded, is 8.
+identifying the device that is asking the question. $S_r$ and $T_r$
+are the slot in which the track being asked about can be found and,
+its track type; each has the same values used in CDJ status packets,
+as shown in Figure~\ref{fig:cdjStatus}. Finally, $artwork$ identifies
+the specific artwork image you are requesting, as it was specified in
+the track medatata response. As with other graphical requests, the
+value after $D$, which identifies the location of the menu for which
+data is being loaded, is 8.
 
 The response will be a message with $type$ {\tt 4002}, containing
 four arguments. The first argument echoes back our request type, which
@@ -2230,7 +2230,8 @@ Replace the arguments with the {\tt var} holding your player
 connection, the proper $S_r$ number for the media slot the art is
 found in, and the $artwork$ ID of the album art, and dysentery will
 open a window like Figure~{\ref{fig:artworkExample}} showing the
-image.
+image. To load artwork for a non-rekordbox track, add an additional
+argument with the value $2$ at the end.
 
 \begin{figure}
   \vspace{5mm}

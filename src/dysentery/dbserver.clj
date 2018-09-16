@@ -681,26 +681,28 @@
   artwork id as reported in a metadata or track list response) for a
   track in a media slot on the player. Displays the image retrieved
   and returns the response containing it."
-  [player slot artwork-id]
-  (let [id (swap! (:counter player) inc)
-        menu-field (number-field [(:number player) 1 slot 1])
-        setup (build-message id 0x2003 menu-field (number-field artwork-id 4))]
-    (print "Sending > ")
-    (describe-message setup)
-    (send-message player setup)
-    (when-let [response (read-message player)]
-      (print "Received > ")
-      (describe-message response)
-      (if (= 0x4002 (get-message-type response))
-        (let [img (javax.imageio.ImageIO/read
-                   (java.io.ByteArrayInputStream. (byte-array (get-in response [:arguments 3 :data]))))
-              frame (javax.swing.JFrame. (str "Album art " artwork-id))]
-          (doto frame
-            (.add (javax.swing.JLabel. (javax.swing.ImageIcon. img)))
-            (.setSize 180 120)
-            (.setVisible true))
-          response)
-        (timbre/error "No artwork with id" id "available for slot" slot "on player" (:target player))))))
+  ([player slot artwork-id]
+   (request-album-art player slot artwork-id 1))
+  ([player slot track track-type]
+   (let [id (swap! (:counter player) inc)
+         menu-field (number-field [(:number player) 1 slot track-type])
+         setup (build-message id 0x2003 menu-field (number-field artwork-id 4))]
+     (print "Sending > ")
+     (describe-message setup)
+     (send-message player setup)
+     (when-let [response (read-message player)]
+       (print "Received > ")
+       (describe-message response)
+       (if (= 0x4002 (get-message-type response))
+         (let [img (javax.imageio.ImageIO/read
+                    (java.io.ByteArrayInputStream. (byte-array (get-in response [:arguments 3 :data]))))
+               frame (javax.swing.JFrame. (str "Album art " artwork-id))]
+           (doto frame
+             (.add (javax.swing.JLabel. (javax.swing.ImageIcon. img)))
+             (.setSize 180 120)
+             (.setVisible true))
+           response)
+         (timbre/error "No artwork with id" id "available for slot" slot "on player" (:target player)))))))
 
 (defn request-beat-grid
   "Sends the message that requests the beat grid for a track in a
