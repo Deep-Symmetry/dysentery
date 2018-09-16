@@ -3561,6 +3561,149 @@ Assuming the track can be loaded, the player will respond with a
 packet whose type indicator (at byte~{\tt 0a}) has the value {\tt 1a}
 to acknowledge the command, and will load the specified track.
 
+\section{Media Slot Queries}
+
+In order to correctly ask for the root menu for a media slot, you need
+to know what kind of media (rekordbox or unanalyzed) is present in the
+slot so you can send the proper $T_r$ value in your menu requests. You
+might also want to show information about the entire media collection,
+such as its name, size, date created, number of tracks, number of
+playlists, and free space. All of these things can be determined by
+sending a packet like the one shown in Figure~\ref{fig:mediaQuery} to
+port 50002 on the player that holds the slot, with appropriate values
+for $D$ (the device number you are posing as), $D_r$ (the device
+owning the slot), and $S_r$ (the slot you're interested in). These are
+the same values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}
+
+\begin{figure}[h]
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+        {\tt 4c} {\tt \textbf{05}}}
+      & \bitbox[lrt]{5}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 0c}} &
+      \bitbox{4}{IP address} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D_r$} &
+      & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$S_r$}
+    \end{leftwordgroup} \\
+
+  \end{bytefield}
+  \caption{Media query packet}
+  \label{fig:mediaQuery}
+\end{figure}
+
+The player will respond by sending a packet like the one shown in
+Figure~\ref{fig:mediaResponse} to port 50002 on the IP address specified
+in your query packet (so you want to supply your own address to get
+the response). This contains the information about the media mounted
+in the slot.
+
+\begin{figure}[h]
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitboxes*{1}{{\tt 51} {\tt 73} {\tt 70} {\tt 74} {\tt 31} {\tt 57} {\tt 6d} {\tt 4a} {\tt 4f}
+        {\tt 4c} {\tt \textbf{06}}}
+      & \bitbox[lrt]{5}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox[lrb]{15}{Device Name (padded with {\tt 00})} \bitbox{1}{\tt 01}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 9c}} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D_r$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$S_r$} &
+      \bitbox[lrt]{4}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox[lr]{16}{Media Name (UTF-16, padded with {\tt 0000})}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 40}
+      \bitbox[lr]{16}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 50}
+      \bitbox[lr]{16}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 60}
+      \bitbox[lrb]{12}{} & \bitbox[lrt]{4}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 70}
+      \bitbox[lr]{16}{Creation Date (UTF-16, padded with {\tt 0000})}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 80}
+      \bitbox[lr]{16}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 90}
+      \bitbox[lr]{16}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries a0}
+      \bitbox[lrb]{6}{} & \bitbox{2}{$tracks$} & \bitbox{1}{$x$} & \bitbox{1}{\tt 00} &
+      \bitbox{1}{$T_r$} & \bitbox{1}{$a$} & \bitboxes*{1}{{\tt 00} {\tt 00}} &
+      \bitbox{2}{$plists$}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries b0}
+      \bitbox[lrb]{8}{Total space} & \bitbox{8}{Free space}
+    \end{leftwordgroup} \\
+
+  \end{bytefield}
+  \caption{Media response packet}
+  \label{fig:mediaResponse}
+\end{figure}
+
+The name of the media stick (as assigned in rekordbox) can be found as
+a UTF-16 encoded string starting at byte~{\tt 2c}, and up to {\tt 40}
+bytes long, padding with trailing null characters. This is followed by
+a textual representation of the creation date of the media database,
+encoded in the same way, starting at byte~{\tt 6c}, up to {\tt 28}
+bytes long.
+
+The number of rekordbox tracks present in the database is found in
+bytes~{\tt a6} and {\tt a7}, (this will be zero if there is no
+rekordbox database present). The purpose of value $x$ at byte~{\tt a8}
+is uncertain, we have seen values of {\tt 06} and {\tt 00}, but don't
+know what they mean.
+
+$T_r$ at byte~{\tt aa} reports the type of tracks available, with the
+same values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}. In other words, it will have the value
+{\tt 01} when a rekordbox database is present, and {\tt 02} otherwise;
+this is the same value that must be sent as $T_r$ in order to make a
+successful request for the root menu associated with this media.
+Again, we don't know the purpose of $a$ at byte~{\tt ab}, though it
+seems that it might have the value {\tt 01} when there is a rekordbox
+database present, and {\tt 00} otherwise, hence the use of $a$ to
+suggest ``analyzed.''
+
+The number of rekordbox playlists present on the media (also zero if
+there is no rekordbox database) is found at bytes~{\tt ae} and {\tt
+  af}.
+
+Finally, there are two eight-byte numbers at the end of the packet.
+The value at bytes~{\tt b0} through {\tt b7} is the total capacity of
+the media (in bytes), and the value at bytes~{\tt b8} through {\tt bf}
+is the number of unused bytes left on it.
+
 \section{What's Missing?}
 
 We know this analysis isn't complete. Here are some loose ends to
