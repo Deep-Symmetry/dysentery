@@ -683,7 +683,7 @@
   and returns the response containing it."
   ([player slot artwork-id]
    (request-album-art player slot artwork-id 1))
-  ([player slot track track-type]
+  ([player slot artwork-id track-type]
    (let [id (swap! (:counter player) inc)
          menu-field (number-field [(:number player) 1 slot track-type])
          setup (build-message id 0x2003 menu-field (number-field artwork-id 4))]
