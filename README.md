@@ -65,6 +65,27 @@ The packet captures used to create that document can be downloaded
 you notice anything we have not, even if you don&rsquo;t have any
 Pioneer gear to try out.
 
+### Funding
+
+Dysentery and its research products are, and will remain, completely
+free and open-source. If they have helped you, taught you something,
+or inspired you, let us know and share some of your discoveries and
+code. If you'd like to financially support this ongoing research, you
+are welcome (but by no means obligated) to donate to offset the
+hundreds of hours of research, development, and writing that have
+already been invested. Or perhaps to facilitate future efforts, tools,
+toys, and time to explore.
+
+<a href="https://liberapay.com/deep-symmetry/donate"><img align="center" alt="Donate using Liberapay"
+    src="https://liberapay.com/assets/widgets/donate.svg"></a> using Liberapay, or
+<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=M7EXPEX7CZN8Q"><img align="center"
+    alt="Donate" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif"></a> using PayPal
+
+> If enough people jump onboard, we may even be able to get a newer
+> CDJ to experiment with, although that's an unlikely stretch goal.
+> :grinning:
+
+
 ## Status
 
 Dysentery is currently being developed as a
