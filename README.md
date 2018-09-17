@@ -69,9 +69,9 @@ Pioneer gear to try out.
 
 Dysentery and its research products are, and will remain, completely
 free and open-source. If they have helped you, taught you something,
-or inspired you, let us know and share some of your discoveries and
-code. If you'd like to financially support this ongoing research, you
-are welcome (but by no means obligated) to donate to offset the
+or inspired you, please let us know and share some of your discoveries
+and code. If you'd like to financially support this ongoing research,
+you are welcome (but by no means obligated) to donate to offset the
 hundreds of hours of research, development, and writing that have
 already been invested. Or perhaps to facilitate future efforts, tools,
 toys, and time to explore.
