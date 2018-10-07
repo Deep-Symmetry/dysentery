@@ -628,7 +628,7 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
 
     \begin{leftwordgroup}{\tiny\bfseries 30}
       \bitboxes*{1}{{\tt 00} {\tt 00}} \bitbox{2}{$Track$} \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {$d_l$}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+        {\tt 00} {\tt 00} {\tt a0} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 40}
@@ -2114,6 +2114,11 @@ $recordbox$ value reported in CDJ status packets in order to find out
 the values used to request the metadata for tracks loaded from solid
 state media; CD tracks are requested using the simple track number as
 the $rekordbox$ value.
+
+\emph{Note:} It seems that to reliably get data back when requesting
+metadata for non-rekordbox tracks, your virtual CDJ needs to be
+sending properly-formatted status packets, not just device
+announcement packets.
 
 \subsection{Album Art}
 \label{sec:albumArt}
