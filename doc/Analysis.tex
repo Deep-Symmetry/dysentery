@@ -3430,12 +3430,12 @@ a packet like the one shown in Figure~\ref{fig:faderStart} to port
 50001 of the players, with appropriate command values for $C_1$
 through $C_4$ telling that player what to do. A command value of {\tt
   00} tells the corresponding player to start playing if it isn't
-already. The command {\tt 01} tells that player to stop playing if it
-is, and a value of {\tt 02} tells this player to stay in its current
-state. (It also seems to work to broadcast the packet on port 50001,
-which makes sense, since it can be interpreted individually by each
-player, so a single packet can be used to affect the states of all
-four players if desired.)
+already. The command {\tt 01} tells that player to stop playing and
+return to the cue point, and the value {\tt 02} tells the player to
+stay in its current state. (It also seems to work to broadcast the
+packet on port 50001, which makes sense, since it can be interpreted
+individually by each player, so a single packet can be used to affect
+the states of all four players if desired.)
 
 \begin{figure}[h]
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
