@@ -372,9 +372,9 @@ based on the beat number reported by the master player.
 To track beats, open a socket and bind it to port 50001. The devices
 seem to broadcast two different kinds of packets to this port, a
 shorter packet containing {\tt 2d} bytes of data, and a longer packet
-containing {\tt 60} bytes. The shorter packets seem to all have
-identical content, and do not seem to convey useful information, so we
-currently simply ignore them.
+containing {\tt 60} bytes. The shorter packets contain information
+about which channels are on-air, and fader start/stop commands to the
+players, as described in Section~\ref{sec:channelsOnAir}.
 
 The {\tt 60}-byte packets are sent on each beat, so even the arrival
 of the packet is interesting information, it means that the player is
@@ -3463,6 +3463,7 @@ the states of all four players if desired.)
 
 
 \section{Channels On Air}
+\label{sec:channelsOnAir}
 
 Thanks to @jan2000\footnote{\url{https://github.com/jan2000}} we know
 how the mixer reports which channels are currently on-air, and we can
