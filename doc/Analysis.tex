@@ -100,7 +100,7 @@ When the mixer starts up, after it obtains an IP address (or gives up
 on doing that and self-assigns an address), it sends out what look
 like a series of packets\footnote{The packet capture described in this
   analysis can be found at
-  \url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/powerup.pcapng}}
+  \url{https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/powerup.pcapng}}
 simply announcing its existence to UDP port 50000 on the broadcast
 address of the local network.
 
@@ -358,7 +358,7 @@ Figure~\ref{fig:mixerKeepalive}.
 \label{sec:beatPackets}
 
 For some time now,
-Afterglow\footnote{\url{https://github.com/brunchboy/afterglow\#afterglow}}
+Afterglow\footnote{\url{https://github.com/deep-symmetry/afterglow\#afterglow}}
 has been able to synchronize its light shows with music being played
 on Pioneer equipment by observing packets broadcast by the mixer to
 port 50001. Until recently, however, it was not possible to tell which
@@ -516,7 +516,7 @@ We are just beginning to analyze all the information which can be
 gleaned from these packets, but here is what we know so
 far.\footnote{Examples of packets discussed in this section can be
   found in the capture at
-  \url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/to-virtual.pcapng}}
+  \url{https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/to-virtual.pcapng}}
 
 \subsection{Mixer Status Packets}
 
@@ -810,7 +810,7 @@ state flags, detailed in Figure~\ref{fig:cdjStateFlags}.\footnote{We
   have not yet seen any other values for bits 0, 1, 2, or 7 in $F$, so
   we're unsure if they also carry meaning. If you ever find different
   values for them, please let us know by filing an Issue at
-  \url{https://github.com/brunchboy/dysentery/issues}} It seems to
+  \url{https://github.com/deep-symmetry/dysentery/issues}} It seems to
 only be available on nexus players, and others always send {\tt 00}
 for this byte?
 
@@ -3728,7 +3728,7 @@ particular rekordbox ID values.
 Using an Ethernet switch
 with port mirroring was, as we hoped, very helpful. As can be seen in
 the capture at
-\url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/LinkInfo.pcapng},
+\url{https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/LinkInfo.pcapng},
 which shows a CDJ with IP address 169.254.192.112 booting, the new CDJ
 opens two TCP connections to the other CDJ at 169.254.119.181.
 
@@ -3744,7 +3744,7 @@ that was already loaded, then new information as the linked CDJ loaded
 three other tracks.
 
 There is another capture at
-\url{https://github.com/brunchboy/dysentery/raw/master/doc/assets/LinkInfo2.pcapng},
+\url{https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/LinkInfo2.pcapng},
 with more Link Info streams to be studied (all of the odd numbered
 {\tt tcp.stream} values in Wireshark are the relevant ones).
 
@@ -3805,7 +3805,7 @@ work than posing as a CDJ.
 If you have access to Pioneer equipment and are willing to help us
 validate this analysis, and perhaps even figure out more details, you
 can find the tool that is being used to perform this research at: \\
-\url{https://github.com/brunchboy/dysentery}
+\url{https://github.com/deep-symmetry/dysentery}
 
 \begin{appendix}
 
