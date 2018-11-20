@@ -3152,6 +3152,8 @@ the same as described there. Additionally, if you pass a $sort$ value
 of {\tt 09}, the playlist entries will come back sorted by track
 title, Label 2 will be empty, and the item type will be {\tt 2904}.
 
+\pagebreak
+
 To experiment with this, start up dysentery in a Clojure REPL and
 connect to a player as described in Section~\ref{sec:experimenting},
 then evaluate an expression like {\tt (db/request-playlist p2 3 1)},
@@ -3167,6 +3169,42 @@ Finally, you can add a fourth argument to specify a sort order, like
 this to sort all the tracks in playlist 12 by genre:
 
 {\tt (db/request-playlist p2 3 12 false 6)}
+
+\subsection{Disconnecting}
+
+If you want to be polite about the fact that you are done talking to
+the dbserver, you can send it a message like the one shown in
+Figure~\ref{fig:teardownMessage}. This will cause the player to
+disconnect from its side.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{\tt fffffffe} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 0100} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 00} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Connection Teardown Message}
+  \label{fig:teardownMessage}
+\end{figure}
 
 \subsection{Experimenting with Metadata}
 \label{sec:experimenting}
@@ -3756,15 +3794,13 @@ the ones that will be immediately useful to Beat Link Trigger.
 Contributions of additional research and insight are eagerly
 welcomed---I would have not gotten nearly this far without help!
 
-\subsection{Reading Data Without a CDJ}
+\subsection{Reading Data with Four Players}
 
 In order to offer metadata, timecode, waveforms, and so on, when there
-are four actual CDJs on the network, it is necessary to pre-load and
-cache all the data, since dbserver queries are not possible with all
-player numbers in use. While this can be done with a single CDJ
-powered up, it would be really nice to be able to read the information
-right out of the rekordbox files on the media that the DJ will be
-using for the show. So far, we don't know how to do that.
+are four actual CDJs on the network, it is necessary get the data
+using a different mechanism. See the Crate Digger
+project\footnote{\url{https://github.com/Deep-Symmetry/crate-digger}}
+for the solution we have found.
 
 Before we discovered how to ask players for metadata about
 particular tracks, we did some research into the underlying rexordbox
@@ -3780,16 +3816,6 @@ It seems to still be
 available,\footnote{\url{http://www.ubiquitous.co.jp/en/products/db/md/devicesql/}}
 but I'd be surprised if they wanted to help out an open source effort
 like this one.
-
-It looks like, other than the textual metadata in the {\tt .edb} file,
-the format of the files containing the other crucial information (beat
-grid, wave forms, cue lists) is figured
-out,\footnote{\url{https://reverseengineering.stackexchange.com/questions/4311/help-reversing-a-edb-database-file-for-pioneers-rekordbox-software}}
-so a possible half-measure would be to create a half-baked metadata
-cache file whose track titles are based on the file paths, and which
-contains everything but the other text information, and then provide a
-mechanism for combining that with queries for just the text metadata
-to build a complete cache much more quickly at the start of a show.
 
 \subsection{CDJ Packets to Rekordbox}
 
