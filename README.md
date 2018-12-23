@@ -189,7 +189,7 @@ dysentery loaded.
 dysentery.core=>
 ```
 
-At that point, you can evalute Clojure expressions:
+At that point, you can evaluate Clojure expressions:
 
 ```clojure
 (view/find-devices)
