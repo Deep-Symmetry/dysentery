@@ -2047,11 +2047,19 @@ far are listed in Table~\ref{table:menuItemTypes}.
 
   {\tt 0086} & Rating menu \\
 
+  {\tt 0087} & Year menu \\
+
   {\tt 008b} & Key menu \\
+
+  {\tt 008e} & Color menu \\
 
   {\tt 0090} & Folder menu \\
 
   {\tt 0091} & Search ``menu'' \\
+
+  {\tt 0092} & Time menu \\
+
+  {\tt 0094} & Filename menu \\
 
   {\tt 0095} & History menu \\
 
@@ -3398,10 +3406,22 @@ argument will be simply shown as \rmst.
   {\tt 1007} & Rating Menu &
   \rmst, sort \\
 
+  {\tt 1008} & Year Menu &
+  \rmst, sort \\
+
+  {\tt 100d} & Color Menu &
+  \rmst, sort \\
+
+  {\tt 1010} & Time Menu &
+  \rmst, sort \\
+
   {\tt 1011} & Folder Menu &
   \rmst, sort \\
 
   {\tt 1012} & History Menu &
+  \rmst, sort? \\
+
+  {\tt 1013} & Filename Menu &
   \rmst, sort? \\
 
   {\tt 1014} & Key Menu &
@@ -3422,6 +3442,15 @@ argument will be simply shown as \rmst.
   {\tt 1107} & Tracks for Rating &
   \rmst, sort, rating id \\
 
+  {\tt 1108} & Years for Decade &
+  \rmst, sort, decade \\
+
+  {\tt 110d} & Tracks for Color &
+  \rmst, sort, color id \\
+
+  {\tt 1110} & Tracks for Time &
+  \rmst, sort, time \\
+
   {\tt 1112} & Tracks for History &
   \rmst, sort, history id \\
 
@@ -3431,11 +3460,14 @@ argument will be simply shown as \rmst.
   \hline {\tt 1201} & Albums for Genre+Artist &
   \rmst, sort, genre id, artist id\textsuperscript{*} \\
 
-  \hline {\tt 1202} & Tracks for Artist+Album &
+  {\tt 1202} & Tracks for Artist+Album &
   \rmst, sort, artist id, album id\textsuperscript{*} \\
 
   {\tt 1206} & Tracks for BPM +/- \% &
   {\raggedright{}\rmst, sort, bpm id, distance (+/- \%; can be 0--6)} \\
+
+  {\tt 1208} & Tracks for Decade+Year &
+  \rmst, sort, decade, year\textsuperscript{*} \\
 
   {\tt 1214} & Tracks near Key &
   \rmst, sort, key id, distance \\
