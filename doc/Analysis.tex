@@ -115,7 +115,7 @@ address of the local network.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 02}}
+    \bitbox{1}{\tt 01} & \bitbox{1}{\tt \textbf{02}} & \bitbox{2}{$len_p$} & \bitbox{1}{\tt 02}
   \end{bytefield}
   \caption{Initial announcement packets from Mixer}
   \label{fig:mixerInitial}
@@ -126,9 +126,17 @@ These have a data length\footnote{Values within packets, packet
 bytes, appear roughly every 300 milliseconds, and have the content
 shown in Figure~\ref{fig:mixerInitial}.
 
-The byte at offset {\tt 0a} (inside what is labeled the header) is
-bolded because its value changes in the different types of packets
-which follow.
+Byte~{\tt 0a} (inside what is labeled the header) is bolded because
+its value changes in the different types of packets which follow.
+
+The byte following the device name (at byte~{\tt 20}) seems to
+always have the value 1 in every kind of packet seen. The next byte is
+bolded as well because it seems to indicate the structure of the
+remainder of the packet. The value {\tt 02} is followed by a two-byte
+value $len_p$ that indicates the length of the entire packet
+(including the preceding header bytes), and followed by the payload.
+In the case of this kind of packet, the length is {\tt 0025}, and the
+payload is the single-byte value {\tt 02}.
 
 After about three of these packets are sent, another series of three
 begins. It is not clear what purpose these packets serve, because they
@@ -148,17 +156,17 @@ port they are connected to?
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {$N$} {\tt 02}} &
-    \bitbox{6}{MAC address}
+    \bitbox{1}{\tt 01} & \bitbox{1}{\tt \textbf{02}} & \bitbox{2}{$len_p$} &
+    \bitboxes*{1}{{$N$} {\tt 02}} & \bitbox{6}{MAC address}
   \end{bytefield}
   \caption{First-stage Mixer device number assignment packets}
   \label{fig:mixerStage1}
 \end{figure}
 
 In any case, these three packets have a data length of {\tt 2c} bytes,
-are again sent to UDP port 50000 on the local network broadcast
-address, at roughly 300 millisecond intervals, and have the content
-shown in Figure~\ref{fig:mixerStage1}.
+reflected in $len_p$, are again sent to UDP port 50000 on the local
+network broadcast address, at roughly 300 millisecond intervals, and
+have the content shown in Figure~\ref{fig:mixerStage1}.
 
 The value $N$ at byte~{\tt 24} is {\tt 01}, {\tt 02}, or {\tt 03},
 depending on whether this is the first, second, or third time the
@@ -167,9 +175,9 @@ packet is sent.
 After these comes another series of three numbered packets. These
 appear to be claiming the device number for a particular device, as
 well as announcing the IP address at which it can be found. They have
-a data length of {\tt 32} bytes, and are again sent to UDP port
-50000 on the local network broadcast address, at roughly 300
-millisecond intervals, with the content shown in
+a data length and $len_p$ value of {\tt 32} bytes, and are again sent
+to UDP port 50000 on the local network broadcast address, at roughly
+300 millisecond intervals, with the content shown in
 Figure~\ref{fig:mixerStage2}.
 
 \begin{figure}[ht]
@@ -183,7 +191,7 @@ Figure~\ref{fig:mixerStage2}.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 32}} &
+    \bitbox{1}{\tt 01} & \bitbox{1}{\tt \textbf{02}} & \bitbox{2}{$len_p$} &
     \bitbox{4}{IP address} & \bitbox{6}{MAC address} &
     \bitbox{1}{$D$} & \bitbox{1}{$N$} \\
     \bitboxes*{1}{{\tt 02} {\tt 01}}
@@ -219,6 +227,7 @@ the content shown in Figure~\ref{fig:mixerStage3}.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
+    \bitbox{1}{\tt 01} & \bitbox{1}{\tt \textbf{02}} & \bitbox{2}{$len_p$} &
     \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 26}} &
     \bitbox{1}{$D$} & \bitbox{1}{$N$}
   \end{bytefield}
@@ -249,7 +258,7 @@ the content shown in Figure~\ref{fig:mixerKeepalive}.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
+    \bitbox{1}{\tt 01} & \bitbox{1}{\tt \textbf{02}} & \bitbox{2}{$len_p$} &
     \bitbox{1}{$D$} & \bitbox{1}{\tt 02} &
     \bitbox{6}{MAC address} & \bitbox{4}{IP address} \\
     \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 02} {\tt 00}}
@@ -278,7 +287,7 @@ for the mixer.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 25} {\tt 01}}
+    \bitbox{1}{\tt 01} & \bitbox{1}{\tt \textbf{02}} & \bitbox{2}{$len_p$} & \bitbox{1}{\tt 01}
   \end{bytefield}
   \caption{Initial announcement packets from CDJ}
   \label{fig:cdjInitial}
@@ -301,7 +310,8 @@ is {\tt 01} for the CDJ, and was {\tt 02} for the mixer.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 2c} {$N$} {\tt 01}} &
+    \bitbox{1}{\tt 01} & \bitbox{1}{\tt \textbf{02}} & \bitbox{2}{$len_p$} &
+    \bitboxes*{1}{{$N$} {\tt 01}} &
     \bitbox{6}{MAC address}
   \end{bytefield}
   \caption{First-stage CDJ device number assignment packets}
@@ -337,7 +347,7 @@ packets with the content shown in Figure~\ref{fig:cdjKeepalive}.
       \end{leftwordgroup} \\
       \wordbox[lrb]{1}{Device Name (padded with {\tt 00})}
     \end{rightwordgroup} \\
-    \bitboxes*{1}{{\tt 01} {\tt 02} {\tt 00} {\tt 36}} &
+    \bitbox{1}{\tt 01} & \bitbox{1}{\tt \textbf{02}} & \bitbox{2}{$len_p$} &
     \bitbox{1}{$D$} & \bitbox{1}{\tt 01} &
     \bitbox{6}{MAC address} & \bitbox{4}{IP address} \\
     \bitboxes*{1}{{\tt 01} {\tt 00} {\tt 00} {\tt 00} {\tt 01} {\tt 00}}
@@ -399,7 +409,7 @@ Figure~\ref{fig:beatPacket}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 3c}} &
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
       \bitbox{4}{$nextBeat$} & \bitbox{4}{$2ndBeat$} & \bitbox{4}{$nextBar$}
     \end{leftwordgroup} \\
 
@@ -424,9 +434,21 @@ Figure~\ref{fig:beatPacket}.
   \label{fig:beatPacket}
 \end{figure}
 
-The Device Number in $D$ (bytes~{\tt 21} and {\tt 5f}) is the Player
-Number as displayed on the CDJ itself, or {\tt 21} for the mixer, or
-another value for a computer running rekordbox.
+This introduces our first packet structure variant following the
+device name. As always the byte after the name has the value 1, but
+the subtype value which follows that (at byte~{\tt 20}) has the value
+{\tt 00} here, rather than {\tt 02} as we saw in the startup packets.
+In packets of subtype {\tt 00} the subtype indicator is followed by
+the Device Number $D$ at byte~{\tt 21}; this is the Player Number as
+displayed on the CDJ itself, or {\tt 21} for the mixer, or another
+value for a computer running rekordbox. And that is followed by a
+different kind of length indicator: $len_r$ at bytes~{\tt 22}--{\tt
+  23} reports the length of the \emph{rest of the packet}, in other
+words, the number of bytes which come after $len_r$. In this packet
+$len_r$ has the value {\tt 003c}. For some reason, there is a
+redundant copy of $D$ at the end of the packet, in byte~{\tt 5f}. That
+seems common in packets with subtype {\tt 00}, and is one of many
+inefficiencies in the protocol.
 
 To facilitate synchronization of variable-tempo tracks, the number of
 milliseconds after which a variety of upcoming beats will occur are
@@ -538,7 +560,7 @@ content shown in Figure~\ref{fig:mixerStatus}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 14}} &
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
       \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00}} & \bitbox{1}{$F$} &
       \bitbox{4}{$Pitch$}\bitboxes*{1}{{\tt 80} {\tt 00}} & \bitbox{2}{$BPM$}
     \end{leftwordgroup} \\
@@ -552,9 +574,19 @@ content shown in Figure~\ref{fig:mixerStatus}.
   \label{fig:mixerStatus}
 \end{figure}
 
+Since these use packet subtype {\tt 00}, the $len_r$ value reports
+there are {\tt 14} bytes remaining after it.
+
 Packets coming from a DJM-2000 nexus connected as the only mixer on
 the network contain a value of {\tt 21} for their Device Number $D$
 (bytes~{\tt 21} and {\tt 24}).
+
+It seems that rekordbox sometimes sends ``mixer status'' packets like
+this as well, but with yet another packet subtype variant: it sends a
+value of {\tt 01} for byte~{\tt 20}, and for packets with that
+subtype, the length at bytes~{\tt 22}--{\tt 23} is a $len_p$ value,
+reporting the length of the entire packet, rather than the number of
+bytes remaining in the packet. The packets are otherwise identical.
 
 The value marked $F$ at byte~{\tt 27} is evidently a status flag
 equivalent to the one shown in Figure~\ref{fig:cdjStateFlags},
@@ -620,7 +652,7 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 03} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt b0}} &
+      \bitbox{1}{\tt \textbf{03}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
       \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 01}} & \bitbox{1}{$A$} &
       \bitbox{1}{$D_r$} & \bitbox{1}{$S_r$} & \bitbox{1}{$T_r$} & \bitbox{1}{\tt 00} &
       \bitbox{4}{$rekordbox$}
@@ -686,9 +718,20 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
   \label{fig:cdjStatus}
 \end{figure}
 
+These use yet another packet structure variant following the device
+name. As always the byte after the name has the value {\tt 01}, but
+the subtype value which follows that (at byte~{\tt 20}) has the value
+{\tt 03} here, rather than {\tt 00} as we saw in the mixer status
+packets. Packets of subtype {\tt 03} seem structurally equivalent to
+subtype {\tt 00} however: the subtype indicator is followed by the
+Device Number $D$ at byte~{\tt 21} and a length-remaining value
+$len_r$ at bytes~{\tt 22}--{\tt 23}. If anyone can think of a reason
+why these packets don't simply reuse subtype {\tt 00}, please share
+it!
+
 The Device Number in $D$ (bytes~{\tt 21} and {\tt 24}) is the Player
 Number as displayed on the CDJ itself. In the case of this capture,
-the CDJs were assigned Player Numbers 2 and 3.
+the value of $len_r$ was {\tt 00b0}.
 
 The activity flag $A$ at byte~{\tt 27} seems to be {\tt 00} when the
 player is idle, and {\tt 01} when it is playing, searching, or loading
@@ -1049,8 +1092,9 @@ Sync mode.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 08} {\tt 00} {\tt 00} {\tt 00}} &
-      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$S$} & \bitbox[]{4}{}
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$S$} & \bitbox[]{4}{}
     \end{leftwordgroup}
 
   \end{bytefield}
@@ -1064,7 +1108,9 @@ To tell a player to become tempo master, the same type of packet shown
 in Figure~\ref{fig:syncControlPacket} is used, with a value of {\tt
   01} for $S$. This will cause the player to behave as if the DJ had
 pressed its Master button, following the steps described in the next
-section. This packet can be sent to a CDJ or DJM mixer.
+section. This packet can be sent to a CDJ or DJM mixer. Since this
+packet uses subtype {\tt 00}, the length sent in $len_r$ has the value
+{\tt 0008}, reflecting the eight bytes which follow it.
 
 \subsection{Tempo Master Handoff}
 \label{sec:masterHandoff}
@@ -1100,14 +1146,17 @@ master as the value of $D$.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 04} {\tt 00} {\tt 00} {\tt 00}} &
-      \bitbox{1}{$D$} & \bitbox[]{8}{}
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D$} & \bitbox[]{8}{}
     \end{leftwordgroup}
 
   \end{bytefield}
   \caption{Tempo master takeover request packet}
   \label{fig:tempoTakeoverRequest}
 \end{figure}
+
+Since this packet uses subtype {\tt 00}, the length sent in $len_r$
+has the value {\tt 0004}, reflecting the four bytes which follow it.
 
 The current tempo master will agree to the handoff by sending a packet like the one shown in
 Figure~\ref{fig:tempoTakeoverResponse} to port 50001 of the device that sent the takeover request,
@@ -1128,14 +1177,18 @@ with the its own device number as the value of $D$.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 08} {\tt 00} {\tt 00} {\tt 00}} &
-      \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 01}} & \bitbox[]{4}{}
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 01}} & \bitbox[]{4}{}
     \end{leftwordgroup}
 
   \end{bytefield}
   \caption{Tempo master takeover response packet}
   \label{fig:tempoTakeoverResponse}
 \end{figure}
+
+Since this packet uses subtype {\tt 00}, the length sent in $len_r$
+has the value {\tt 0008}, reflecting the eight bytes which follow it.
 
 Once that is done, the outgoing master will continue to report itself
 as the master according to its status packets (bit 5 of $F$, and for
@@ -3524,7 +3577,7 @@ the states of all four players if desired.)
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 04}} &
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
       \bitbox{1}{$C_1$} & \bitbox{1}{$C_2$} & \bitbox{1}{$C_3$} & \bitbox{1}{$C_4$} & \bitbox[]{8}{}
     \end{leftwordgroup}
 
@@ -3533,6 +3586,8 @@ the states of all four players if desired.)
   \label{fig:faderStart}
 \end{figure}
 
+Since this packet uses subtype {\tt 00}, the length sent in $len_r$
+has the value {\tt 0004}, reflecting the four bytes which follow it.
 
 \section{Channels On Air}
 \label{sec:channelsOnAir}
@@ -3566,7 +3621,7 @@ the player's channel is on the air.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 09}} &
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
       \bitbox{1}{$F_1$} & \bitbox{1}{$F_2$} & \bitbox{1}{$F_3$} & \bitbox{1}{$F_4$} &
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox[]{3}{}
     \end{leftwordgroup}
@@ -3575,6 +3630,9 @@ the player's channel is on the air.
   \caption{On Air flags packet}
   \label{fig:onAirFlags}
 \end{figure}
+
+Since this packet uses subtype {\tt 00}, the length sent in $len_r$
+has the value {\tt 0009}, reflecting the nine bytes which follow it.
 
 \section{Loading Tracks}
 
@@ -3609,7 +3667,7 @@ Figure~\ref{fig:cdjStatus}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 34}} &
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
       \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} &
       \bitbox{1}{$D_r$} & \bitbox{1}{$S_r$} & \bitbox{1}{$T_r$} & \bitbox{1}{\tt 00} &
       \bitbox{4}{$rekordbox$}
@@ -3634,6 +3692,10 @@ Figure~\ref{fig:cdjStatus}
   \caption{Load Track command packet}
   \label{fig:loadTrackCommand}
 \end{figure}
+
+Since this packet uses subtype {\tt 00}, the length sent in $len_r$
+has the value {\tt 0034}, reflecting the number of bytes which follow
+it.
 
 Assuming the track can be loaded, the player will respond with a
 packet whose type indicator (at byte~{\tt 0a}) has the value {\tt 1a}
@@ -3669,7 +3731,7 @@ Figure~\ref{fig:cdjStatus}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 0c}} &
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
       \bitbox{4}{IP address} & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D_r$} &
       & \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$S_r$}
     \end{leftwordgroup} \\
@@ -3678,6 +3740,9 @@ Figure~\ref{fig:cdjStatus}
   \caption{Media query packet}
   \label{fig:mediaQuery}
 \end{figure}
+
+Since this packet uses subtype {\tt 00}, the length sent in $len_r$
+has the value {\tt 000c}, reflecting the twelve bytes which follow it.
 
 The player will respond by sending a packet like the one shown in
 Figure~\ref{fig:mediaResponse} to port 50002 on the IP address specified
@@ -3700,7 +3765,7 @@ in the slot.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 20}
-      \bitbox{1}{\tt 00} & \bitbox{1}{$D$} & \bitboxes*{1}{{\tt 00} {\tt 9c}} &
+      \bitbox{1}{\tt \textbf{00}} & \bitbox{1}{$D$} & \bitbox{2}{$len_r$} &
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$D_r$} &
       \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00}} & \bitbox{1}{$S_r$} &
       \bitbox[lrt]{4}{}
@@ -3748,6 +3813,10 @@ in the slot.
   \caption{Media response packet}
   \label{fig:mediaResponse}
 \end{figure}
+
+Since this packet uses subtype {\tt 00}, the length sent in $len_r$
+has the value {\tt 009c}, reflecting the number of bytes which follow
+it.
 
 The name of the media stick (as assigned in rekordbox) can be found as
 a UTF-16 encoded string starting at byte~{\tt 2c}, and up to {\tt 40}
