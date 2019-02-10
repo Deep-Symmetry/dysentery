@@ -3823,7 +3823,8 @@ a UTF-16 encoded string starting at byte~{\tt 2c}, and up to {\tt 40}
 bytes long, padding with trailing null characters. This is followed by
 a textual representation of the creation date of the media database,
 encoded in the same way, starting at byte~{\tt 6c}, up to {\tt 28}
-bytes long.
+bytes long. (Neither of these fields have meaningful values for
+``media'' served by rekordbox mobile from its collection on a phone.)
 
 The number of rekordbox tracks present in the database is found in
 bytes~{\tt a6} and {\tt a7}, (this will be zero if there is no
