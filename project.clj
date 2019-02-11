@@ -3,10 +3,10 @@
   :url "http://github.com/brunchboy/dysentery"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [com.taoensso/timbre "4.10.0"]
-                 [selmer "1.12.0"]]
+                 [selmer "1.12.6"]]
   :main dysentery.core
   :uberjar-name "dysentery.jar"
 
