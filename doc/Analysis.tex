@@ -2104,6 +2104,8 @@ far are listed in Table~\ref{table:menuItemTypes}.
 
   {\tt 0087} & Year menu \\
 
+  {\tt 0089} & Label menu \\
+
   {\tt 008b} & Key menu \\
 
   {\tt 008e} & Color menu \\
@@ -3464,6 +3466,9 @@ argument will be simply shown as \rmst.
   {\tt 1008} & Year Menu &
   \rmst, sort \\
 
+  {\tt 100a} & Label Menu &
+  \rmst, sort \\
+
   {\tt 100d} & Color Menu &
   \rmst, sort \\
 
@@ -3500,6 +3505,9 @@ argument will be simply shown as \rmst.
   {\tt 1108} & Years for Decade &
   \rmst, sort, decade \\
 
+  {\tt 110a} & Artist for Label &
+  \rmst, sort, label id \\
+
   {\tt 110d} & Tracks for Color &
   \rmst, sort, color id \\
 
@@ -3524,6 +3532,9 @@ argument will be simply shown as \rmst.
   {\tt 1208} & Tracks for Decade+Year &
   \rmst, sort, decade, year\textsuperscript{*} \\
 
+  \hline {\tt 1201} & Albums for Label+Artist &
+  \rmst, sort, label id, artist id\textsuperscript{*} \\
+
   {\tt 1214} & Tracks near Key &
   \rmst, sort, key id, distance \\
 
@@ -3532,6 +3543,10 @@ argument will be simply shown as \rmst.
 
   {\tt 1301} & Tracks for (see args) &
   \rmst, sort, genre id, artist id,\textsuperscript{*}
+  album id\textsuperscript{*} \\
+
+  {\tt 130a} & Tracks for (see args) &
+  \rmst, sort, label id, artist id,\textsuperscript{*}
   album id\textsuperscript{*} \\
 
   & & {\tiny\textsuperscript{*}Use -1 for ``all''.} \\
