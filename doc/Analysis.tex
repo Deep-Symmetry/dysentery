@@ -2106,6 +2106,8 @@ far are listed in Table~\ref{table:menuItemTypes}.
 
   {\tt 0087} & Year menu \\
 
+  {\tt 0088} & Remixer menu \\
+
   {\tt 0089} & Label menu \\
 
   {\tt 008a} & Original Artist menu \\
@@ -3496,6 +3498,9 @@ argument will be simply shown as \rmst.
   {\tt 1302} & Original Artist Menu &
   \rmst, sort \\
 
+  {\tt 1602} & Remixer Menu &
+  \rmst, sort \\
+
   \hline {\tt 1101} & Artists for Genre &
   \rmst, sort, genre id \\
 
@@ -3529,6 +3534,9 @@ argument will be simply shown as \rmst.
   {\tt 1402} & Albums for Orig. Artist &
   \rmst, sort, artist id \\
 
+  {\tt 1702} & Albums for Remixer &
+  \rmst, sort, artist id \\
+
   \hline {\tt 1201} & Albums for Genre and Artist &
   \rmst, sort, genre id, artist id\textsuperscript{*} \\
 
@@ -3548,6 +3556,9 @@ argument will be simply shown as \rmst.
   \rmst, sort, key id, distance \\
 
   {\tt 1502} & Tracks for Original Artist and Album &
+  \rmst, sort, artist id, album id\textsuperscript{*} \\
+
+  {\tt 1802} & Tracks for Remixer and Album &
   \rmst, sort, artist id, album id\textsuperscript{*} \\
 
   & & {\tiny\textsuperscript{*}Use -1 for ``all''.} \\
