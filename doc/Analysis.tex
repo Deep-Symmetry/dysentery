@@ -2058,6 +2058,8 @@ far are listed in Table~\ref{table:menuItemTypes}.
 
   {\tt 000f} & Key \\
 
+  {\tt 0010} & Bit Rate \\
+
   {\tt 0011} & Year \\
 
   \hline {\tt 0013} & Color None \\
@@ -2115,6 +2117,8 @@ far are listed in Table~\ref{table:menuItemTypes}.
   {\tt 0091} & Search ``menu'' \\
 
   {\tt 0092} & Time menu \\
+
+  {\tt 0093} & Bitrate menu \\
 
   {\tt 0094} & Filename menu \\
 
@@ -3475,7 +3479,7 @@ argument will be simply shown as \rmst.
   {\tt 1010} & Time Menu &
   \rmst, sort \\
 
-  {\tt 1011} & Folder Menu &
+  {\tt 1011} & Bitrate Menu &
   \rmst, sort \\
 
   {\tt 1012} & History Menu &
@@ -3548,6 +3552,9 @@ argument will be simply shown as \rmst.
   {\tt 130a} & Tracks for (see args) &
   \rmst, sort, label id, artist id,\textsuperscript{*}
   album id\textsuperscript{*} \\
+
+  {\tt 2006} & Folder Menu &
+  \rmst, sort?, folder id, 0? \\
 
   & & {\tiny\textsuperscript{*}Use -1 for ``all''.} \\
 
