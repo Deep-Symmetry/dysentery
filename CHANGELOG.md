@@ -21,6 +21,8 @@ This change log follows the conventions of
   sending code in Beat Link.
 - Documentation of how to obtain a wide variety of menus.
 - Documentation and implementation of database text substring search.
+- Documentation of nxs2-style extended cue list requests and
+  responses.
 
 ## [0.2.1] - 2018-07-21
 
