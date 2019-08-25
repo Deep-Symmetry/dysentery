@@ -30,6 +30,7 @@
 \usepackage{alltt}
 \usepackage{tabu, booktabs}
 \usepackage{longtable}
+\usepackage{awesomebox}
 \usepackage{hyperxmp}
 \hypersetup{%
   pdfcontactemail={james@deepsymmetry.org},
@@ -38,8 +39,6 @@
   pdfmetalang={en}
 }
 \usepackage{hyperref}
-
-\usepackage{longtable}
 
 \newcommand{\rmst}{{\it\small rmst}}
 
@@ -2216,10 +2215,10 @@ the values used to request the metadata for tracks loaded from solid
 state media; CD tracks are requested using the simple track number as
 the $rekordbox$ value.
 
-\emph{Note:} It seems that to reliably get data back when requesting
+\notebox{It seems that to reliably get data back when requesting
 metadata for non-rekordbox tracks, your virtual CDJ needs to be
 sending properly-formatted status packets, not just device
-announcement packets.
+announcement packets.}
 
 \subsection{Album Art}
 \label{sec:albumArt}
@@ -2770,6 +2769,13 @@ darkest blue at 0 to near-white at 7. The five low-order bits encode
 the height of the waveform at that point, from 0 to 31 pixels.
 
 \subsection{Requesting Cue Points and Loops}
+\label{sec:nexusCuePoints}
+
+\notebox{This section discusses how to obtain cue points and loops
+  which are compatible with original nexus players. See
+  Section~\ref{sec:nxs2CuePoints} for how you can obtain a newer
+  format which includes hot cue colors, DJ-assigned comment text, and
+  hot cues beyond C.}
 
 The locations of the cue points and loops stored in a track can be
 obtained with a request like the one shown in
@@ -2867,8 +2873,11 @@ follows it. We don't know the meaning of the final, binary, argument.
       \bitbox{1}{\tt 11} & \bitbox{4}{$length_1$} & \bitbox{1}{\tt 14}
     \end{leftwordgroup} \\
 
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{$length_1$} & \bitbox[lrt]{12}{Cue and loop point bytes}
+    \end{leftwordgroup} \\
+
     \begin{leftwordgroup}{}
-      \bitbox{4}{$length_1$} & \bitbox[lrt]{12}{Cue and loop point bytes} \\
       \skippedwords \\
       \bitbox[lrb]{1}{} & \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000036}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{$num_{hot}$} & \bitbox{1}{\tt 11} & \bitbox{4}{$num_{cue}$} \\
@@ -2903,11 +2912,11 @@ through C are represented by the values {\tt 01}, {\tt 02}, and {\tt
 The actual location of the cue and loop points are in the values $cue$
 and $loop$. These are both 4-byte integers, and like beat grid
 positions, but unlike essentially every other number in the protocol,
-they are stored with a little-endian byte order. For non-looping cue
-points, only $cue$ has a meaning, and it identifies the position of
-the cue point in the track, in \( \frac{1}{150} \) second units. For
-loops, $cue$ identifies the start of the loop, and $loop$ identifies
-the end of the loop, again in \( \frac{1}{150} \) second units.
+they are sent in little-endian byte order. For non-looping cue points,
+only $cue$ has a meaning, and it identifies the position of the cue
+point in the track, in \( \frac{1}{150} \) second units. For loops,
+$cue$ identifies the start of the loop, and $loop$ identifies the end
+of the loop, again in \( \frac{1}{150} \) second units.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -2935,8 +2944,221 @@ the end of the loop, again in \( \frac{1}{150} \) second units.
 \end{figure}
 
 
+\subsection{Requesting Nxs2 Cue Points and Loops}
+\label{sec:nxs2CuePoints}
+
+For tracks that have been exported since the introduction of the nxs2
+series of players, rekordbox includes a richer set of information
+about cue points and loops. In addition to the information described
+in Section~\ref{sec:nexusCuePoints}, you can learn about any custom
+colors a DJ has assigned to their hot cues, as well as optional text
+comments describing hot cues, mamory points, and loops. And while
+older players only supported hot cues A through C, this new format
+returns more.
+
+\tipbox{In order to work well in mixed-player environments, the
+  firmware of even older players has been updated to return this
+  information if it is found in the exported data, so it is worth
+  trying to ask for it. If the query described in this section fails,
+  then you can fall back on the one shown in
+  Section~\ref{sec:nexusCuePoints}.}
+
+Enhanced information about the cue points and loops stored in a track
+can be obtained with a request like the one shown in
+Figure~\ref{fig:cuePointRequestPacket2}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2b04} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 03} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} & \bitbox[]{1}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Extended cue point request message}
+  \label{fig:cuePointRequestPacket2}
+\end{figure}
+
+As always, $TxID$ should be 1 for the first query packet you send, 2
+for the next, and so on. $D$ should have the same value you used in
+your initial query context setup packet, identifying the device that
+is asking the question. $S_r$ is the slot in which the track being
+asked about can be found, and has the same values used in CDJ status
+packets, as shown in Figure~\ref{fig:cdjStatus}, and as usual,
+$rekordbox$ is the database ID of the track you're interested in.
+
+The response will be a message with $type$ {\tt 4e02}, containing
+five arguments. The first argument echoes back our request type, which
+was {\tt 2b04}. The second always seems to be 0. The third contains
+the length of the blob containing cue and loop points in bytes, which
+seems redundant, because that is also conveyed in the fourth argument
+itself, which is a blob containing the actual bytes of the cue and
+loop points, as shown in Figure~\ref{fig:cuePointResponse2}.
+However, if there are no cue or loop points, this value will be 0, and
+the following blob field will be completely omitted from the response,
+so you \emph{must not} try to read it!
+
+The fifth argument reports the number of cue point entries found in
+the blob. Because each extended cue entry can include a comment
+string, they have variable lengths, so each entry needs to be examined
+in order to figure out where it ends, and therefore the next one
+begins. The extended entry structure is shown in
+Figure~\ref{fig:cuePointEntry2}.
 
 
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4e02} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 05} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 03} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002b04} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length_1$} & \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{$length_1$} & \bitbox[lrt]{12}{Cue and loop point bytes}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \skippedwords \\
+      \bitbox[lrb]{5}{} & \bitbox{1}{\tt 11} & \bitbox{4}{$num_{entries}$} & \bitbox[lt]{6}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Extended cue point response message}
+  \label{fig:cuePointResponse2}
+\end{figure}
+
+
+The first four bytes, $length$, hold the length of the current entry,
+and so can be used to find the start of the next entry. Like other
+numbers in cue point responses (and unlike most numbers in the
+protocol), this is sent in little-endian byte order. The fourth byte,
+labeled $H$, is {\tt 00} for ordinary cue points, but has a value if
+this entry defines a hot cue. Hot cues A through H are represented by
+the values {\tt 01} through {\tt 08}.
+
+$F_l$, at byte~{\tt 06} has the value {\tt 01} if this entry specifies
+a memory point and {\tt 02} if it is a loop. If both $H$ and $F_l$ are
+{\tt 00}, the entry should be ignored (it is probably a leftover cue
+point that was deleted by the DJ).
+
+The actual location of the cue and loop points are in the values $cue$
+and $loop$. These are both 4-byte integers, and as noted above, they
+are sent in a little-endian byte order. For non-looping cue points,
+only $cue$ has a meaning, and it identifies the position of the cue
+point in the track, in \( \frac{1}{150} \) second units. For loops,
+$cue$ identifies the start of the loop, and $loop$ identifies the end
+of the loop, again in \( \frac{1}{150} \) second units.
+
+$len_c$ at byte~{\tt 48} is a two-byte, little-endian integer that
+contains the length of the comment. If it is zero, there is no
+comment. Otherwise, $comment$ will follow $len_c$, taking up that many
+bytes, as a string (in UTF-16 encoding with a trailing {\tt 0000}
+character). So if $len_c$ isn't zero, it will be an even number with
+minimum value four, representing a comment that is one character long.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+      \bitbox{4}{$length$}
+      \bitbox{1}{$H$} & \bitbox{1}{\tt 00} & \bitbox{1}{$F_l$} &
+      \bitbox{5}{$unknown$} & \bitbox{4}{$cue$}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \bitbox{4}{$loop$} & \bitbox[lrt]{12}{$unknown_2$}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \wordbox[lr]{1}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \wordbox[lr]{1}{}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 40}
+      \bitbox[lrb]{8}{} & \bitbox{2}{$len_c$} & \bitbox[lrt]{6}{$comment$}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \skippedwords \\
+      \bitbox[lrb]{5}{} & \bitbox{1}{$c$} & \bitbox{1}{$r$} & \bitbox{1}{$g$} & \bitbox{1}{$b$} &
+      \bitbox[lrt]{7}{$unknown_3$}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \bitbox[ltb]{8}{} & \bitbox[rb]{5}{} & \bitbox[t]{3}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Extended cue/loop point entry}
+  \label{fig:cuePointEntry2}
+\end{figure}
+
+Immediately after $comment$ (in other words, starting $len_c + {\tt
+  4a}$ past the start of the entry) there are four one-byte values
+containing color information. $c$ appears to be a code identifying the
+color with which rekordbox displays the cue, by looking it up in a
+table. There have been sixteen codes identified, and their
+corresponding RGB colors can be found by looking at the {\tt
+  findRecordboxColor} static method in the Beat Link library's {\tt
+  CueList}
+class.\footnote{\url{https://deepsymmetry.org/beatlink/apidocs/}} The
+next three bytes, $r$, $g$, and $b$, make up an RGB color
+specification which is similar, but not identical, to the color that
+rekordbox displays. We believe these are the values used to illuminate
+the RGB LEDs in a player that has loaded the cue. When no color is
+associated with the cue, all four of these bytes have the value {\tt
+  00}.
+
+We do not know what, if anything, is sent in the remaining bytes of
+the the entry.
 
 
 \subsection{Requesting All Tracks}
