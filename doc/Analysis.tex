@@ -1,22 +1,50 @@
 \documentclass[11pt]{article}
 
-\usepackage[utf8]{inputenc}
-\usepackage[english]{babel}
-\usepackage{courier}
+\usepackage{ifxetex}
+\ifxetex
+    % XeLaTeX
+    \usepackage{polyglossia}
+    \setmainlanguage[]{english}
+    \usepackage{fontspec}
+    \usepackage[]{unicode-math}
+    %\setmainfont{Hoefler Text}
+    \setmainfont{Garamond Premier Pro}
+    %\setmonofont{Andale Mono}  Has no bold version, which we rely on.
+    %\setmathfont
+    %    [ Extension = .otf,
+    %      BoldFont = *bold,
+    %    ]{xits-math}
+\else
+    % default: pdfLaTeX
+    \usepackage[utf8]{inputenc}
+    \usepackage[english]{babel}
+    \usepackage{courier}
+    %\usepackage[babel=true]{microtype}
+\fi
+
 \usepackage{graphicx}
 \usepackage[bottom]{footmisc}
 \usepackage{bytefield}
-\usepackage{hyperref}
 \usepackage{bookmark}
 \usepackage{color}
 \usepackage{alltt}
 \usepackage{tabu, booktabs}
 \usepackage{longtable}
+\usepackage{hyperxmp}
+\hypersetup{%
+  pdfcontactemail={james@deepsymmetry.org},
+  pdfcontacturl={http://deepsymmetry.org},
+  pdflang={en},
+  pdfmetalang={en}
+}
+\usepackage{hyperref}
+
+\usepackage{longtable}
 
 \newcommand{\rmst}{{\it\small rmst}}
 
 \title{DJ Link Packet Analysis}
-\author{James Elliott\\Deep Symmetry, LLC}
+\author{James Elliott \\Deep Symmetry, LLC}
 
 \begin{document}
 
@@ -2601,12 +2629,15 @@ the waveform as either very dark or light blue accordingly.
 
 To experiment with this, start up dysentery in a Clojure REPL and
 connect to a player as described in Section~\ref{sec:experimenting},
-then evaluate an expression like {\tt (db/request-waveform-preview p2
-  3 1060)}, replacing the arguments with the {\tt var} holding your
-player connection, the proper $S_r$ number for the media slot the
-track is found in, and the $rekordbox$ ID of the track, and dysentery
-will open a window like Figure~{\ref{fig:waveformPreviewExample}}
-showing the waveform preview.
+then evaluate an expression like:
+
+{\tt (db/request-waveform-preview p2 3 1060)}
+
+Replace the arguments with the {\tt var} holding your player
+connection, the proper $S_r$ number for the media slot the track is
+found in, and the $rekordbox$ ID of the track, and dysentery will open
+a window like Figure~{\ref{fig:waveformPreviewExample}} showing the
+waveform preview.
 
 \begin{figure}
   \vspace{5mm}
@@ -3102,8 +3133,11 @@ items with the specified item type values in argument 7.
 
 To experiment with this, start up dysentery in a Clojure REPL and
 connect to a player as described in Section~\ref{sec:experimenting},
-then evaluate an expression like {\tt (db/request-track-list p2 3)},
-replacing the arguments with the {\tt var} holding your player
+then evaluate an expression like:
+
+{\tt (db/request-track-list p2 3)}
+
+Replace the arguments with the {\tt var} holding your player
 connection and the proper $S_r$ number for the media slot containing
 the tracks you want to list. You can also add a third argument to
 specify a sort order, like this to sort all the tracks in the USB slot
