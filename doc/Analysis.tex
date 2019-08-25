@@ -559,6 +559,13 @@ and any name you would like. As long as you are sending these packets
 roughly every 1.5 seconds, the other players and mixers will begin
 sending packets directly to the socket you have opened on port 50002.
 
+\notebox{But note that use of a non-standard player number (outside
+  the range 1--4) will interfere with your ability to perfrom metadata
+  requests using {\tt dbserver} queries as described in
+  Section~\ref{sec:dbServerMessages}. In situations where there are
+  four actual players on the network you can use alternate ways to get
+  the data, as described in Section~\ref{sec:dealingWithFourPlayers}.}
+
 Each device seems to send status packets roughly every 200 milliseconds.
 
 We are just beginning to analyze all the information which can be
@@ -1402,24 +1409,41 @@ Figure~\ref{fig:stringField}.
 \subsection{Messages}
 \label{sec:dbServerMessages}
 
-Messages are introduced by a 4~byte Number field containing the magic
-value {\tt 872349ae}. This is followed by another 4~byte number field
-that contains a transaction ID, which starts at 1 and is incremented
-for each query sent, and all messages sent in response to that query
-will contain the same transaction ID. This is followed by a 2~byte
-number field containing the message type, a 1~byte number field
-containing the number of argument fields present in the message, and a
-blob field containing a series of bytes which identify the types of
-each argument field. This blob is always twelve bytes long, regardless
-of how few arguments there are (and presumably this means no message
-ever has more than twelve arguments). Tag bytes past the actual
-argument count of the message are set to 0.
+Messages are introduced by a 4~byte Number field containing a
+``magic`` value (it is always {\tt 872349ae}). This is followed by
+another 4~byte number field that contains a transaction ID, which
+starts at 1 and is incremented for each query sent, and all messages
+sent in response to that query will contain the same transaction ID.
+This is followed by a 2~byte number field containing the message type,
+a 1~byte number field containing the number of argument fields present
+in the message, and a blob field containing a series of bytes which
+identify the types of each argument field. This blob is always twelve
+bytes long, regardless of how few arguments there are (and presumably
+this means no message ever has more than twelve arguments). Tag bytes
+past the actual argument count of the message are set to 0.
 
 The argument type tags use different values than the field type tags
 themselves, for some reason, and it is not clear why this redundant
 information is necessary at all, but that is true a number of places
 in the protocol as you will see later. Table~\ref{table:argumentTags}
 lists the known tag values and their meanings.
+
+I am guessing that if we ever see them, a tag of {\tt 04} would
+represent a 1~byte integer, and {\tt 05} would represent a 2~byte
+integer. But so far no such messages have been seen.
+
+This header is followed by the fields that make up the message
+arguments, if any. The header structure is illustrated in
+Figure~\ref{fig:messageHeader}, where $TxID$ is the transaction ID,
+$n$ is the number of arguments found in the message, and $t_1$ through
+$t_{12}$ are the type tags for each argument, or {\tt 00} if there is
+no argument in that position.
+
+Before you can send your first actual query, you need to send a
+special message which seems to be necessary for establishing the
+context for queries. It has a $type$ of {\tt 0000}, a special $TxID$
+value of {\tt fffffffe}, and a single numeric argument, as shown in
+Figure~\ref{fig:querySetupPacket}.
 
 \begin{longtabu}{rX}
   \toprule
@@ -1435,17 +1459,6 @@ lists the known tag values and their meanings.
 
   {\tt 06} & A 4~byte big-endian integer \\
 \end{longtabu}
-
-I am guessing that if we ever see them, a tag of {\tt 04} would
-represent a 1~byte integer, and {\tt 05} would represent a 2~byte
-integer. But so far no such messages have been seen.
-
-This header is followed by the fields that make up the message
-arguments, if any. The header structure is illustrated in
-Figure~\ref{fig:messageHeader}, where $TxID$ is the transaction ID,
-$n$ is the number of arguments found in the message, and $t_1$ through
-$t_{12}$ are the type tags for each argument, or {\tt 00} if there is
-no argument in that position.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -1480,12 +1493,6 @@ no argument in that position.
   \caption{Message Header}
   \label{fig:messageHeader}
 \end{figure}
-
-Before you can send your first actual query, you need to send a
-special message which seems to be necessary for establishing the
-context for queries. It has a $type$ of {\tt 0000}, a special $TxID$
-value of {\tt fffffffe}, and a single numeric argument, as shown in
-Figure~\ref{fig:querySetupPacket}.
 
 The value $D$ is, like in the other packets we have seen, a player
 device number. In this case it is the device that is asking for
@@ -1858,6 +1865,41 @@ slots. They have the general structure shown in in
 Figure~\ref{fig:trackMetadataMenuItem}, and the arguments are listed
 in Table~\ref{table:menuItemArguments}.
 
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4101} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 0c} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 02} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 02} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[rbt]{lightpurple}{1}{\tt 06}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \wordbox[lrt]{1}{Arguments} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Menu item response}
+  \label{fig:trackMetadataMenuItem}
+\end{figure}
+
 \begin{longtabu}{rcX}
   \toprule
   {\bfseries Arg} & {\bfseries Type} & {\bfseries Meaning} \endhead
@@ -1895,41 +1937,6 @@ in Table~\ref{table:menuItemArguments}.
   12 & number & unknown \\
 
 \end{longtabu}
-
-\begin{figure}
-  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
-    \hexhead \\
-    \messagehead \\
-
-    \begin{leftwordgroup}{\tiny\bfseries 00}
-
-      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
-      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
-      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4101} &
-      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 0c} &
-      \colorbitbox{lightpurple}{1}{\tt 14}
-    \end{leftwordgroup} \\
-
-    \begin{leftwordgroup}{\tiny\bfseries 10}
-      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
-      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
-      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 02} &
-      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 02} &
-      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
-      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
-      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[rbt]{lightpurple}{1}{\tt 06}
-    \end{leftwordgroup} \\
-
-    \begin{leftwordgroup}{}
-      \wordbox[lrt]{1}{Arguments} \\
-      \skippedwords \\
-      \wordbox[lrb]{1}{}
-    \end{leftwordgroup}
-
-  \end{bytefield}
-  \caption{Menu item response}
-  \label{fig:trackMetadataMenuItem}
-\end{figure}
 
 \subsubsection{Track Metadata Item 1: Title}
 \label{sec:trackTitleItem}
@@ -2491,6 +2498,9 @@ second of track content. There is also an even tinier 100 pixel
 preview, which is used by older players such as the pre-Nexus CDJ 900,
 returned as the final 100 bytes of the preview response.
 
+\tipbox{We also know how to request Nxs2-style higher resolution and
+  color waveforms, see Section~\ref{sec:nxs2Waveforms} for details.}
+
 To request the waveform preview of a track, send a message with $type$
 {\tt 2004} containing the $rekordbox$ ID of the track, like the one
 shown in Figure~\ref{fig:waveformPreviewRequest}.
@@ -2561,7 +2571,7 @@ which data is being loaded, is 8.
   if that numeric field has the value $0$, you \emph{must not} try to
   read the blob field. Instead, expect the next field or message to
   follow the numeric field.
-\end{noteblock}`
+\end{noteblock}
 
 The second argument has an unknown purpose, but we have seen values of
 3 or 4 for it. The fourth argument is the size of the blob argument we
@@ -2616,17 +2626,14 @@ preview, as shown in Figure~\ref{fig:waveformPreviewResponse}.
   \label{fig:waveformPreviewResponse}
 \end{figure}
 
-For this kind of waveform preview request,\footnote{There is an even
-  lower-resolution preview available, with 4 bits of height per
-  segment, and no shading, and there is also a full-color preview, but
-  we don't yet know the requests needed to obtain these.} there are
-900 (decimal) bytes of waveform data returned. The first 800 of them
-contain 400 columns of waveform data, in the form of two-byte pairs,
-where the first byte is the pixel height of the waveform at that
-column (a value ranging from 0 to 31), and the second byte is the
-whiteness, as before, where 0 is blue and 7 is fully white. My players
-seem to only pay attention to the highest bit of whiteness, drawing
-the waveform as either very dark or light blue accordingly.
+For this kind of waveform preview request, there are 900 (decimal)
+bytes of waveform data returned. The first 800 of them contain 400
+columns of waveform data, in the form of two-byte pairs, where the
+first byte is the pixel height of the waveform at that column (a value
+ranging from 0 to 31), and the second byte is the whiteness, as
+before, where 0 is blue and 7 is fully white. My players seem to only
+pay attention to the highest bit of whiteness, drawing the waveform as
+either very dark or light blue accordingly.
 
 To experiment with this, start up dysentery in a Clojure REPL and
 connect to a player as described in Section~\ref{sec:experimenting},
@@ -2779,6 +2786,343 @@ seconds in the player display.) Each byte encodes both a color and
 height. The three high-order bits encode the color, ranging from
 darkest blue at 0 to near-white at 7. The five low-order bits encode
 the height of the waveform at that point, from 0 to 31 pixels.
+
+\subsection{Requesting Nxs2 Track Waveforms}
+\label {sec:nxs2Waveforms}
+
+Thanks to some wonderful
+analysis\footnote{\url{https://github.com/Deep-Symmetry/dysentery/issues/9}}
+by @jan2000\footnote{\url{https://github.com/jan2000}} we now know how
+to request and interpret the higher resolution and color waveforms
+supported by the nxs2 series of players.
+
+Both the enhanced waveform preview and enhanced detail are requested
+using variations on the same request type, which asks for specific
+content from the {\tt ANLZ0000.EXT} file created by rekordbox. See the
+Crate Digger
+project\footnote{\url{https://github.com/Deep-Symmetry/crate-digger}}, which
+has its own analysis document, if you would like to learn more about
+the structure and content of these files.
+
+To request the enhanced waveform preview of a track, send a message
+with $type$ {\tt 2c04} containing the $rekordbox$ ID of the track, the
+tag type identifier {\tt PWV4} and the file extension identifier {\tt
+  EXT} encoded as four-byte numbers, holding the ASCII in big-endian
+(backwards) order, as shown in
+Figure~\ref{fig:nxs2WaveformPreviewRequest}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2c04} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 04} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 34 56 57 50} & \bitbox{1}{\tt 11}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{\tt 00 54 58 45} &
+      \bitbox[]{12}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Nxs2 waveform preview request message}
+  \label{fig:nxs2WaveformPreviewRequest}
+\end{figure}
+
+As usual, $seq$ should be incremented each time you send a query, and
+will be used to identify the response messages. $D$ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. $S_r$ is the slot
+in which the track being asked about can be found, and has the same
+values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}. For some reason the value after $D$, which
+identifies the location of the menu for which data is being loaded, is
+1 in this case. $rekordbox$ identifies the specific track whose
+analysis you are requesting, as found in a CDJ status packet or
+playlist response, and the final two numeric arguments specify that
+you are interested in the {\tt PWV4} tag (which holds the enhanced
+waveform preview) from the track's {\tt EXT} extended analysis file.
+
+The response will be a message with $type$ {\tt 4f02}, containing five
+arguments. The first argument echoes back our request type, which was
+{\tt 2c04}. The second always seems to be 0. The third contains the
+length of the requested tag (holding the enhanced waveform preview) in
+bytes. If this value is 0, the fourth argument will be omitted from
+the response. When present, the fourth argument is a blob containing
+the actual bytes of the enhanced waveform preview, as shown in
+Figure~\ref{fig:nxs2WaveformPreviewResponse}. The fifth argument has
+an unknown purpose and so far seems to always have the value 0.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4f02} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 05} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 03} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002c04} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length$} & \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{$length$} & \bitbox[lrt]{12}{Extended waveform preview bytes}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \wordbox[lr]{1}{} \\
+      \skippedwords \\
+      \wordbox[lr]{1}{} \\
+      \bitbox[lrb]{5}{} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} & \bitbox[lt]{6}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Nxs2 waveform preview response message}
+  \label{fig:nxs2WaveformPreviewResponse}
+\end{figure}
+
+The extended preview data begins at byte {\tt 34} and is 7,200
+(decimal) bytes long, representing 1,200 columns of waveform preview
+information.
+
+The color waveform preview entries are the most complex of any of the
+waveform tags. See the discussion on
+Github\footnote{\url{https://github.com/Deep-Symmetry/dysentery/issues/9}}
+for how the analysis was performed. {\tt @jan2000} created an audio
+file containing a 10 second sine wave sweep from 20 Hz to 20 kHz, and
+analyzed that in rekordbox. The results are represented in
+Figure~\ref{fig:sineSweepAnalysis}.
+
+As a summary, the top six stripes plot the values of each six channels
+of waveform preview information. The first byte of data is the first
+column of the top stripe, the next byte is the first column of the
+second stripe, and so on, until we reach the seventh byte, which is
+the second column of the first stripe.
+
+We are not sure what the top two stripes represent, but they do seem
+to have an effect on the blue version of the waveform preview, so they
+somehow encode ``whiteness''. The next stripe, corresponding to
+byte~{\tt 2} of each column, indicates how much sound energy is
+present in the bottom half of the frequency range (it drops around 10
+KHz). The stripe corresponding to byte~{\tt 3} reflects how much sound
+energy is present in the bottom third of the frequency range,
+byte~{\tt 4} reflects how much sound energy is in the middle of the
+frequency range, and byte~{\tt 5} tracks the sound energy in the top of
+the frequency range.
+
+The stripe labeled ``color'' reflect's {\tt @jan2000}'s algorithm for
+combining bytes~3, 4, and 5 into a color preview, and the bottom
+stripe is his approach for deriving the blue preview from that and the
+other two stripes.
+
+The calculations used by Beat Link to build its own color previews can
+be found in the {\tt segmentColor} and {\tt segmentHeight} methods of
+the {\tt WaveformPreview}
+class\footnote{\url{https://deepsymmetry.org/beatlink/apidocs/org/deepsymmetry/beatlink/data/WaveformPreview.html}},
+and the way they are used to draw the actual graphical representation
+can be found in the {\tt updateWaveform} method of the {\tt
+  WaveformPreviewComponent}
+class\footnote{\url{https://deepsymmetry.org/beatlink/apidocs/org/deepsymmetry/beatlink/data/WaveformPreviewComponent.html}}.
+These produce attractive results, but it is certainly possible that
+refinements can be found in the future.
+
+\begin{figure}
+  \vspace{5mm}
+  \centering
+  \includegraphics[width=10cm]{assets/sine-sweep-preview}
+  \caption{Sine sweep analysis}
+  \label{fig:sineSweepAnalysis}
+\end{figure}
+
+As mentioned, requesting the detailed color waveform is a simple
+variant of the request used to obtain the preview. The same request
+type is used, and the only difference is that the tag type requested
+to obtain the scrollable detail view is {\tt PWV5}. The full request
+is shown in Figure~\ref{fig:nxs2WaveformDetailRequest}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 2c04} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 04} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitboxes*{1}{{$D$} {\tt 08} {$S_r$} {\tt 01}} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$rekordbox$} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 35 56 57 50} & \bitbox{1}{\tt 11}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{\tt 00 54 58 45} &
+      \bitbox[]{12}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Nxs2 waveform detail request message}
+  \label{fig:nxs2WaveformDetailRequest}
+\end{figure}
+
+As usual, $seq$ should be incremented each time you send a query, and
+will be used to identify the response messages. $D$ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. $S_r$ is the slot
+in which the track being asked about can be found, and has the same
+values used in CDJ status packets, as shown in
+Figure~\ref{fig:cdjStatus}. For some reason the value after $D$, which
+identifies the location of the menu for which data is being loaded, is
+1 in this case. $rekordbox$ identifies the specific track whose
+analysis you are requesting, as found in a CDJ status packet or
+playlist response, and the final two numeric arguments specify that
+you are interested in the {\tt PWV5} tag (which holds the enhanced
+waveform detail) from the track's {\tt EXT} extended analysis file.
+
+The response will be a message with $type$ {\tt 4f02}, containing five
+arguments. The first argument echoes back our request type, which was
+{\tt 2c04}. The second always seems to be 0. The third contains the
+length of the requested tag (holding the enhanced waveform detail) in
+bytes. If this value is 0, the fourth argument will be omitted from
+the response. When present, the fourth argument is a blob containing
+the actual bytes of the enhanced waveform segments, as shown in
+Figure~\ref{fig:nxs2WaveformDetailResponse}. The fifth argument has an
+unknown purpose and so far seems to always have the value 0.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \hexhead \\
+    \messagehead \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 00}
+
+      \colorbitbox{lightgreen}{1}{\tt 11} & \colorbitbox{lightgreen}{4}{\tt 872349ae} &
+      \colorbitbox{yellow}{1}{\tt 11} & \colorbitbox{yellow}{4}{$TxID$} &
+      \colorbitbox{lightred}{1}{\tt 10} & \colorbitbox{lightred}{2}{\tt 4f02} &
+      \colorbitbox{lightcyan}{1}{\tt 0f} & \colorbitbox{lightcyan}{1}{\tt 05} &
+      \colorbitbox{lightpurple}{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 10}
+      \colorbitbox{lightpurple}{4}{{\tt 0000000c}\small{ (12)}} &
+      \colorbitbox[lbt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 06} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 03} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 06} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[bt]{lightpurple}{1}{\tt 00} &
+      \colorbitbox[bt]{lightpurple}{1}{\tt 00} & \colorbitbox[rbt]{lightpurple}{1}{\tt 00}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 20}
+      \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00002c04} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} &
+      \bitbox{1}{\tt 11} & \bitbox{4}{$length$} & \bitbox{1}{\tt 14}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{\tiny\bfseries 30}
+      \bitbox{4}{$length$} & \bitbox[lrt]{12}{Extended waveform detail bytes}
+    \end{leftwordgroup} \\
+
+    \begin{leftwordgroup}{}
+      \wordbox[lr]{1}{} \\
+      \skippedwords \\
+      \wordbox[lr]{1}{} \\
+      \bitbox[lrb]{5}{} & \bitbox{1}{\tt 11} & \bitbox{4}{\tt 00000000} & \bitbox[lt]{6}{}
+    \end{leftwordgroup}
+
+  \end{bytefield}
+  \caption{Nxs2 waveform detail response message}
+  \label{fig:nxs2WaveformDetailResponse}
+\end{figure}
+
+The extended waveform detail data begins at byte {\tt 34} and has a
+variable length, but a vastly simpler structure than the waveform
+preview. Every pair of bytes represents one segment of the waveform,
+and there are 150 segments per second of audio. (These seem to
+correspond to ``half frames'' counted as {\tt 03.5{\tiny F}} following
+the seconds in the player display.) Each pair of bytes encodes the
+height of the waveform at that segment as a five bit value, along with
+three bits each of red, green, and blue intensity, arranged as shown
+in Figure~\ref{fig:nxs2WaveformDetailSegment}.
+
+\begin{figure}
+  \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
+    \bitbox[]{1}{\tiny\bfseries f}
+    \bitbox[]{1}{\tiny\bfseries e}
+    \bitbox[]{1}{\tiny\bfseries d}
+    \bitbox[]{1}{\tiny\bfseries c}
+    \bitbox[]{1}{\tiny\bfseries b}
+    \bitbox[]{1}{\tiny\bfseries a}
+    \bitbox[]{1}{\tiny\bfseries 9}
+    \bitbox[]{1}{\tiny\bfseries 8}
+    \bitbox[]{1}{\tiny\bfseries 7}
+    \bitbox[]{1}{\tiny\bfseries 6}
+    \bitbox[]{1}{\tiny\bfseries 5}
+    \bitbox[]{1}{\tiny\bfseries 4}
+    \bitbox[]{1}{\tiny\bfseries 3}
+    \bitbox[]{1}{\tiny\bfseries 2}
+    \bitbox[]{1}{\tiny\bfseries 1}
+    \bitbox[]{1}{\tiny\bfseries 0} \\
+
+    \bitbox{3}{$red$} & \bitbox{3}{$green$}& \bitbox{3}{$blue$}& \bitbox{5}{$height$} & \bitbox{2}{\tt 0000}
+  \end{bytefield}
+  \caption{Nxs2 waveform detail segment bits}
+  \label{fig:nxs2WaveformDetailSegment}
+\end{figure}
+
 
 \subsection{Requesting Cue Points and Loops}
 \label{sec:nexusCuePoints}
@@ -3501,12 +3845,13 @@ the same as described there. Additionally, if you pass a $sort$ value
 of {\tt 09}, the playlist entries will come back sorted by track
 title, Label 2 will be empty, and the item type will be {\tt 2904}.
 
-\pagebreak
-
 To experiment with this, start up dysentery in a Clojure REPL and
 connect to a player as described in Section~\ref{sec:experimenting},
-then evaluate an expression like {\tt (db/request-playlist p2 3 1)},
-replacing the arguments with the {\tt var} holding your player
+then evaluate an expression like:
+
+{\tt (db/request-playlist p2 3 1)}
+
+Replace the arguments with the {\tt var} holding your player
 connection, the proper $S_r$ number for the media slot containing the
 playlist you want to list, and the playlist ID. You can also add a
 third argument to specify that you want to list a folder, like this
@@ -4221,6 +4566,7 @@ Contributions of additional research and insight are eagerly
 welcomed---I would have not gotten nearly this far without help!
 
 \subsection{Reading Data with Four Players}
+\label{sec:dealingWithFourPlayers}
 
 In order to offer metadata, timecode, waveforms, and so on, when there
 are four actual CDJs on the network, it is necessary get the data
