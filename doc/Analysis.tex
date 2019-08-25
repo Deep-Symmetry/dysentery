@@ -2963,9 +2963,6 @@ returns more.
   then you can fall back on the one shown in
   Section~\ref{sec:nexusCuePoints}.}
 
-Enhanced information about the cue points and loops stored in a track
-can be obtained with a request like the one shown in
-Figure~\ref{fig:cuePointRequestPacket2}.
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -3001,6 +2998,12 @@ Figure~\ref{fig:cuePointRequestPacket2}.
   \label{fig:cuePointRequestPacket2}
 \end{figure}
 
+Enhanced information about the cue points and loops stored in a track
+can be obtained with a request like the one shown in
+Figure~\ref{fig:cuePointRequestPacket2}.\footnote{Thanks to Matt
+  Positive, \url{https://soundcloud.com/mattpositive}, for packet
+  captures!}
+
 As always, $TxID$ should be 1 for the first query packet you send, 2
 for the next, and so on. $D$ should have the same value you used in
 your initial query context setup packet, identifying the device that
@@ -3026,7 +3029,6 @@ string, they have variable lengths, so each entry needs to be examined
 in order to figure out where it ends, and therefore the next one
 begins. The extended entry structure is shown in
 Figure~\ref{fig:cuePointEntry2}.
-
 
 \begin{figure}
   \begin{bytefield}[bitwidth=1.9em, leftcurly=., leftcurlyspace=0pt, boxformatting={\baselinealign}]{16}
@@ -3070,7 +3072,6 @@ Figure~\ref{fig:cuePointEntry2}.
   \caption{Extended cue point response message}
   \label{fig:cuePointResponse2}
 \end{figure}
-
 
 The first four bytes, $length$, hold the length of the current entry,
 and so can be used to find the start of the next entry. Like other
