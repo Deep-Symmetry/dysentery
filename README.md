@@ -53,11 +53,11 @@ together.
 
 ## Analysis
 
-A major goal of this project is the
-[Packet Analysis](doc/Analysis.pdf), which is intended to be useful to
-anyone who wants to write code to interact with DJ Link networks.
-Check out what we have learned so far, and please help us figure out
-more if you can!
+A major goal of this project is the [Packet
+Analysis](http://deepsymmetry.org/dysentery/Analysis.pdf), which is
+intended to be useful to anyone who wants to write code to interact
+with DJ Link networks. Check out what we have learned so far, and
+please help us figure out more if you can!
 
 The packet captures used to create that document can be downloaded
 ([Sections 1 and 2](doc/assets/powerup.pcapng),
