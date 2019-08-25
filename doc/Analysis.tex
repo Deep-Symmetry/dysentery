@@ -2890,11 +2890,14 @@ follows it. We don't know the meaning of the final, binary, argument.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{}
+      \wordbox[lr]{1}{} \\
       \skippedwords \\
+      \wordbox[lr]{1}{} \\
       \bitbox[lrb]{1}{} & \bitbox{1}{\tt 11} & \bitbox{4}{{\tt 00000036}} &
       \bitbox{1}{\tt 11} & \bitbox{4}{$num_{hot}$} & \bitbox{1}{\tt 11} & \bitbox{4}{$num_{cue}$} \\
       \bitbox{1}{\tt 11} & \bitbox{4}{$length_2$} &
       \bitbox{1}{\tt 14} & \bitbox{4}{$length_2$} &\bitbox[lrt]{6}{Unknown bytes} \\
+      \wordbox[lr]{1}{} \\
       \skippedwords \\
       \wordbox[lrb]{1}{}
     \end{leftwordgroup}
@@ -3076,7 +3079,9 @@ Figure~\ref{fig:cuePointEntry2}.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{}
+      \wordbox[lr]{1}{} \\
       \skippedwords \\
+      \wordbox[lr]{1}{} \\
       \bitbox[lrb]{5}{} & \bitbox{1}{\tt 11} & \bitbox{4}{$num_{entries}$} & \bitbox[lt]{6}{}
     \end{leftwordgroup}
 
@@ -3140,7 +3145,9 @@ minimum value four, representing a comment that is one character long.
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{}
+      \wordbox[lr]{1}{} \\
       \skippedwords \\
+      \wordbox[lr]{1}{} \\
       \bitbox[lrb]{5}{} & \bitbox{1}{$c$} & \bitbox{1}{$r$} & \bitbox{1}{$g$} & \bitbox{1}{$b$} &
       \bitbox[lrt]{7}{$unknown_3$}
     \end{leftwordgroup} \\
