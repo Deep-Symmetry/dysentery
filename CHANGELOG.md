@@ -23,6 +23,7 @@ This change log follows the conventions of
 - Documentation and implementation of database text substring search.
 - Documentation of nxs2-style extended cue list requests and
   responses.
+- Some preliminary discoveries about the XDJ-XZ.
 
 ## [0.2.1] - 2018-07-21
 
