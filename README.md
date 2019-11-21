@@ -157,7 +157,8 @@ black over the next second, until the next packet is received.
 Beneath the timestamp is a an interpretation of the meaning of the
 packet, as best we can currently understand it, with italic field
 labels corresponding to the byte fields identified in Figures
-9&ndash;12 of the [Packet Analysis document](doc/Analysis.pdf).
+9&ndash;12 of the [Packet Analysis
+document](http://deepsymmetry.org/dysentery/Analysis.pdf).
 
 > If you have access to any Pioneer Nexus gear, please run Dysentery
 > and see if the results it gives seem to make sense for your
