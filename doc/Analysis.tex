@@ -908,7 +908,8 @@ holding down on the jog wheel, $P_1$ considers it to be playing (value
 {\tt 03}), while $P_2$ considers it to be stopped (value {\tt 7e}).
 Non-nexus players seem to use the value {\tt 6a} when playing and {\tt
   6e} when stopped, while nxs2 players use the values {\tt fa} and
-{\tt fe}, so this seems to be another bit field like $F$.
+{\tt fe}, and the XDJ-XZ uses the values {\tt 9a} and {\tt 9e} so this
+seems to be another bit field like $F$.
 
 There are four different places where pitch information appears in
 these packets: $Pitch_1$ at bytes~{\tt 8c}--{\tt 8f}, $Pitch_2$ at
@@ -1078,7 +1079,8 @@ watched long enough for the count to need more than the last three
 bytes).
 
 Byte~{\tt cc}, labeled $nx$, seems to have the value {\tt 0f} for
-nexus players, and {\tt 05} for older players.
+nexus players, {\tt 1f} for the XDJ-XZ, and {\tt 05} for older
+players.
 
 \subsection{Rekordbox Status Packets}
 

@@ -309,6 +309,8 @@
                                           0x6e "Stop"
                                           0x7a "nxs Play"
                                           0x7e "nxs Stop"
+                                          0x9a "xz Play"
+                                          0x9e "xz Stop"
                                           0xfa "nxs2 Play"
                                           0xfe "nxs2 Stop"
                                           "???")
@@ -471,7 +473,7 @@
                             (and (zero? value) (= 208 (count packet)))))]
 
     (= index 0x8b)  ; Play mode part 2?
-    [hex (recognized-if (#{0x6a 0x7a 0x6e 0x7e 0xfa 0xfe} value))]
+    [hex (recognized-if (#{0x6a 0x7a 0x6e 0x7e 0x9a 0x9e 0xfa 0xfe} value))]
 
     (#{141 153 193 197} index)  ; The first byte of the four pitch copies
     [hex (recognized-if (< value 0x80))] ; Valid pitces range from 0x000000 to 0x200000 but can scratch much faster
@@ -515,8 +517,8 @@
     (<= 200 index 203)  ; Packet counter
     [hex (Color/green)]
 
-    (= index 204)  ; Seems to be 0x0f for nexus players, 0x05 for others?
-    [hex (recognized-if (or (and (= value 0x0f) (#{212 284} (count packet)))
+    (= index 204)  ; Seems to be 0x0f for nexus players, 0x1f for the XDJ-XZ, 0x05 for others?
+    [hex (recognized-if (or (and (#{0x0f 0x1f} value) (#{212 284} (count packet)))
                             (and (= value 0x05) (= 208 (count packet)))))]
 
     :else
