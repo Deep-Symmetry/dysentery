@@ -703,8 +703,8 @@ Newer firmware and Nexus 2 players send packets that are {\tt 11c} or
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 40}
-      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {$d_n$}
-        {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}} & \bitbox{2}{$d_n$} &
+      \bitboxes*{1}{{\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00} {\tt 00}}
     \end{leftwordgroup} \\
 
     \begin{leftwordgroup}{\tiny\bfseries 50}
@@ -808,13 +808,20 @@ bytes~{\tt 32} and {\tt 33}, labeled $Track$. (It may be a 4-byte
 value and also include bytes~{\tt 30} and {\tt 31}, but that would
 seem an unmanageable number of tracks to search through.)
 
-The field~$d_l$ at byte~{\tt 37} appears to indicate when a disc is
-loaded. It has the value~{\tt 00} when the disc slot is empty, and
-seems to have the value~{\tt 1e} when a CD Audio disc is loaded, and
-{\tt 11} when a data disc containing files in MP3, AAC, WAV or AIFF
-format is loaded. Similarly, when a disc is loaded, the field~$d_n$ at
-byte~{\tt 47} changes from {\tt 00} to the number of tracks on the
-disc (a data disc will generally have one track).
+The field~$d_l$ at byte~{\tt 37} was given this label because we first
+believed it to indicate when a disc is loaded. It has the value~{\tt
+  00} when the disc slot is empty, and seems to have the value~{\tt
+  1e} when a CD Audio disc is loaded, and {\tt 11} when a data disc
+containing files in MP3, AAC, WAV or AIFF format is loaded. However,
+we later noticed that it also gets non-zero values when a track is
+loaded from a playlist ({\tt 05}) or another player menu (different
+values, depending on the type of menu; if anyone would like to take
+the time to record all the different values and their meanings, a pull
+request would be extremely welcome). Relatedly, when a track is loaded
+from a disc, playlist, or menu, the field~$d_n$ at bytes~{\tt
+  46}--{\tt 47} changes from {\tt 0000} to the number of tracks on the
+disc or in the playlist or menu (a data disc will generally have one
+track).
 
 Some of the fields shown as having value {\tt 00} in this region will
 sometimes have other values in them; their meanings are simply not yet
