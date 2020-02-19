@@ -479,18 +479,23 @@ inefficiencies in the protocol.
 
 To facilitate synchronization of variable-tempo tracks, the number of
 milliseconds after which a variety of upcoming beats will occur are
-reported. $nextBeat$ at bytes~{\tt 24}--{\tt 27} is the number of
-milliseconds in which the very next beat will arrive. $2ndBeat$
-(bytes~{\tt 28}--{\tt 2b}) is the number of milliseconds until the
-beat after that. $nextBar$ (bytes~{\tt 2c}--{\tt 2f}) reports the
-number of milliseconds until the next measure of music begins, which
-may be from 1 to 4 beats away. $4thBeat$ (bytes~{\tt 30}--{\tt 33})
-reports how many millisecond will elapse until the fourth upcoming
-beat; $2ndBar$ (bytes~{\tt 34}--{\tt 37}) the interval until the
-second measure after the current one begins (which will occur in 5 to
-8 beats, depending how far into the current measure we have reached);
-and $8thBeat$ (bytes~{\tt 38}--{\tt 3b}) tells how many millieconds we
-have to wait until the eighth upcoming beat will arrive.
+reported. \emph{Note that the timing values for all these upcoming
+  beats are always reported as if the track was being played at normal
+  speed, with a pitch adjustment of 0\%. If a pitch adjustment is in
+  effect, you will need to perform the calculation to scale the beat
+  timing values yourself.} $nextBeat$ at bytes~{\tt 24}--{\tt 27} is
+the number of milliseconds in which the very next beat will arrive.
+$2ndBeat$ (bytes~{\tt 28}--{\tt 2b}) is the number of milliseconds
+until the beat after that. $nextBar$ (bytes~{\tt 2c}--{\tt 2f})
+reports the number of milliseconds until the next measure of music
+begins, which may be from 1 to 4 beats away. $4thBeat$ (bytes~{\tt
+  30}--{\tt 33}) reports how many millisecond will elapse until the
+fourth upcoming beat; $2ndBar$ (bytes~{\tt 34}--{\tt 37}) the interval
+until the second measure after the current one begins (which will
+occur in 5 to 8 beats, depending how far into the current measure we
+have reached); and $8thBeat$ (bytes~{\tt 38}--{\tt 3b}) tells how many
+millieconds we have to wait until the eighth upcoming beat will
+arrive.
 
 The player's current pitch adjustment\footnote{The mixer always
   reports a pitch of $+0\%$.} can be found in bytes~{\tt 54}--{\tt
