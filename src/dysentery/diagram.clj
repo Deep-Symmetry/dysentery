@@ -19,7 +19,7 @@
 
 (def box-width
   "How much room each byte (or bit) box takes up."
-  50)
+  40)
 
 (def boxes-per-row
   "How many individual byte/bit boxes fit on each row."
@@ -43,6 +43,11 @@
   (atom {:index 0 ; The current box being drawn.
          :y     5 ; The y coordinate of the top of the current line. Intial value forms a top margin.
          :body  '()})) ; Rows get added to this, svg wrapper is added at end once size is known.
+
+(defn append-svg
+  "Adds another svg element to the body being built up."
+  [element]
+  (swap! state update :body concat [element]))
 
 (defn draw-column-headers
   "Generates the header row that identifies each byte/bit box. By
@@ -86,20 +91,20 @@
             :as   options}]
   (let [x (- left-margin 5)
         y (+ (:y @state) (* 0.5 row-height))]
-    (swap! state update :body concat
-           [(svg/text (merge options
-                              {:x                 x
-                               :y                 y
-                               :font-family       font-family
-                               :font-size         font-size
-                               :dominant-baseline "middle"
-                               :text-anchor       "end"})
-                       label)])))
+    (append-svg (svg/text (merge options
+                                 {:x                 x
+                                  :y                 y
+                                  :font-family       font-family
+                                  :font-size         font-size
+                                  :dominant-baseline "middle"
+                                  :text-anchor       "end"})
+                          label))))
 
 (defn draw-line
-  "Adds a line to the SVG being built up."
+  "Adds a line to the SVG being built up. SVG line attributes can be
+  overridden by passing additional keyword/value pairs."
   [x1 y1 x2 y2]
-  (swap! state update :body concat [(svg/line x1 y1 x2 y2 :stroke "#000000" :stroke-width 1)]))
+  (append-svg (svg/line x1 y1 x2 y2 :stroke "#000000" :stroke-width 1)))
 
 (defn next-row
   "Advances drawing to the next row of boxes, reseting the index to 0.
@@ -130,20 +135,17 @@
         right  (+ left width)
         top    (:y @state)
         bottom (+ top height)]
-    (when fill
-      (swap! state update :body concat
-             [(svg/rect left top height width :fill fill)]))
+    (when fill (append-svg (svg/rect left top height width :fill fill)))
     (when (borders :top) (draw-line left top right top))
     (when (borders :bottom) (draw-line left bottom right bottom))
     (when (borders :right) (draw-line right top right bottom))
     (when (borders :left) (draw-line left top left bottom))
     (when text
-      (swap! state update :body concat
-             [(xml/add-attrs text
+      (append-svg (xml/add-attrs text
                              :x (/ (+ left right) 2.0)
                              :y (+ top 1 (/ height 2.0))
                              :dominant-baseline "middle"
-                             :text-anchor "middle")]))
+                             :text-anchor "middle")))
     (swap! state update :index + span)))
 
 (defn label-text
@@ -170,7 +172,7 @@
                      label]
                     (when subscript
                       [(svg/tspan {:baseline-shift "sub"
-                                   :font-size      "60%"}
+                                   :font-size      "70%"}
                                   subscript)])))))
 
 (defn hex-text
@@ -205,22 +207,33 @@
   either side of the gap is 5, but all can be overridden with keyword
   arguments."
   [& {:keys [height gap edge]
-      :or   {height 50
+      :or   {height 70
              gap    10
-             edge   5}}]
+             edge   15}}]
   (let [y     (:y @state)
         top   (+ y edge)
         right (+ left-margin (* box-width boxes-per-row))
         bottom (+ y (- height edge))]
     (draw-line left-margin y left-margin top)
     (draw-line right y right top)
-    (draw-line left-margin top right (- bottom gap))
+    (append-svg (svg/line left-margin top right (- bottom gap) :stroke "#000000" :stroke-width 1
+                          :stroke-dasharray "1,1"))
     (draw-line right y right (- bottom gap))
-    (draw-line left-margin (+ top gap) right bottom)
+    (append-svg (svg/line left-margin (+ top gap) right bottom :stroke "#000000" :stroke-width 1
+                          :stroke-dasharray "1,1"))
     (draw-line left-margin (+ top gap) left-margin bottom)
     (draw-line left-margin bottom left-margin (+ y height))
     (draw-line right bottom right (+ y height)))
   (swap! state update :y + height))
+
+(defn draw-bottom
+  "Ends the diagram by drawing a line across the box area. Needed if the
+  preceding action was drawing a gap, to avoid having to draw an empty
+  row of boxes, which would extend the height of the diagram without
+  adding useful information."
+  []
+  (let [y (:y @state)]
+    (draw-line left-margin y (+ left-margin (* box-width boxes-per-row)) y)))
 
 (defn emit-svg
   "Outputs the finished SVG."
@@ -229,11 +242,11 @@
 
 (def green
   "The green color we use in `remotedb` message headers"
-  "#00ff00")
+  "#a0ffa0")
 
 (def yellow
   "The yellow color we use in `remotedb` message headers"
-  "#ffff00")
+  "#ffffa0")
 
 (def pink
   "The pink color we use in `remotedb` message headers"
@@ -241,12 +254,14 @@
 
 (def cyan
   "The cyan color we use in `remotedb` message headers"
-  "#00fafa")
+  "#a0fafa")
 
 (def purple
   "The purple color we use in `remotedb` message headers"
   "#e4b5f7")
 
+
+;; Figure 48: Cue point response message.
 
 (draw-column-headers)
 
@@ -263,7 +278,7 @@
 (draw-box :text (hex-text "11") :fill yellow)
 (draw-box :span 4 :text (label-text "TxID") :fill yellow)
 (draw-box :text (hex-text "10") :fill pink)
-(draw-box :span 2 :text (hex-text "4002") :fill pink)
+(draw-box :span 2 :text (hex-text "4702") :fill pink)
 (draw-box :text (hex-text "0f") :fill cyan)
 (draw-box :text (hex-text "09") :fill cyan)
 (draw-box :text (hex-text "14") :fill purple)
@@ -282,7 +297,7 @@
                                              "(12)"))
           :fill purple)
 (draw-box :text (hex-text "06") :borders #{:left :top :bottom} :fill purple)
-(doseq [val (concat (repeat 7 "06") ["03" "00" "00"])]
+(doseq [val ["06" "06" "03" "06" "06" "06" "06" "03" "00" "00"]]
   (draw-box :text (hex-text val) :borders #{:top :bottom} :fill purple))
 (draw-box :text (hex-text "00") :borders #{:right :top :bottom} :fill purple)
 (next-row)
@@ -303,4 +318,25 @@
                                    "Cue and loop point bytes") :borders #{:left :right :top})
 (next-row)
 (draw-gap)
+
+(draw-box)
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (hex-text "00000036"))
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (label-text "num" "hot"))
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (label-text "num" "cue"))
+(next-row)
+
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (label-text "length" "2"))
+(draw-box :text (hex-text "14"))
+(draw-box :span 4 :text (label-text "length" "2"))
+(draw-box :span 6 :text (svg/text {:font-family serif-family}
+                                   "Unknown bytes") :borders #{:left :right :top})
+(next-row)
+(draw-gap)
+(draw-bottom)
+
+
 (spit "/tmp/test.svg" (emit-svg))
