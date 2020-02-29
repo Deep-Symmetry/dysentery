@@ -1,6 +1,5 @@
 (ns dysentery.diagram
-  (:require [clojure.edn :as edn]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [analemma.svg :as svg]
             [analemma.xml :as xml]))
 
@@ -261,20 +260,6 @@
   "The purple color we use in `remotedb` message headers"
   "#e4b5f7")
 
-(defn build-diagram
-  "Reads an EDN-based diagram specification and returns the
-  corresponding SVG. `diagram` can either be a string or a
-  `java.io.Reader` from which the diagram specification can be read."
-  [diagram]
-  (let [reader (if (string? diagram)
-                 (java.io.StringReader. diagram)
-                 diagram)
-        reader (clojure.lang.LineNumberingPushbackReader. reader)
-        eof    (Object.)]
-    (try
-      (edn/read {:eof eof} reader)
-      (catch Exception e
-        (throw (RuntimeException. (str "Problem reading diagram at line " (.getLineNumber reader)) e))))))
 
 ;; Figure 48: Cue point response message.
 
