@@ -234,6 +234,12 @@
 
 (declare limited-eval) ; Need to forward declare our evaluator because of mutual recursion.
 
+(defn- build-error-message
+  "Adds information about the location where an error occurred in a
+  standard format."
+  [error line]
+  (str error " in expression starting on line " line))
+
 (defn- and-form
   "Implements the `and` special form."
   [args scope line]
@@ -253,13 +259,34 @@
         current
         (recur (rest remainder))))))
 
+(defn- doseq-form
+  "Implements the `doseq` special form."
+  [args scope line]
+  (let [bindings (first args)]
+    (when-not (and (vector? bindings) (= 2 (count bindings)))
+      (throw (IllegalArgumentException. (build-error-message "doseq must be followed by a two-element binding vector"
+                                                             line))))
+    (let [[sym raw-vs] bindings
+          vs           (limited-eval raw-vs scope line)]
+      (when-not (symbol? sym)
+        (throw (IllegalArgumentException. (build-error-message (str sym " is not a symbol in doseq binding") line))))
+      (when-not (seqable? vs)
+        (throw (IllegalArgumentException. (build-error-message
+                                           (str raw-vs " cannot be used as sequence in doseq binding") line))))
+      (doseq [v vs]  ; Iterate over the sequence provided.
+        (let [scope {:bindings {sym v}  ; Bind the symbol as a new inner scope.
+                     :next     scope}]
+          (doseq [expr (rest args)]  ; Evaluate any body expressions in the new scope.
+            (limited-eval expr scope line)))))))
+
 (def special-forms
   "All the symbols which get special handing in our domain-specific
   language. Keys are what they get represented by in the parsed form,
   values are the functions that implement their meanings when
   evaluating the form."
-  {::and and-form
-   ::or  or-form})
+  {::and   and-form
+   ::or    or-form
+   ::doseq doseq-form})
 
 (defmacro self-bind-symbols
   "Builds a map in which each of the supplied list of symbols is mapped
@@ -572,8 +599,9 @@
     'purple "#e4b5f7"
 
     ;; Special forms we handle when evaluating diagram code.
-    'and ::and
-    'or  ::or
+    'and   ::and
+    'or    ::or
+    'doseq ::doseq
 
     ;; Values used to track the current state of the diagram being created:
     'box-index 0 ; Row offset of the next box to be drawn.
@@ -606,7 +634,7 @@
         (let [not-found (Object.)
               result (get @*globals* sym not-found)]
           (if (= result not-found)
-            (throw (NoSuchElementException. (str "Unbound symbol " sym " in expression starting at line " line)))
+            (throw (NoSuchElementException. (build-error-message (str "Unbound symbol " sym) line)))
             result))))))
 
 (defn limited-eval
@@ -630,8 +658,8 @@
         (apply f (map #(limited-eval % scope line) (rest expr)))
 
         :else
-        (throw (IllegalArgumentException. (str (first expr) " (" f
-                                               ") is not a function in expression starting at line " line)))))
+        (throw (IllegalArgumentException. (build-error-message (str (first expr) " (" f ") is not a function")
+                                                               line)))))
 
     (vector? expr)  ; Vectors just need their elements recursively evaluated.
     (mapv #(limited-eval % scope line) expr)
@@ -650,12 +678,15 @@
 
 (defn build-diagram
   "Reads an EDN-based diagram specification and returns the
-  corresponding SVG. `diagram` can either be a string (URL or file
-  name), a `java.io.File`, or a `java.io.Reader` from which the
-  diagram specification can be read."
-  [diagram]
+  corresponding SVG. `source` can either be a `String` (URL or file
+  name), a `File`, `InputStream`, or `Reader` from which the diagram
+  specification can be read. Similarly, `destination` can be a
+  `String`, `File`, `OutputStream` or `Writer` specifying where the
+  SVG output should be directed."
+  [source destination]
   (binding [*globals* (atom initial-globals)]
-    (with-open [reader (io/reader diagram)]
+    (with-open [reader (io/reader source)
+                writer (io/writer destination)]
       (let [reader    (clojure.lang.LineNumberingPushbackReader. reader)
             eof       (Object.)
             opts      {:eof eof}
@@ -674,4 +705,5 @@
                   (throw (RuntimeException. (str "EOF reading quoted expression starting at line " line)))))
               (limited-eval expr {} line)) ; Evaluate the line normally.
             (recur (.getLineNumber reader) (read-expr))))
-        (spit "/tmp/test.svg" (emit-svg))))))
+
+        (binding [*out* writer] (print (emit-svg)))))))
