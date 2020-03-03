@@ -7,28 +7,28 @@
 cd doc
 
 # Build the unreleased branch of Antora that supports plugins
-git clone git@gitlab.com:djencks/antora.git
+git clone https://gitlab.com/djencks/antora.git
 cd antora
 git checkout issue-585-with-377-582-git-credential-plugin
 yarn
 cd ..
 
 # Build the unreleased Antora LUNR plugin
-git clone git@github.com:djencks/antora-lunr.git
+git clone https://github.com/djencks/antora-lunr.git
 cd antora-lunr
 git checkout plugin-377
 yarn
 cd ..
 
 # Build the unreleased generic SVG generator plugin
-git clone git@gitlab.com:djencks/asciidoctor-generic-svg-extension.js.git extension
+git clone https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js.git extension
 cd extension
 git checkout issue-377-plugin
 yarn
 cd ..
 
 # Build the unreleased byte field generator
-git clone git@github.com:Deep-Symmetry/bytefield-svg generator
+git clone https://github.com/Deep-Symmetry/bytefield-svg generator
 cd generator
 npm install
 npm run build
