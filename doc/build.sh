@@ -9,8 +9,9 @@ cd doc
 # Build the unreleased branch of Antora that supports plugins
 git clone https://gitlab.com/djencks/antora.git
 cd antora
+npm install yarn
 git checkout issue-585-with-377-582-git-credential-plugin
-yarn
+node_modules/.bin/yarn
 cd ..
 
 # Build the unreleased Antora LUNR plugin
