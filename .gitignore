@@ -7,6 +7,7 @@
 /doc/Analysis.lot
 /doc/Analysis.pdf
 /doc/Analysis.toc
+/doc/build
 pom.xml
 pom.xml.asc
 *.jar

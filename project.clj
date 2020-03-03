@@ -1,6 +1,6 @@
 (defproject dysentery "0.2.2-SNAPSHOT"
   :description "Exploring ways to participate in a Pioneer Pro DJ Link network"
-  :url "http://github.com/brunchboy/dysentery"
+  :url "http://github.com/Deep-Symmetry/dysentery"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.0"]

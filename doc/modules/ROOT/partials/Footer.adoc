@@ -1,0 +1,3 @@
+
++++<a href="http://deepsymmetry.org"><img src="_images/DS-logo-bw-200-padded-left.png" align="right" alt="Deep Symmetry logo" width="216" height="123"></a>+++
+Copyright © 2020 http://deepsymmetry.org[Deep Symmetry, LLC]

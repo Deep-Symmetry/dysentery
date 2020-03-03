@@ -1,0 +1,165 @@
+= DJ Link Packet Analysis
+James Elliott <james@deepsymmetry.org>
+:icons: font
+:experimental:
+
+// Set up support for relative links on GitHub, and give it
+// usable icons for admonitions, w00t! Add more conditions
+// if you need to support other environments and extensions.
+ifdef::env-github[]
+:outfilesuffix: .adoc
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::env-github[]
+
+// Render section header anchors in a GitHub-compatible way.
+ifndef::env-github[]
+:idprefix:
+:idseparator: -
+endif::env-github[]
+
+The protocol used by Pioneer professional DJ equipment to communicate
+and coordinate performances can be monitored to provide useful
+information for synchronizing other software, such as light shows and
+sequencers. By creating a “virtual CDJ” that sends appropriate packets
+to the network, other devices can be induced to send packets
+containing even more useful information about their state. This
+document details what has been learned so far about the protocol, and
+how to accomplish these tasks.
+
+[[mixer-startup]]
+== Mixer Startup
+
+When the mixer starts up, after it obtains an IP address (or gives up
+on doing that and self-assigns an address), it sends out what look
+like a series of packets{empty}footnote:[The packet capture described
+in this analysis can be found at
+https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/powerup.pcapng]
+simply announcing its existence to UDP port 50000 on the broadcast
+address of the local network.
+
+.Initial announcement packets from Mixer
+[bytefield]
+----
+(draw-column-headers)
+
+(draw-row-header "00")
+(draw-box :text (hex-text "51") :borders #{:left :top :bottom})
+(doseq [val ["73" "70" "74" "31" "57" "6d" "4a" "4f" "4c"]]
+  (draw-box :text (hex-text val) :borders #{:top :bottom}))
+(draw-box :text (hex-text "0a" :font-weight "bold") :borders #{:top :bottom})
+(draw-box :text (hex-text "00") :borders #{:right :top :bottom})
+(draw-box :span 4 :borders #{:left :right :top})
+(next-row)
+
+(draw-row-header "10")
+(draw-box :span 16 :text (svg/text {:font-size         18
+                                    :font-family       serif-family
+                                    :dominant-baseline "middle"
+                                    :text-anchor       "middle"}
+                                   "Device Name (padded with "
+                                   (svg/tspan {:font-family      hex-family
+                                              :font-size         18
+                                              :dominant-baseline "middle"}
+                                             "00")
+                                   ")")
+          :borders #{:left :right :bottom})
+(next-row)
+
+(draw-row-header "20")
+(draw-box :text (hex-text "01"))
+(draw-box :text (hex-text "02" :font-weight "bold"))
+(draw-box :span 2 :text (label-text "len" "p"))
+(draw-box :text (hex-text "02"))
+(next-row)
+----
+
+To be continued...
+
+[bytefield]
+----
+;; Figure 48: Cue point response message.
+
+(draw-column-headers)
+
+(draw-group-label-header 5 "start")
+(draw-group-label-header 5 "TxID")
+(draw-group-label-header 3 "type")
+(draw-group-label-header 2 "args")
+(draw-group-label-header 1 "tags")
+(next-row :height 18)
+
+(draw-row-header "00")
+(draw-box :text (hex-text "11") :fill green)
+(draw-box :span 4 :text (hex-text "872349ae") :fill green)
+(draw-box :text (hex-text "11") :fill yellow)
+(draw-box :span 4 :text (label-text "TxID") :fill yellow)
+(draw-box :text (hex-text "10") :fill pink)
+(draw-box :span 2 :text (hex-text "4702") :fill pink)
+(draw-box :text (hex-text "0f") :fill cyan)
+(draw-box :text (hex-text "09") :fill cyan)
+(draw-box :text (hex-text "14") :fill purple)
+(next-row)
+
+(draw-row-header "10")
+(draw-box :span 4 :text (svg/text {:font-size         18
+                                   :font-family       hex-family
+                                   :dominant-baseline "middle"
+                                   :text-anchor       "middle"}
+                                  "0000000c "
+                                  (svg/tspan {:font-family       serif-family
+                                              :font-size         16
+                                              :font-weight       "light"
+                                              :dominant-baseline "middle"}
+                                             "(12)"))
+          :fill purple)
+(draw-box :text (hex-text "06") :borders #{:left :top :bottom} :fill purple)
+(doseq [val ["06" "06" "03" "06" "06" "06" "06" "03" "00" "00"]]
+  (draw-box :text (hex-text val) :borders #{:top :bottom} :fill purple))
+(draw-box :text (hex-text "00") :borders #{:right :top :bottom} :fill purple)
+(next-row)
+
+
+(draw-row-header "20")
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (hex-text "00002104"))
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (hex-text "00000000"))
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (label-text "length" "1"))
+(draw-box :text (hex-text "14"))
+(next-row)
+
+(draw-row-header "30")
+(draw-box :span 4 :text (label-text "length" "1"))
+(draw-box :span 12 :text (svg/text {:font-family serif-family}
+                                   "Cue and loop point bytes") :borders #{:left :right :top})
+(next-row)
+(draw-gap)
+
+(draw-box)
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (hex-text "00000036"))
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (label-text "num" "hot"))
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (label-text "num" "cue"))
+(next-row)
+
+(draw-box :text (hex-text "11"))
+(draw-box :span 4 :text (label-text "length" "2"))
+(draw-box :text (hex-text "14"))
+(draw-box :span 4 :text (label-text "length" "2"))
+(draw-box :span 6 :text (svg/text {:font-family serif-family}
+                                   "Unknown bytes") :borders #{:left :right :top})
+(next-row)
+(draw-gap)
+(draw-bottom)
+----
+
+
+
+include::partial$Footer.adoc[]

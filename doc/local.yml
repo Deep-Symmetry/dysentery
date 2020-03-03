@@ -1,0 +1,18 @@
+site:
+  title: DJ Link Packet Analysis
+  url: https://djl-analysis.deepsymmetry.org
+  start_page: djl-analysis::README.adoc
+content:
+  sources:
+  - url: ../dysentery
+    branches: [master]
+    start_path: doc
+plugins:
+  - path: /Users/jim/git/djencks-integration/asciidoctor-generic-svg-extension.js
+    config:
+      generator: /Users/jim/git/bytefield-svg
+      name: bytefield
+ui:
+  bundle:
+    url: https://deepsymmetry.org/media/antora/ui-bundle.zip
+    snapshot: true
