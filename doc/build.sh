@@ -18,14 +18,14 @@ cd ..
 git clone https://github.com/djencks/antora-lunr.git
 cd antora-lunr
 git checkout plugin-377
-$(npm bin)/yarn
+npm install
 cd ..
 
 # Build the unreleased generic SVG generator plugin
 git clone https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js.git extension
 cd extension
 git checkout issue-377-plugin
-$(npm bin)/yarn
+npm install
 cd ..
 
 # Build the unreleased byte field generator
