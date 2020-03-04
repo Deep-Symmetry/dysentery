@@ -8,32 +8,45 @@ npm install yarn
 cd doc
 
 # Build the unreleased branch of Antora that supports plugins
-git clone https://gitlab.com/djencks/antora.git
-cd antora
-git checkout issue-585-with-377-582-git-credential-plugin
-../../node_modules/.bin/yarn
-cd ..
+if [ ! -d "antora" ]
+then
+    git clone https://gitlab.com/djencks/antora.git
+    cd antora
+    git checkout issue-585-with-377-582-git-credential-plugin
+    ../../node_modules/.bin/yarn
+    cd ..
+fi
 
 # Build the unreleased Antora LUNR plugin
-git clone https://github.com/djencks/antora-lunr.git
-cd antora-lunr
-git checkout plugin-377
-npm install
-cd ..
+if [! -d "antora-lunr"]
+then
+    git clone https://github.com/djencks/antora-lunr.git
+    cd antora-lunr
+    git checkout plugin-377
+    npm install
+    cd ..
+fi
 
 # Build the unreleased generic SVG generator plugin
-git clone https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js.git extension
-cd extension
-git checkout issue-377-plugin
-npm install
-cd ..
+if [! -d "extension" ]
+then
+    git clone https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js.git extension
+    cd extension
+    git checkout issue-377-plugin
+    npm install
+    cd ..
+fi
 
 # Build the unreleased byte field generator
-git clone https://github.com/Deep-Symmetry/bytefield-svg generator
-cd generator
-npm install
-npm run build
-cd ..
+if [! -d "generator"]
+then
+    git clone https://github.com/Deep-Symmetry/bytefield-svg generator
+    cd generator
+    npm install
+    npm run build
+    cd ..
+fi
+
 
 # Finally, put them all together to build the documentation site.
 cd ..
