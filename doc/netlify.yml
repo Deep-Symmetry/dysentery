@@ -4,7 +4,7 @@ site:
   start_page: djl-analysis::README.adoc
 content:
   sources:
-  - url: ../dysentery
+  - url: https://github.com/Deep-Symmetry/dysentery.git
     branches: [master]
     start_path: doc
 plugins:
