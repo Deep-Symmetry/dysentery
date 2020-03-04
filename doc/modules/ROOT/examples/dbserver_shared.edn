@@ -5,18 +5,6 @@
 (def cyan "#a0fafa")
 (def purple "#e4b5f7")
 
-(defn draw-packet-header
-  "Generates the byte labels and first eleven bytes of a standard DJ
-  Link packet with the specified `kind` byte."
-  [kind]
-  (draw-column-headers)
-  (draw-row-header "00")
-  (draw-box :text (hex-text "51") :borders #{:left :top :bottom} :fill green)
-  (doseq [val ["73" "70" "74" "31" "57" "6d" "4a" "4f" "4c"]]
-    (draw-box :text (hex-text val) :borders #{:top :bottom} :fill green))
-  (draw-box :text (hex-text kind :font-weight "bold") :borders #{:top :bottom} :fill green)
-  (draw-box :text (hex-text "00") :borders #{:right :top :bottom} :fill green))
-
 (defn draw-remotedb-header
   "Generates the byte and field labels and standard header fields of a
   request or response message for the `remotedb` database server with

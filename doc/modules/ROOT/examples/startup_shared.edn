@@ -1,0 +1,56 @@
+;; Some nice default background colors, used to distinguish header sections.
+(def green "#a0ffa0")
+(def yellow "#ffffa0")
+(def pink "#ffb0a0")
+(def cyan "#a0fafa")
+(def purple "#e4b5f7")
+
+(defn draw-packet-header
+  "Generates the byte labels and first row of a standard DJ Link startup
+  packet with the specified `kind` byte."
+  [kind]
+  (draw-column-headers)
+  (draw-row-header "00")
+  (draw-box :text (hex-text "51") :borders #{:left :top :bottom} :fill green)
+  (doseq [val ["73" "70" "74" "31" "57" "6d" "4a" "4f" "4c"]]
+    (draw-box :text (hex-text val) :borders #{:top :bottom} :fill green))
+  (draw-box :text (hex-text kind :font-weight "bold") :borders #{:top :bottom} :fill green)
+  (draw-box :text (hex-text "00") :borders #{:right :top :bottom} :fill green)
+  (draw-box :span 4 :borders #{:left :right :top})
+  (next-row))
+
+(defn draw-device-name-row
+  "Draws the second row common to most device packets which is entirely
+  filled with bytes from its name."
+  []
+  (draw-row-header "10")
+  (draw-box :span 16 :text (svg/text {:font-size         18
+                                      :font-family       serif-family
+                                      :dominant-baseline "middle"
+                                      :text-anchor       "middle"}
+                                     "Device Name (padded with "
+                                     (svg/tspan {:font-family      hex-family
+                                                 :font-size         18
+                                                 :dominant-baseline "middle"}
+                                                "00")
+                                     ")")
+            :borders #{:left :right :bottom})
+  (next-row))
+
+(defn draw-device-name-row
+  "Draws the second row common to most device packets which is entirely
+  filled with bytes from its name."
+  []
+  (draw-row-header "10")
+  (draw-box :span 16 :text (svg/text {:font-size         18
+                                      :font-family       serif-family
+                                      :dominant-baseline "middle"
+                                      :text-anchor       "middle"}
+                                     "Device Name (padded with "
+                                     (svg/tspan {:font-family      hex-family
+                                                 :font-size         18
+                                                 :dominant-baseline "middle"}
+                                                "00")
+                                     ")")
+            :borders #{:left :right :bottom})
+  (next-row))

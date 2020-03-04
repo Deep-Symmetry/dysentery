@@ -1,2 +1,1 @@
-* xref:README.adoc[Abstract]
-** xref:README.adoc#mixer-startup[Mixer Startup]
+* xref:mixer.adoc[Mixer Startup]

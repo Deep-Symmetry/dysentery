@@ -71,8 +71,17 @@ content:
 .Initial announcement packets from mixer.
 [bytefield]
 ----
-include::example$bytefield_setup.edn[]
-include::example$mixer_announcement_packet.edn[]
+include::example$startup_shared.edn[]
+
+(draw-packet-header "0a")
+(draw-device-name-row)
+
+(draw-row-header "20")
+(draw-box :text (hex-text "01"))
+(draw-box :text (hex-text "02" :font-weight "bold"))
+(draw-box :span 2 :text (label-text "len" "p"))
+(draw-box :text (hex-text "02"))
+(next-row)
 ----
 
 Byte `0a` (inside the green header section) is shown in bold because
@@ -103,9 +112,126 @@ millisecond intervals, and have the following content:
 .First-stage mixer device number assignment packets.
 [bytefield]
 ----
-include::example$bytefield_setup.edn[]
-include::example$mixer_number_assign_packet_1.edn[]
+include::example$startup_shared.edn[]
+
+(draw-packet-header "00")
+(draw-device-name-row)
+
+(draw-row-header "20")
+(draw-box :text (hex-text "01"))
+(draw-box :text (hex-text "02" :font-weight "bold"))
+(draw-box :span 2 :text (label-text "len" "p"))
+(draw-box :text (label-text "N"))
+(draw-box :text (hex-text "02"))
+(draw-box :span 6 :text (plain-text "MAC address"))
+(next-row)
 ----
+
+The value _N_ at byte `24` is `01`, `02`, or `03`, depending on
+whether this is the first, second, or third time the packet is sent.
+
+After these comes another series of three numbered packets. These
+appear to be claiming the device number for a particular device, as
+well as announcing the IP address at which it can be found. They have
+a data length and _len~p~_ value of `32` bytes, and are again sent to
+UDP port 50000 on the local network broadcast address, at roughly 300
+millisecond intervals, with the following content:
+
+.Second-stage mixer device number assignment packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header "02")
+(draw-device-name-row)
+
+(draw-row-header "20")
+(draw-box :text (hex-text "01"))
+(draw-box :text (hex-text "02" :font-weight "bold"))
+(draw-box :span 2 :text (label-text "len" "p"))
+(draw-box :span 4 :text (plain-text "IP address"))
+(draw-box :span 6 :text (plain-text "MAC address"))
+(draw-box :text (label-text "D"))
+(draw-box :text (label-text "N"))
+(next-row)
+
+(draw-box :text (hex-text "02") :borders #{:left :top :bottom})
+(draw-box :text (hex-text "01") :borders #{:right :top :bottom})
+(next-row)
+----
+
+I identify these as claiming/identifying the device number because the
+value _D_ at byte `2e` is the same as the device number that the mixer
+uses to identify itself (`21`) and the same is true for the
+corresponding packets seen from my CDJs (they use device numbers `02`
+and `03`, as they are connected to those ports/channels on the mixer).
+
+As with the previous series of three packets, the value _N_ at byte
+`2f` takes on the values `01`, `02`, and `03` in the three packets.
+
+These are followed by another three packets, perhaps the last stage of
+claiming the device number, again at 300 millisecond intervals, to the
+same port 50000. These shorter packets have `2a` bytes of data and the
+content shown here:
+
+.Final-stage mixer device number assignment packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header "04")
+(draw-device-name-row)
+
+(draw-row-header "20")
+(draw-box :text (hex-text "01"))
+(draw-box :text (hex-text "02" :font-weight "bold"))
+(draw-box :span 2 :text (label-text "len" "p"))
+(draw-box :text (hex-text "01") :borders #{:left :top :bottom})
+  (doseq [val ["02" "00"]]
+    (draw-box :text (hex-text val) :borders #{:top :bottom}))
+(draw-box :text (hex-text "26") :borders #{:right :top :bottom})
+(draw-box :text (label-text "D"))
+(draw-box :text (label-text "N"))
+(next-row)
+----
+
+As before the value _D_ at byte `24` is the same as the device number
+that the mixer uses to identify itself (`21`) and _N_ at byte `25`
+takes on the values `01`, `02`, and `03` in the three packets.
+
+Once those are sent, the mixer seems to settle down and send what
+looks like a keep-alive packet to retain presence on the network and
+ownership of its device number, at a less frequent interval. These
+packets are `36` bytes long, again sent to port 50000 on the local
+network broadcast address, roughly every second and a half. They have
+the following content:
+
+.Mixer keep-alive packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header "06")
+(draw-device-name-row)
+
+(draw-row-header "20")
+(draw-box :text (hex-text "01"))
+(draw-box :text (hex-text "02" :font-weight "bold"))
+(draw-box :span 2 :text (label-text "len" "p"))
+(draw-box :text (label-text "D"))
+(draw-box :text (hex-text "02"))
+(draw-box :span 6 :text (plain-text "MAC address"))
+(draw-box :span 4 :text (plain-text "IP address"))
+(next-row)
+
+(draw-row-header "30")
+(draw-box :text (hex-text "01") :borders #{:left :top :bottom})
+  (doseq [val ["00" "00" "00" "02"]]
+    (draw-box :text (hex-text val) :borders #{:top :bottom}))
+(draw-box :text (hex-text "00") :borders #{:right :top :bottom})
+(next-row)
+----
+
 
 
 To be continued...
@@ -114,7 +240,7 @@ To be continued...
 [bytefield]
 ----
 ;; Figure 48
-include::example$bytefield_setup.edn[]
+include::example$dbserver_shared.edn[]
 include::example$cue_point_response.edn[]
 ----
 
