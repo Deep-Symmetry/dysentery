@@ -30,6 +30,27 @@ containing even more useful information about their state. This
 document details what has been learned so far about the protocol, and
 how to accomplish these tasks.
 
+This information was discovered by studying packet captures and with
+the help of https://github.com/Deep-Symmetry/dysentery[dysentery], a
+bespoke protocol analysis tool written in Clojure. This document was
+created in parallel with the development of dysentery to help spread
+the knowledge to other developers using other languages.
+
+Once enough had been understood to start interacting in useful ways
+with the devices, the
+https://github.com/brunchboy/beat-link#beat-link[Beat Link] library
+was written to provide a convenient interface for other programs
+running in the Java virtual machine. Eventually enough was learned
+about the format of the media databases on USB drives and SD cards
+inserted in the players to implement
+https://github.com/Deep-Symmetry/crate-digger#crate-digger[Crate
+Digger], another Java library which parses them, and whose analysis is
+part of this documentation site as well.
+
+Other implementations include
+https://github.com/EvanPurkhiser/prolink-go[prolink-go] and
+https://github.com/flesniak/python-prodj-link[python-prodj-link].
+
 [[mixer-startup]]
 == Mixer Startup
 
@@ -41,125 +62,60 @@ https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/powerup.pcapng]
 simply announcing its existence to UDP port 50000 on the broadcast
 address of the local network.
 
-.Initial announcement packets from Mixer
+These have a data length{empty}footnote:[Values within packets, packet
+lengths, and byte offsets are all shown in hexadecimal in `code` font.
+Other numbers are in normal body text font and are decimal.] of `25`
+bytes, appear roughly every 300 milliseconds, and have the following
+content:
+
+.Initial announcement packets from mixer.
 [bytefield]
 ----
-(draw-column-headers)
-
-(draw-row-header "00")
-(draw-box :text (hex-text "51") :borders #{:left :top :bottom})
-(doseq [val ["73" "70" "74" "31" "57" "6d" "4a" "4f" "4c"]]
-  (draw-box :text (hex-text val) :borders #{:top :bottom}))
-(draw-box :text (hex-text "0a" :font-weight "bold") :borders #{:top :bottom})
-(draw-box :text (hex-text "00") :borders #{:right :top :bottom})
-(draw-box :span 4 :borders #{:left :right :top})
-(next-row)
-
-(draw-row-header "10")
-(draw-box :span 16 :text (svg/text {:font-size         18
-                                    :font-family       serif-family
-                                    :dominant-baseline "middle"
-                                    :text-anchor       "middle"}
-                                   "Device Name (padded with "
-                                   (svg/tspan {:font-family      hex-family
-                                              :font-size         18
-                                              :dominant-baseline "middle"}
-                                             "00")
-                                   ")")
-          :borders #{:left :right :bottom})
-(next-row)
-
-(draw-row-header "20")
-(draw-box :text (hex-text "01"))
-(draw-box :text (hex-text "02" :font-weight "bold"))
-(draw-box :span 2 :text (label-text "len" "p"))
-(draw-box :text (hex-text "02"))
-(next-row)
+include::example$bytefield_setup.edn[]
+include::example$mixer_announcement_packet.edn[]
 ----
+
+Byte `0a` (inside the green header section) is shown in bold because
+its value changes in the different types of packets that devices send,
+and can be used to tell them apart.
+
+The byte following the device name (at byte `20`) seems to always have
+the value 1 in every kind of packet seen. The next byte is in bold as
+well because it seems to indicate the structure of the remainder of
+the packet. The value `02` is followed by a two-byte value _len~p~_
+that indicates the length of the entire packet (including the
+preceding header bytes), and followed by the payload. In the case of
+this kind of packet, the length is `0025`, and the payload is the
+single-byte value `02`.
+
+After about three of these packets are sent, another series of three
+begins. It is not clear what purpose these packets serve, because they
+are not yet asserting ownership of any device number; perhaps they are
+used when CDJs are powering up as part of the mechanism the mixer can
+use to tell them which device number to use based on which network
+port they are connected to?
+
+In any case, these three packets have the value `00` at byte `0a`, a
+data length of `2c` bytes (reflected in _len~p~_), are again sent to
+UDP port 50000 on the local network broadcast address, at roughly 300
+millisecond intervals, and have the following content:
+
+.First-stage mixer device number assignment packets.
+[bytefield]
+----
+include::example$bytefield_setup.edn[]
+include::example$mixer_number_assign_packet_1.edn[]
+----
+
 
 To be continued...
 
+.Cue point response message.
 [bytefield]
 ----
-;; Figure 48: Cue point response message.
-
-(draw-column-headers)
-
-(draw-group-label-header 5 "start")
-(draw-group-label-header 5 "TxID")
-(draw-group-label-header 3 "type")
-(draw-group-label-header 2 "args")
-(draw-group-label-header 1 "tags")
-(next-row :height 18)
-
-(draw-row-header "00")
-(draw-box :text (hex-text "11") :fill green)
-(draw-box :span 4 :text (hex-text "872349ae") :fill green)
-(draw-box :text (hex-text "11") :fill yellow)
-(draw-box :span 4 :text (label-text "TxID") :fill yellow)
-(draw-box :text (hex-text "10") :fill pink)
-(draw-box :span 2 :text (hex-text "4702") :fill pink)
-(draw-box :text (hex-text "0f") :fill cyan)
-(draw-box :text (hex-text "09") :fill cyan)
-(draw-box :text (hex-text "14") :fill purple)
-(next-row)
-
-(draw-row-header "10")
-(draw-box :span 4 :text (svg/text {:font-size         18
-                                   :font-family       hex-family
-                                   :dominant-baseline "middle"
-                                   :text-anchor       "middle"}
-                                  "0000000c "
-                                  (svg/tspan {:font-family       serif-family
-                                              :font-size         16
-                                              :font-weight       "light"
-                                              :dominant-baseline "middle"}
-                                             "(12)"))
-          :fill purple)
-(draw-box :text (hex-text "06") :borders #{:left :top :bottom} :fill purple)
-(doseq [val ["06" "06" "03" "06" "06" "06" "06" "03" "00" "00"]]
-  (draw-box :text (hex-text val) :borders #{:top :bottom} :fill purple))
-(draw-box :text (hex-text "00") :borders #{:right :top :bottom} :fill purple)
-(next-row)
-
-
-(draw-row-header "20")
-(draw-box :text (hex-text "11"))
-(draw-box :span 4 :text (hex-text "00002104"))
-(draw-box :text (hex-text "11"))
-(draw-box :span 4 :text (hex-text "00000000"))
-(draw-box :text (hex-text "11"))
-(draw-box :span 4 :text (label-text "length" "1"))
-(draw-box :text (hex-text "14"))
-(next-row)
-
-(draw-row-header "30")
-(draw-box :span 4 :text (label-text "length" "1"))
-(draw-box :span 12 :text (svg/text {:font-family serif-family}
-                                   "Cue and loop point bytes") :borders #{:left :right :top})
-(next-row)
-(draw-gap)
-
-(draw-box)
-(draw-box :text (hex-text "11"))
-(draw-box :span 4 :text (hex-text "00000036"))
-(draw-box :text (hex-text "11"))
-(draw-box :span 4 :text (label-text "num" "hot"))
-(draw-box :text (hex-text "11"))
-(draw-box :span 4 :text (label-text "num" "cue"))
-(next-row)
-
-(draw-box :text (hex-text "11"))
-(draw-box :span 4 :text (label-text "length" "2"))
-(draw-box :text (hex-text "14"))
-(draw-box :span 4 :text (label-text "length" "2"))
-(draw-box :span 6 :text (svg/text {:font-family serif-family}
-                                   "Unknown bytes") :borders #{:left :right :top})
-(next-row)
-(draw-gap)
-(draw-bottom)
+;; Figure 48
+include::example$bytefield_setup.edn[]
+include::example$cue_point_response.edn[]
 ----
-
-
 
 include::partial$Footer.adoc[]
