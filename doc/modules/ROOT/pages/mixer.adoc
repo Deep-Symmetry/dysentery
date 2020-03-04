@@ -155,6 +155,7 @@ include::example$startup_shared.edn[]
 (draw-box :text (label-text "N"))
 (next-row)
 
+(draw-row-header "30")
 (draw-box :text (hex-text "02") :borders #{:left :top :bottom})
 (draw-box :text (hex-text "01") :borders #{:right :top :bottom})
 (next-row)
