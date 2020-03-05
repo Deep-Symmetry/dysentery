@@ -1,25 +1,9 @@
-= DJ Link Packet Analysis
+= Mixer Startup
 James Elliott <james@deepsymmetry.org>
 :icons: font
 :experimental:
 
-// Set up support for relative links on GitHub, and give it
-// usable icons for admonitions, w00t! Add more conditions
-// if you need to support other environments and extensions.
-ifdef::env-github[]
-:outfilesuffix: .adoc
-:tip-caption: :bulb:
-:note-caption: :information_source:
-:important-caption: :heavy_exclamation_mark:
-:caution-caption: :fire:
-:warning-caption: :warning:
-endif::env-github[]
-
-// Render section header anchors in a GitHub-compatible way.
-ifndef::env-github[]
-:idprefix:
-:idseparator: -
-endif::env-github[]
+== Background
 
 The protocol used by Pioneer professional DJ equipment to communicate
 and coordinate performances can be monitored to provide useful
@@ -231,18 +215,6 @@ include::example$startup_shared.edn[]
   (draw-box (hex-text val) :box-related))
 (draw-box 0 :box-last)
 (next-row)
-----
-
-
-
-To be continued...
-
-.Cue point response message.
-[bytefield]
-----
-;; Figure 48
-include::example$dbserver_shared.edn[]
-include::example$cue_point_response.edn[]
 ----
 
 include::partial$Footer.adoc[]

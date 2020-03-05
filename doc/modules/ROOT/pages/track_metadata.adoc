@@ -1,0 +1,140 @@
+= Track Metadata
+James Elliott <james@deepsymmetry.org>
+:icons: font
+:experimental:
+
+Thanks to https://github.com/EvanPurkhiser[@EvanPurkhiser], we finally
+started making progress in retrieving metadata from CDJs, and then
+some shared code from https://bitbucket.org/awwright/libpdjl[Austin
+Wright] boosted our understanding considerably, and led to this
+section.
+
+== Connecting to the Database
+
+The first step is to determine the port on which the player is
+offering its remote database server. That can be determined by opening
+a TCP connection to port 12523 on the player and sending it sending
+a packet with the following content:
+
+.DB Server query packet.
+[bytefield]
+----
+(draw-column-headers)
+(draw-row-header "00")
+(draw-box 0 {:borders #{:left :top}})
+(doseq [val [0 0]]
+  (draw-box val {:borders #{:top}}))
+(draw-box 0xf {:borders #{:top :bottom}})
+(doseq [c "RemoteDBSer"]
+  (draw-box (text c :hex) :box-related))
+(draw-box (text "v" :hex) :box-last)
+(next-row)
+
+(draw-row-header "10")
+(draw-box (text "e" :hex) {:borders #{:left :bottom}})
+(draw-box (text "r" :hex) {:borders #{:bottom}})
+(draw-box 0 {:borders #{:bottom :right}})
+(next-row)
+----
+
+The player will send back a two-byte response, containing the high
+byte of the port number followed by the low byte. So far, the response
+from a CDJ has always indicated a port number of 1051, but using this
+query to determine the port to use will protect you against any future
+changes. The same query can also be sent to a laptop running rekordbox
+to find the rekordbox database server port, which can also be queried
+for metadata in the exact same way described below.
+
+To find the metadata associated with a particular track, given its
+rekordbox ID number, as well as the player and slot from which it was
+loaded (all of which can be determined from a CDJ status packet
+received by a virtual CDJ as described in TODO: _Section 4_), open a
+TCP connection to the device from which the track was loaded, using
+the port that it gave you in response to the DB Server query packet,
+then send the following four packets. (You can also get metadata for
+non-rekordbox tracks, even for CD Audio tracks being played in the CD
+slot, using the variation described in TODO: _Section 6.6_.)
+
+Once you have determined the database port, send it a setup packet
+with the following content, and the server will send the same five
+bytes back:
+
+.Database connection setup packet.
+[bytefield]
+----
+(def boxes-per-row 5)
+(def left-margin 1)
+(draw-column-headers)
+(draw-box 0x11)
+(draw-box 1 {:span 4})
+(next-row)
+----
+
+All further packets have a shared structure. They consist of lists of
+type-tagged fields (a type byte, followed some number of value bytes,
+although in the case of the variable-size types, the first four bytes
+are a big-endian integer that specifies the length of the additional
+value bytes that make up the field). So far, there are four known
+field types, and it turns out that the packet we just saw is one of
+them, it represents the number 1 as a 4-byte integer.
+
+== Field Types
+
+The first byte of a field identifies what type of field is coming. The
+values `0f`, `10`, and `11` are followed by `1`, `2`, and `4` byte
+fixed-length integer fields, while `14` and `26` introduce
+variable-length fields, a binary blob and a UTF-16 big-endian string
+respectively.
+
+=== Number Fields
+
+Number fields are indicated by an initial byte `0f`, `10`, or `11`
+which is followed by big-endian integer value of length `1`, `2`, or
+`4` bytes respectively, as shown below. So, as noted above, the
+initial greeting packet sent to and received back from the database
+server is a number field, four bytes long, representing the value 1.
+
+.Number Field of length 1.
+[bytefield]
+----
+(def boxes-per-row 2)
+(def left-margin 1)
+(draw-column-headers)
+(draw-box 0xf)
+(draw-box (text "n" :math))
+(next-row)
+----
+
+.Number Field of length 2.
+[bytefield]
+----
+(def boxes-per-row 3)
+(def left-margin 1)
+(draw-column-headers)
+(draw-box 0x10)
+(draw-box (text "n" :math) {:span 2})
+(next-row)
+----
+
+.Number Field of length 4.
+[bytefield]
+----
+(def boxes-per-row 5)
+(def left-margin 1)
+(draw-column-headers)
+(draw-box 0x11)
+(draw-box (text "n" :math) {:span 4})
+(next-row)
+----
+
+To be continued...
+
+.Cue point response message.
+[bytefield]
+----
+;; Figure 48
+include::example$dbserver_shared.edn[]
+include::example$cue_point_response.edn[]
+----
+
+include::partial$Footer.adoc[]

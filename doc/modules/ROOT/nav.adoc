@@ -1,1 +1,2 @@
 * xref:mixer.adoc[Mixer Startup]
+* xref:track_metadata.adoc[Track Metadata]
