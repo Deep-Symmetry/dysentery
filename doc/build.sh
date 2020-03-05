@@ -37,14 +37,6 @@ then
     cd ..
 fi
 
-# Install the clojure CLI tools (Netlify currently only offers Leiningen)
-if [ ! -d "clojure" ]
-then
-    curl -O https://download.clojure.org/install/linux-install-1.10.1.536.sh
-    chmod +x linux-install-1.10.1.536.sh
-    ./linux-install-1.10.1.536.sh --prefix "$PWD/clojure"
-fi
-
 # Build the unreleased byte field generator
 if [ ! -d "generator" ]
 then
