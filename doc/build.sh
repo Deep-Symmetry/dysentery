@@ -18,7 +18,7 @@ then
 fi
 
 # Build the unreleased Antora LUNR plugin
-if [! -d "antora-lunr"]
+if [ ! -d "antora-lunr"]
 then
     git clone https://github.com/djencks/antora-lunr.git
     cd antora-lunr
@@ -28,7 +28,7 @@ then
 fi
 
 # Build the unreleased generic SVG generator plugin
-if [! -d "extension" ]
+if [ ! -d "extension" ]
 then
     git clone https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js.git extension
     cd extension
@@ -38,7 +38,7 @@ then
 fi
 
 # Build the unreleased byte field generator
-if [! -d "generator"]
+if [ ! -d "generator"]
 then
     git clone https://github.com/Deep-Symmetry/bytefield-svg generator
     cd generator
