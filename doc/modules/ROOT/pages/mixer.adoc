@@ -60,8 +60,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 0x0a)
 (draw-device-name-row)
 
-(draw-box 1)
-(draw-box (hex-text 2 2 :bold))
+(draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
 (draw-box 2)
 ----
@@ -99,11 +98,9 @@ include::example$startup_shared.edn[]
 (draw-packet-header 0)
 (draw-device-name-row)
 
-(draw-box 1)
-(draw-box (hex-text 2 2 :bold))
+(draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
-(draw-box (text "N" :math))
-(draw-box 2)
+(draw-boxes [(text "N" :math) 2])
 (draw-box "MAC address" {:span 6})
 ----
 
@@ -125,13 +122,11 @@ include::example$startup_shared.edn[]
 (draw-packet-header 2)
 (draw-device-name-row)
 
-(draw-box 1)
-(draw-box (hex-text 2 2 :bold))
+(draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
 (draw-box "IP address" {:span 4})
 (draw-box "MAC address" {:span 6})
-(draw-box (text "D" :math))
-(draw-box (text "N" :math))
+(draw-boxes (map #(text % :math) ["D" "N"]))
 
 (draw-box 2 :box-first)
 (draw-box 1 :box-last)
@@ -159,15 +154,12 @@ include::example$startup_shared.edn[]
 (draw-packet-header 4)
 (draw-device-name-row)
 
-(draw-box 1)
-(draw-box (hex-text 2 2 :bold))
+(draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
 (draw-box 1 :box-first)
-(doseq [val [2 0]]
-  (draw-box val :box-related))
+(draw-boxes [2 0] :box-related)
 (draw-box 0x26 :box-last)
-(draw-box (text "D" :math))
-(draw-box (text "N" :math))
+(draw-boxes (map #(text % :math) ["D" "N"]))
 ----
 
 As before the value _D_ at byte `24` is the same as the device number
@@ -189,17 +181,14 @@ include::example$startup_shared.edn[]
 (draw-packet-header 6)
 (draw-device-name-row)
 
-(draw-box 1)
-(draw-box (hex-text 2 2 :bold))
+(draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
-(draw-box (text "D" :math))
-(draw-box 2)
+(draw-boxes [(text "D" :math) 2])
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
 
 (draw-box 1 :box-first)
-(doseq [val [0 0 0 2]]
-  (draw-box (hex-text val) :box-related))
+(draw-boxes (map hex-text [0 0 0 2]) :box-related)
 (draw-box 0 :box-last)
 ----
 
