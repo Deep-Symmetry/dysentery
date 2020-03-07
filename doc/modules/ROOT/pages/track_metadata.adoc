@@ -20,7 +20,6 @@ a packet with the following content:
 [bytefield]
 ----
 (draw-column-headers)
-(draw-row-header "00")
 (draw-box 0 {:borders #{:left :top}})
 (doseq [val [0 0]]
   (draw-box val {:borders #{:top}}))
@@ -28,13 +27,10 @@ a packet with the following content:
 (doseq [c "RemoteDBSer"]
   (draw-box (text c :hex) :box-related))
 (draw-box (text "v" :hex) :box-last)
-(next-row)
 
-(draw-row-header "10")
 (draw-box (text "e" :hex) {:borders #{:left :bottom}})
 (draw-box (text "r" :hex) {:borders #{:bottom}})
 (draw-box 0 {:borders #{:bottom :right}})
-(next-row)
 ----
 
 The player will send back a two-byte response, containing the high
@@ -67,7 +63,6 @@ bytes back:
 (draw-column-headers)
 (draw-box 0x11)
 (draw-box 1 {:span 4})
-(next-row)
 ----
 
 All further packets have a shared structure. They consist of lists of
@@ -102,7 +97,6 @@ server is a number field, four bytes long, representing the value 1.
 (draw-column-headers)
 (draw-box 0xf)
 (draw-box (text "n" :math))
-(next-row)
 ----
 
 .Number Field of length 2.
@@ -113,7 +107,6 @@ server is a number field, four bytes long, representing the value 1.
 (draw-column-headers)
 (draw-box 0x10)
 (draw-box (text "n" :math) {:span 2})
-(next-row)
 ----
 
 .Number Field of length 4.
@@ -124,7 +117,6 @@ server is a number field, four bytes long, representing the value 1.
 (draw-column-headers)
 (draw-box 0x11)
 (draw-box (text "n" :math) {:span 4})
-(next-row)
 ----
 
 === Binary Fields
@@ -142,7 +134,6 @@ grid):
 (draw-box 0x14)
 (draw-box (text "length" :math) {:span 4})
 (draw-box "Binary Data" [{:span 11} :box-above])
-(next-row)
 (draw-gap)
 (draw-bottom)
 ----
@@ -163,7 +154,6 @@ represented by `0000`:
 (draw-box 0x26)
 (draw-box (text "length" :math) {:span 4})
 (draw-box "UTF-16BE string" [{:span 11} :box-above])
-(next-row)
 (draw-gap)
 (draw-bottom)
 ----

@@ -60,12 +60,10 @@ include::example$startup_shared.edn[]
 (draw-packet-header 0x0a)
 (draw-device-name-row)
 
-(draw-row-header "20")
 (draw-box 1)
 (draw-box (hex-text 2 2 :bold))
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
 (draw-box 2)
-(next-row)
 ----
 
 Byte `0a` (inside the green header section) is shown in bold because
@@ -101,14 +99,12 @@ include::example$startup_shared.edn[]
 (draw-packet-header 0)
 (draw-device-name-row)
 
-(draw-row-header "20")
 (draw-box 1)
 (draw-box (hex-text 2 2 :bold))
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
 (draw-box (text "N" :math))
 (draw-box 2)
 (draw-box "MAC address" {:span 6})
-(next-row)
 ----
 
 The value _N_ at byte `24` is `01`, `02`, or `03`, depending on
@@ -129,7 +125,6 @@ include::example$startup_shared.edn[]
 (draw-packet-header 2)
 (draw-device-name-row)
 
-(draw-row-header "20")
 (draw-box 1)
 (draw-box (hex-text 2 2 :bold))
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
@@ -137,12 +132,9 @@ include::example$startup_shared.edn[]
 (draw-box "MAC address" {:span 6})
 (draw-box (text "D" :math))
 (draw-box (text "N" :math))
-(next-row)
 
-(draw-row-header "30")
 (draw-box 2 :box-first)
 (draw-box 1 :box-last)
-(next-row)
 ----
 
 I identify these as claiming/identifying the device number because the
@@ -167,7 +159,6 @@ include::example$startup_shared.edn[]
 (draw-packet-header 4)
 (draw-device-name-row)
 
-(draw-row-header "20")
 (draw-box 1)
 (draw-box (hex-text 2 2 :bold))
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
@@ -177,7 +168,6 @@ include::example$startup_shared.edn[]
 (draw-box 0x26 :box-last)
 (draw-box (text "D" :math))
 (draw-box (text "N" :math))
-(next-row)
 ----
 
 As before the value _D_ at byte `24` is the same as the device number
@@ -199,7 +189,6 @@ include::example$startup_shared.edn[]
 (draw-packet-header 6)
 (draw-device-name-row)
 
-(draw-row-header "20")
 (draw-box 1)
 (draw-box (hex-text 2 2 :bold))
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
@@ -207,14 +196,11 @@ include::example$startup_shared.edn[]
 (draw-box 2)
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
-(next-row)
 
-(draw-row-header "30")
 (draw-box 1 :box-first)
 (doseq [val [0 0 0 2]]
   (draw-box (hex-text val) :box-related))
 (draw-box 0 :box-last)
-(next-row)
 ----
 
 include::partial$Footer.adoc[]

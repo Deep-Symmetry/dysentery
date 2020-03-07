@@ -1,6 +1,5 @@
 (draw-remotedb-header 0x4702 9)
 
-(draw-row-header "20")
 (draw-box 0x11)
 (draw-box 0x2104 {:span 4})
 (draw-box 0x11)
@@ -8,12 +7,9 @@
 (draw-box 0x11)
 (draw-box (text "length" [:math] [:sub 1]) {:span 4})
 (draw-box 0x14)
-(next-row)
 
-(draw-row-header "30")
 (draw-box (text "length" [:math] [:sub 1]) {:span 4})
 (draw-box "Cue and loop point bytes" [{:span 12} :box-above])
-(next-row)
 (draw-gap)
 
 (draw-box nil :box-below)
@@ -23,13 +19,11 @@
 (draw-box (text "num" [:math] [:sub "hot"]) {:span 4})
 (draw-box 0x11)
 (draw-box (text "num" [:math] [:sub "cue"]) {:span 4})
-(next-row)
 
 (draw-box 0x11)
 (draw-box (text "length" [:math] [:sub 2]) {:span 4})
 (draw-box 0x14)
 (draw-box (text "length" [:math] [:sub 2]) {:span 4})
 (draw-box "Unknown bytes" [{:span 6} :box-above])
-(next-row)
 (draw-gap)
 (draw-bottom)
