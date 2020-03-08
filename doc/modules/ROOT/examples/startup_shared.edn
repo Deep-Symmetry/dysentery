@@ -1,20 +1,14 @@
+;; Functions to draw common features of startup (announcement) packets.
+
 ;; Some nice default background colors, used to distinguish header sections.
 (defattrs :bg-green {:fill "#a0ffa0"})
 
 (defn draw-packet-header
-  "Generates the byte labels and first row of a standard DJ Link startup
-  packet with the specified `kind` byte."
+  "Generates the byte labels and first two rows of a standard DJ Link
+  startup packet with the specified `kind` byte."
   [kind]
   (draw-column-headers)
-  (draw-box 0x51 [:box-first :bg-green])
-  (doseq [val [0x73 0x70 0x74 0x31 0x57 0x6d 0x4a 0x4f 0x4c]]
-    (draw-box val [:box-related :bg-green]))
-  (draw-box (hex-text kind 2 :bold) [:box-related :bg-green])
-  (draw-box 0 [:box-last :bg-green])
-  (draw-box nil [{:span 4} :box-above]))
-
-(defn draw-device-name-row
-  "Draws the second row common to most device packets which is entirely
-  filled with bytes from its name."
-  []
+  (draw-related-boxes [0x51 0x73 0x70 0x74 0x31 0x57 0x6d 0x4a 0x4f 0x4c (hex-text kind 2 :bold) 0]
+                      :bg-green)
+  (draw-box nil [{:span 4} :box-above])
   (draw-box (text "Device Name (padded with " :plain [:hex "00"] ")") [{:span 16} :box-below]))

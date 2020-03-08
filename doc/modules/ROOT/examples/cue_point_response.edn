@@ -1,29 +1,20 @@
 (draw-remotedb-header 0x4702 9)
 
-(draw-box 0x11)
-(draw-box 0x2104 {:span 4})
-(draw-box 0x11)
-(draw-box 0 {:span 4})
-(draw-box 0x11)
-(draw-box (text "length" [:math] [:sub 1]) {:span 4})
-(draw-box 0x14)
+(draw-number-field 0x2104)
+(draw-number-field 0)
+(draw-number-field (text "length" [:math] [:sub 1]))
+(draw-field 0x14 (text "length" [:math] [:sub 1]))  ; Binary field
 
-(draw-box (text "length" [:math] [:sub 1]) {:span 4})
 (draw-box "Cue and loop point bytes" [{:span 12} :box-above])
 (draw-gap)
 
 (draw-box nil :box-below)
-(draw-box 0x11)
-(draw-box 0x36 {:span 4})
-(draw-box 0x11)
-(draw-box (text "num" [:math] [:sub "hot"]) {:span 4})
-(draw-box 0x11)
-(draw-box (text "num" [:math] [:sub "cue"]) {:span 4})
+(draw-number-field 0x36)
+(draw-number-field (text "num" [:math] [:sub "hot"]))
+(draw-number-field (text "num" [:math] [:sub "cue"]))
 
-(draw-box 0x11)
-(draw-box (text "length" [:math] [:sub 2]) {:span 4})
-(draw-box 0x14)
-(draw-box (text "length" [:math] [:sub 2]) {:span 4})
+(draw-number-field (text "length" [:math] [:sub 2]))
+(draw-field 0x14 (text "length" [:math] [:sub 2]))  ; Binary field
 (draw-box "Unknown bytes" [{:span 6} :box-above])
 (draw-gap)
 (draw-bottom)

@@ -58,7 +58,6 @@ content:
 include::example$startup_shared.edn[]
 
 (draw-packet-header 0x0a)
-(draw-device-name-row)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
@@ -96,7 +95,6 @@ millisecond intervals, and have the following content:
 include::example$startup_shared.edn[]
 
 (draw-packet-header 0)
-(draw-device-name-row)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
@@ -120,7 +118,6 @@ millisecond intervals, with the following content:
 include::example$startup_shared.edn[]
 
 (draw-packet-header 2)
-(draw-device-name-row)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
@@ -152,13 +149,10 @@ content shown here:
 include::example$startup_shared.edn[]
 
 (draw-packet-header 4)
-(draw-device-name-row)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
-(draw-box 1 :box-first)
-(draw-boxes [2 0] :box-related)
-(draw-box 0x26 :box-last)
+(draw-related-boxes [1 2 0 0x26])
 (draw-boxes (map #(text % :math) ["D" "N"]))
 ----
 
@@ -179,7 +173,6 @@ the following content:
 include::example$startup_shared.edn[]
 
 (draw-packet-header 6)
-(draw-device-name-row)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" [:math] [:sub "p"]) {:span 2})
@@ -187,9 +180,7 @@ include::example$startup_shared.edn[]
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
 
-(draw-box 1 :box-first)
-(draw-boxes (map hex-text [0 0 0 2]) :box-related)
-(draw-box 0 :box-last)
+(draw-related-boxes [1 0 0 0 2 0])
 ----
 
 include::partial$Footer.adoc[]

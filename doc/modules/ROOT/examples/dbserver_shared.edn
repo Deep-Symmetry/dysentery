@@ -15,6 +15,35 @@
                                                   :borders #{}
                                                   :height  14}))
 
+(defn draw-field
+  "Generates the two boxes which represent a tagged database field with
+  a particular `kind` and byte `length` of the length bytes. Defaults
+  to a length field size of 4 bytes. Additional attributes can be
+  optionally specified after the size."
+  ([kind label]
+   (draw-field kind label 4 nil))
+  ([kind label size]
+   (draw-field kind label size nil))
+  ([kind label size attr-spec]
+   (draw-box kind [attr-spec :box-first])
+   (draw-box label [attr-spec {:span size} :box-last])))
+
+(defn draw-number-field
+  "Generates the two boxes which represent a number with a particular
+  byte length in a database transaction. Defaults to a size of 4
+  bytes. Additional attributes can be optionally specified after the
+  size."
+  ([label]
+   (draw-number-field label 4 nil))
+  ([label size]
+   (draw-number-field label size nil))
+  ([label size attr-spec]
+   (let [kind (case size
+                1 0x0f
+                2 0x10
+                4 0x11)]
+     (draw-field kind label size attr-spec))))
+
 (defn draw-remotedb-header
   "Generates the byte and field labels and standard header fields of a
   request or response message for the remotedb database server with
@@ -28,21 +57,26 @@
   (draw-group-label-header 1 "tags")
   (next-row 18)
 
-  (draw-box 0x11 :bg-green)
-  (draw-box 0x872349ae [{:span 4} :bg-green])
-  (draw-box 0x11 :bg-yellow)
-  (draw-box (text "TxID" :math) [{:span 4} :bg-yellow])
-  (draw-box 0x10 :bg-pink)
-  (draw-box (hex-text kind 4 :bold) [{:span 2} :bg-pink])
-  (draw-box 0x0f :bg-cyan)
-  (draw-box (hex-text args 2 :bold) :bg-cyan)
-  (draw-box 0x14 :bg-purple)
+  (draw-number-field 0x872349ae 4 :bg-green)
+  (draw-number-field (text "TxID" :math) 4 :bg-yellow)
+  (draw-number-field (hex-text kind 4 :bold) 2 :bg-pink)
+  (draw-number-field (hex-text args 2 :bold) 1 :bg-cyan)
+  (draw-box 0x14 [:bg-purple {:borders {:left   :border-unrelated
+                                        :top    :border-unrelated
+                                        :right  :border-related
+                                        :bottom :border-related}}])
 
   (draw-box (text "0000000c" :hex [[:plain {:font-weight "light" :font-size 16}] " (12)"])
-            [{:span 4} :bg-purple])
-  (draw-box (hex-text 6 2 :bold) [:box-first :bg-purple])
+            [{:span 4} [:bg-purple {:borders {:left   :border-related
+                                              :top    :border-unrelated
+                                              :right  :border-related
+                                              :bottom :border-unrelated}}]])
+  (draw-box (hex-text 6 2 :bold) [:box-related :bg-purple])
   (doseq [val [6 6 3 6 6 6 6 3]]
     (draw-box (hex-text val 2 :bold) [:box-related :bg-purple]))
   (doseq [val [0 0]]
     (draw-box val [:box-related :bg-purple]))
-  (draw-box 0 [:box-last :bg-purple]))
+  (draw-box 0 [:bg-purple {:borders {:left   :border-related
+                                     :top    :border-related
+                                     :right  :border-unrelated
+                                     :bottom :border-unrelated}}]))

@@ -58,11 +58,11 @@ bytes back:
 .Database connection setup packet.
 [bytefield]
 ----
+include::example$dbserver_shared.edn[]
 (def boxes-per-row 5)
 (def left-margin 1)
 (draw-column-headers)
-(draw-box 0x11)
-(draw-box 1 {:span 4})
+(draw-number-field 1)
 ----
 
 All further packets have a shared structure. They consist of lists of
@@ -92,31 +92,31 @@ server is a number field, four bytes long, representing the value 1.
 .Number Field of length 1.
 [bytefield]
 ----
+include::example$dbserver_shared.edn[]
 (def boxes-per-row 2)
 (def left-margin 1)
 (draw-column-headers)
-(draw-box 0xf)
-(draw-box (text "n" :math))
+(draw-number-field (text "n" :math) 1)
 ----
 
 .Number Field of length 2.
 [bytefield]
 ----
+include::example$dbserver_shared.edn[]
 (def boxes-per-row 3)
 (def left-margin 1)
 (draw-column-headers)
-(draw-box 0x10)
-(draw-box (text "n" :math) {:span 2})
+(draw-number-field (text "n" :math) 2)
 ----
 
 .Number Field of length 4.
 [bytefield]
 ----
+include::example$dbserver_shared.edn[]
 (def boxes-per-row 5)
 (def left-margin 1)
 (draw-column-headers)
-(draw-box 0x11)
-(draw-box (text "n" :math) {:span 4})
+(draw-number-field (text "n" :math))
 ----
 
 === Binary Fields
@@ -130,9 +130,9 @@ grid):
 .Binary (Blob) Field.
 [bytefield]
 ----
+include::example$dbserver_shared.edn[]
 (draw-column-headers)
-(draw-box 0x14)
-(draw-box (text "length" :math) {:span 4})
+(draw-field 0x14 (text "length" :math))
 (draw-box "Binary Data" [{:span 11} :box-above])
 (draw-gap)
 (draw-bottom)
@@ -150,9 +150,9 @@ represented by `0000`:
 .String Field.
 [bytefield]
 ----
+include::example$dbserver_shared.edn[]
 (draw-column-headers)
-(draw-box 0x26)
-(draw-box (text "length" :math) {:span 4})
+(draw-field 0x26 (text "length" :math))
 (draw-box "UTF-16BE string" [{:span 11} :box-above])
 (draw-gap)
 (draw-bottom)
