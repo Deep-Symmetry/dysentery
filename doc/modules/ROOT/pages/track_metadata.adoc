@@ -20,17 +20,9 @@ a packet with the following content:
 [bytefield]
 ----
 (draw-column-headers)
-(draw-box 0 {:borders #{:left :top}})
-(doseq [val [0 0]]
-  (draw-box val {:borders #{:top}}))
-(draw-box 0xf {:borders #{:top :bottom}})
-(doseq [c "RemoteDBSer"]
-  (draw-box (text c :hex) :box-related))
-(draw-box (text "v" :hex) :box-last)
-
-(draw-box (text "e" :hex) {:borders #{:left :bottom}})
-(draw-box (text "r" :hex) {:borders #{:bottom}})
-(draw-box 0 {:borders #{:bottom :right}})
+(draw-related-boxes (concat [0 0 0 0x0f]
+                            (map #(text % :hex) "RemoteDBServer")
+                            [0]))
 ----
 
 The player will send back a two-byte response, containing the high
