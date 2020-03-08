@@ -44,6 +44,55 @@
                 4 0x11)]
      (draw-field kind label size attr-spec))))
 
+(defn draw-gap-field
+  "Generates the related multi-row structures that represent a variable
+  length field in a database transaction. `kind` is the tag byte that
+  identifies the type of the field, and `label` describes the content
+  of the payload. The label drawn inside the length field defaults to
+  the word \"length\" in math style, but can be replaced by overriding
+  the `:length-label` attribute. Since `draw-gap` is used to draw the
+  payload, the minimum length required for its label can be adjusted
+  with the `:min-label-columns` attribute."
+  ([kind label]
+   (draw-gap-field kind label nil))
+  ([kind label attr-spec]
+   (let [{:keys [length-label]
+          :or   {length-label (text "length" [:math])}
+          :as   attrs} (eval-attribute-spec attr-spec)]
+     (draw-box kind [attr-spec {:borders {:left   :border-unrelated
+                                          :top    :border-unrelated
+                                          :right  :border-related
+                                          :bottom :border-related}}])
+     (draw-box length-label [attr-spec {:span 4 :borders {:left   :border-related
+                                                          :top    :border-unrelated
+                                                          :right  :border-related
+                                                          :bottom :border-related}}])
+     (draw-gap label [attr-spec {:box-above-style :box-above-related}]))))
+
+(defn draw-binary-field
+  "Generates the variable-length structure representing a binary field.
+  Calls `draw-gap-field` with a `kind` of `0x14`. See that function
+  for other argument details."
+  ([label]
+   (draw-gap-field 0x14 label nil))
+  ([label attr-spec]
+   (draw-gap-field 0x14 label attr-spec)))
+
+(defn draw-string-field
+  "Generates the variable-length structure representing a string field.
+  Calls `draw-gap-field` with a `kind` of `0x26`. See that function
+  for other argument details."
+  ([label]
+   (draw-gap-field 0x26 label nil))
+  ([label attr-spec]
+   (draw-gap-field 0x26 label attr-spec)))
+
+(defn length-label
+  "Handles the common case where a structure has multiple length fields
+  distinguished by subscripts."
+  [subscript]
+  (text "length" [:math] [:sub subscript]))
+
 (defn draw-remotedb-header
   "Generates the byte and field labels and standard header fields of a
   request or response message for the remotedb database server with

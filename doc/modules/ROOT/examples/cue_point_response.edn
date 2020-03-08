@@ -2,16 +2,17 @@
 
 (draw-number-field 0x2104)
 (draw-number-field 0)
-(draw-number-field (text "length" [:math] [:sub 1]))
-(draw-field 0x14 (text "length" [:math] [:sub 1]))  ; Binary field
-(draw-gap "Cue and loop point bytes")
+
+(let [label (length-label 1)]
+  (draw-number-field label)
+  (draw-binary-field "Cue and loop point bytes" {:length-label label}))
 
 (draw-box nil :box-below)
 (draw-number-field 0x36)
 (draw-number-field (text "num" [:math] [:sub "hot"]))
 (draw-number-field (text "num" [:math] [:sub "cue"]))
 
-(draw-number-field (text "length" [:math] [:sub 2]))
-(draw-field 0x14 (text "length" [:math] [:sub 2]))  ; Binary field
-(draw-gap "Unknown bytes" {:min-label-columns 6})
+(let [label (length-label 2)]
+  (draw-number-field label)
+  (draw-binary-field "Unknown bytes" {:length-label label :min-label-columns 6}))
 (draw-bottom)

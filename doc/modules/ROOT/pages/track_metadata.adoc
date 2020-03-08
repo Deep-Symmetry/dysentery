@@ -124,8 +124,7 @@ grid):
 ----
 include::example$dbserver_shared.edn[]
 (draw-column-headers)
-(draw-field 0x14 (text "length" :math))
-(draw-gap "Binary Data")
+(draw-binary-field "Binary Data")
 (draw-bottom)
 ----
 
@@ -143,8 +142,7 @@ represented by `0000`:
 ----
 include::example$dbserver_shared.edn[]
 (draw-column-headers)
-(draw-field 0x26 (text "length" :math))
-(draw-gap "UTF-16BE string")
+(draw-string-field "UTF-16BE string")
 (draw-bottom)
 ----
 
