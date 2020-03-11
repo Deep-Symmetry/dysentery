@@ -1,2 +1,3 @@
 * xref:startup.adoc[Mixer and CDJ Startup]
+* xref:beats.adoc[Tracking BPM and Beats]
 * xref:track_metadata.adoc[Track Metadata]

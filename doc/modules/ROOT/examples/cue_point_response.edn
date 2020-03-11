@@ -9,8 +9,8 @@
 
 (draw-box nil :box-below)
 (draw-number-field 0x36)
-(draw-number-field (text "num" [:math] [:sub "hot"]))
-(draw-number-field (text "num" [:math] [:sub "cue"]))
+(draw-number-field (text "num" :math [:sub "hot"]))
+(draw-number-field (text "num" :math [:sub "cue"]))
 
 (let [label (length-label 2)]
   (draw-number-field label)

@@ -61,7 +61,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 0x0a)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
-(draw-box (text "len" [:math] [:sub "p"]) {:span 2})
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
 (draw-box 2)
 ----
 
@@ -99,7 +99,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 0)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
-(draw-box (text "len" [:math] [:sub "p"]) {:span 2})
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
 (draw-boxes [(text "N" :math) 2])
 (draw-box "MAC address" {:span 6})
 ----
@@ -122,7 +122,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 2)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
-(draw-box (text "len" [:math] [:sub "p"]) {:span 2})
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
 (draw-box "IP address" {:span 4})
 (draw-box "MAC address" {:span 6})
 (draw-boxes (map #(text % :math) ["D" "N"]))
@@ -154,7 +154,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 4)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
-(draw-box (text "len" [:math] [:sub "p"]) {:span 2})
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
 (draw-related-boxes [1 2 0 0x26])
 (draw-boxes (map #(text % :math) ["D" "N"]))
 ----
@@ -179,7 +179,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 6)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
-(draw-box (text "len" [:math] [:sub "p"]) {:span 2})
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
 (draw-boxes [(text "D" :math) 2])
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
@@ -205,7 +205,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 0x0a)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
-(draw-box (text "len" [:math] [:sub "p"]) {:span 2})
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
 (draw-box 1)
 ----
 
@@ -223,7 +223,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 0)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
-(draw-box (text "len" [:math] [:sub "p"]) {:span 2})
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
 (draw-boxes [(text "N" :math) 1])
 (draw-box "MAC address" {:span 6})
 ----
@@ -260,7 +260,7 @@ include::example$startup_shared.edn[]
 (draw-packet-header 6)
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
-(draw-box (text "len" [:math] [:sub "p"]) {:span 2})
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
 (draw-boxes [(text "D" :math) 1])
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
@@ -273,7 +273,7 @@ the difference between this and <<#mixer-keep-alive,the mixer
 version>> is that byte `25` (following the device number `D`) has the
 value `01` rather than `02`, and the same is true of the
 second-to-last byte in each of the packets. (Byte `34` is `01` here
-and and `02` in <<#mixer-keep-alive,the mixer version>>.
+and and `02` in <<#mixer-keep-alive,the mixer version>>.)
 
 
 include::partial$Footer.adoc[]

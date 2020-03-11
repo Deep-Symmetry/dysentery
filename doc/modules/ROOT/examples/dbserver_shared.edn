@@ -57,7 +57,7 @@
    (draw-gap-field kind label nil))
   ([kind label attr-spec]
    (let [{:keys [length-label]
-          :or   {length-label (text "length" [:math])}
+          :or   {length-label (text "length" :math)}
           :as   attrs} (eval-attribute-spec attr-spec)]
      (draw-box kind [attr-spec {:borders {:left   :border-unrelated
                                           :top    :border-unrelated
@@ -91,7 +91,7 @@
   "Handles the common case where a structure has multiple length fields
   distinguished by subscripts."
   [subscript]
-  (text "length" [:math] [:sub subscript]))
+  (text "length" :math [:sub subscript]))
 
 (defn draw-remotedb-header
   "Generates the byte and field labels and standard header fields of a

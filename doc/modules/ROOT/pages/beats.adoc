@@ -1,0 +1,76 @@
+= Tracking BPM and Beats
+James Elliott <james@deepsymmetry.org>
+:icons: font
+:experimental:
+
+== Beat Packets
+
+For some time before this analysis was written,
+https://github.com/Deep-Symmetry/afterglow#afterglow[Afterglow] was
+able to synchronize its light shows with music being played on Pioneer
+equipment by observing packets broadcast by the mixer to port 50001.
+
+Using just that approach, however, it was not possible to tell which
+player was the master, so there was no way to determine the down beat
+(the start of each measure). Now that it is possible to to determine
+which CDJ is the master player using the packets described in TODO:
+Section 4, these beat packets have become far more useful, and
+Afterglow now uses
+https://github.com/Deep-Symmetry/beat-link#beat-link[Beat Link], the
+library that resulted from this analysis, to track the down beat based
+on the beat number reported by the master player.
+
+To track beats, open a socket and bind it to port 50001. The devices
+seem to broadcast two different kinds of packets to this port, a
+shorter packet containing `2d` bytes of data, and a longer packet
+containing `60` bytes. The shorter packets contain information about
+which channels are on-air, and fader start/stop commands to the
+players, as described in TODO: Section 9.
+
+The `60`-byte packets are sent on each beat, so even the arrival of
+the packet is interesting information, it means that the player is
+starting a new beat. (CDJs send these packets only when they are
+playing and only for rekordbox-analyzed tracks. The mixer sends them
+all the time, acting as a backup metronome when no other device is
+counting beats.) These packets have the following structure:
+
+.Beat packets.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x28)
+
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-boxes (map #(text % :math) ["nextBeat" "2ndBeat" "nextBar" "4thBeat" "2ndBar" "8thBeat"]) {:span 4})
+(draw-related-boxes (repeat 0x18 0xff))
+(draw-box (text "Pitch" :math) {:span 4})
+(draw-related-boxes [0 0])
+(draw-box (text "BPM" :math) {:span 2})
+(draw-box (text "B" :math [:sub "b"]))
+(draw-related-boxes [0 0])
+(draw-box (text "D" :math))
+----
+
+This introduces our first packet structure variant around the device
+name. The packet header ends immediately after the packet type
+indicator in byte `0a`, so the device name begins one byte earlier at
+byte `0b` (this byte had the value `00` in the
+<<startup#mixer-startup,startup packets>>). As always, the byte after
+the name has the value `01`, but the subtype value which follows that
+(at byte `20`) has the value `00` here, rather than `02` as we saw in
+the <<startup#mixer-startup,startup packets>>. In packets of subtype
+`00` the subtype indicator is followed by the Device Number `D` at
+byte `21`; this is the Player Number as displayed on the CDJ itself,
+or `21` for the mixer, or another value for a computer running
+rekordbox. And that is followed by a different kind of length
+indicator: _len~r~_ at bytes `22`–`23` reports the length of the rest
+of the packet, in other words, the number of bytes which come after
+_len~r~_. In this packet _len~r~_ has the value `003c`. For some
+reason, there is a redundant copy of _D_ at the end of the packet, in
+byte `5f`. That seems common in packets with subtype `00`, and is one
+of many inefficiencies in the protocol.
+
+
+include::partial$Footer.adoc[]
