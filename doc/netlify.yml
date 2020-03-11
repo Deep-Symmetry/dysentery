@@ -1,7 +1,7 @@
 site:
   title: DJ Link Packet Analysis
   url: https://djl-analysis.deepsymmetry.org
-  start_page: djl-analysis::mixer.adoc
+  start_page: djl-analysis::startup.adoc
 content:
   sources:
   - url: https://github.com/Deep-Symmetry/dysentery.git

@@ -1,2 +1,2 @@
-* xref:mixer.adoc[Mixer Startup]
+* xref:startup.adoc[Mixer and CDJ Startup]
 * xref:track_metadata.adoc[Track Metadata]
