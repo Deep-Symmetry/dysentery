@@ -36,12 +36,13 @@ for metadata in the exact same way described below.
 To find the metadata associated with a particular track, given its
 rekordbox ID number, as well as the player and slot from which it was
 loaded (all of which can be determined from a CDJ status packet
-received by a virtual CDJ as described in TODO: _Section 4_), open a
-TCP connection to the device from which the track was loaded, using
-the port that it gave you in response to the DB Server query packet,
-then send the following four packets. (You can also get metadata for
-non-rekordbox tracks, even for CD Audio tracks being played in the CD
-slot, using the variation described in TODO: _Section 6.6_.)
+received by a virtual CDJ as described in
+<<vcdj#creating-vcdj,Creating a Virtual CDJ>>), open a TCP connection
+to the device from which the track was loaded, using the port that it
+gave you in response to the DB Server query packet, then send the
+following four packets. (You can also get metadata for non-rekordbox
+tracks, even for CD Audio tracks being played in the CD slot, using
+the variation described in TODO: _Section 6.6_.)
 
 Once you have determined the database port, send it a setup packet
 with the following content, and the server will send the same five

@@ -1,0 +1,134 @@
+= Detailed Device Status
+James Elliott <james@deepsymmetry.org>
+:icons: font
+:experimental:
+:stem: latexmath
+
+Although some useful information can be obtained simply by watching
+broadcast traffic on a network containing Pioneer gear, in order to
+get important details it is necessary to cause the gear to send you
+information directly. This can be done by simulating a “Virtual
+CDJ”.footnote:[Thanks are due to Diogo Santos for discovering the
+trick of creating a virtual CDJ in order to receive detailed status
+information from other devices.]
+
+[[creating-vcdj]]
+== Creating a Virtual CDJ
+
+To do this, bind a UDP server socket to port 50002 on the network
+interface on which you are receiving DJ-Link traffic, and start
+sending keep-alive packets to port 50000 on the broadcast address as
+if you were a CDJ. Copy the structure of a
+<<startup#cdj-keep-alive,CDJ keep-alive packet>>, but use the actual
+MAC and IP addresses of the network interface on which you are
+receiving DJ-Link traffic, so the devices can see how to reach you.
+
+You can use a value like `05` for _D_ (the device/player number) so as
+not to conflict with any actual players you have on the network, and
+any name you would like. As long as you are sending these packets
+roughly every 1.5 seconds, the other players and mixers will begin
+sending packets directly to the socket you have opened on port 50002.
+
+NOTE: Be forewarned that use of a non-standard player number (outside
+the range 1–4) will interfere with your ability to perform metadata
+requests using `dbserver` queries as described in TODO: Section 6.2.
+In situations where there are four actual players on the network you
+can use alternate ways to get the data, as described in TODO: Section
+12.3.
+
+Each device seems to send status packets roughly every 200 milliseconds.
+
+We are probably not finished learning all the information which can be
+gleaned from these packets, but here is what we know so
+far.footnote:[Examples of packets discussed in this section can be
+found in
+https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/to-virtual.pcapng[this
+WireShark capture].]
+
+
+== Mixer Status Packets
+
+Packets from the mixer will have a length of `38` bytes and the
+following content:
+
+[[mixer-status-packet]]
+.Mixer status packets.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x29)
+
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-box (text "D" :math))
+(draw-related-boxes [0 0])
+(draw-box (text "F" :math))
+(draw-box (text "Pitch" :math) {:span 4})
+(draw-related-boxes [0x80 0])
+(draw-box (text "BPM" :math) {:span 2})
+(draw-related-boxes [0 0x10 0 0 0 9])
+(draw-box (text "M" :math [:sub "h"]))
+(draw-box (text "B" :math [:sub "b"]))
+----
+
+Since these use packet subtype `00`, the _len~r~_ value reports there
+are `14` bytes remaining after it.
+
+
+Packets coming from a DJM-2000 nexus connected as the only mixer on
+the network contain a value of `21` for their Device Number _D_
+(bytes{nbsp}``21`` and `24`).
+
+It seems that rekordbox sometimes sends “mixer status” packets like
+this as well, but with yet another packet subtype variant: it sends a
+value of `01` for byte{nbsp}``20``, and for packets with that subtype,
+the length at bytes `22`-`23` is a _len~p~_ value, reporting the
+length of the entire packet, rather than the number of bytes remaining
+in the packet. The packets are otherwise identical.
+
+The value marked _F_ at byte{nbsp}``27`` is evidently a status flag
+equivalent to the one shown in TODO: Figure 12, although on a mixer
+the only two values seen so far are `f0` when it is the tempo master,
+and `d0` when it is not. So evidently the mixer always considers
+itself to be playing and synced, but never on-air.
+
+There are two places that might contain pitch values,
+bytes{nbsp}``28``–`2b` and bytes{nbsp}``30``–`33`, but since they
+always `100000` (or _+0%_), we can’t be sure. The first value is
+structurally in the same place with respect to _BPM_ as it is found in
+all other packets containing pitch information, so that is the one we
+are assuming is definitive. In any case, since it is always _+0%_, the
+current tempo in beats-per-minute identified by the mixer can be
+obtained as (only the byte offsets are hexadecimal):
+
+[stem]
+++++
+\frac{byte[{\tt 2e}] \times 256 + byte[{\tt 2f}]}{100.0}
+++++
+
+This value is labeled _BPM_ in <<#mixer-status-packet,the diagram>>.
+Unfortunately, this BPM seems to only be valid when a
+rekordbox-analyzed source is playing; when the mixer is doing its own
+beat detection from unanalyzed audio sources, even though it displays
+the detected BPM on the mixer itself, and uses that to drive its beat
+effects, it does not send that value in these packets.
+
+The current beat number within a bar (1, 2, 3 or 4) is sent in
+stem:[byte[{\tt 37}\]], labeled _B~b~_. However, the beat number is
+not synchronized with the master player, and these packets do not
+arrive at the same time as the beat started anyway, so this value is
+not useful for much. The beat number should be determined, when
+needed, from <<beats#beat-packets,beat packets>> that are sent by the
+master player.
+
+The value at stem:[byte[{\tt 36}\]], labeled _M~h~_ (master handoff),
+is used to hand off the tempo master role. It starts out with the
+value `00` when there is no Master player, but as soon as one appears
+it becomes `ff`. If the mixer has been the tempo master and it is
+currently yielding this role to another player, this value will be the
+player number that is becoming tempo master during that handoff, as
+described in TODO: Section 5.
+
+
+include::partial$Footer.adoc[]

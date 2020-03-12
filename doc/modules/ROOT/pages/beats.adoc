@@ -4,6 +4,7 @@ James Elliott <james@deepsymmetry.org>
 :experimental:
 :stem: latexmath
 
+[[beat-packets]]
 == Beat Packets
 
 For some time before this analysis was written,
@@ -35,7 +36,7 @@ playing and only for rekordbox-analyzed tracks. The mixer sends them
 all the time, acting as a backup metronome when no other device is
 counting beats.) These packets have the following structure:
 
-.Beat packets.
+.Beat packet.
 [bytefield]
 ----
 include::example$status_shared.edn[]
@@ -143,9 +144,8 @@ this additional step.]
 
 The counter _B~b~_ at byte{nbsp}``5c`` counts out the beat within each
 bar, cycling _1→2→3→4_ repeatedly, and can be used to identify the
-down beat if it is coming from the master player.
-
-
+down beat if it is coming from the master player (and if the DJ has
+properly established the track's beat grid).
 
 
 include::partial$Footer.adoc[]

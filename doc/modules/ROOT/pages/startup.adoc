@@ -255,6 +255,7 @@ mixer behave in claiming its device number).
 The CDJ then moves to the keep-alive stage, sending out `36`-byte
 packets with the following content:
 
+[[cdj-keep-alive]]
 .CDJ keep-alive packets.
 [bytefield]
 ----
