@@ -2,6 +2,7 @@
 James Elliott <james@deepsymmetry.org>
 :icons: font
 :experimental:
+:stem: latexmath
 
 == Beat Packets
 
@@ -55,22 +56,96 @@ include::example$status_shared.edn[]
 
 This introduces our first packet structure variant around the device
 name. The packet header ends immediately after the packet type
-indicator in byte `0a`, so the device name begins one byte earlier at
-byte `0b` (this byte had the value `00` in the
+indicator in byte{nbsp}``0a``, so the device name begins one byte
+earlier at byte{nbsp}``0b`` (this byte had the value `00` in the
 <<startup#mixer-startup,startup packets>>). As always, the byte after
 the name has the value `01`, but the subtype value which follows that
-(at byte `20`) has the value `00` here, rather than `02` as we saw in
-the <<startup#mixer-startup,startup packets>>. In packets of subtype
-`00` the subtype indicator is followed by the Device Number `D` at
-byte `21`; this is the Player Number as displayed on the CDJ itself,
-or `21` for the mixer, or another value for a computer running
-rekordbox. And that is followed by a different kind of length
-indicator: _len~r~_ at bytes `22`–`23` reports the length of the rest
-of the packet, in other words, the number of bytes which come after
-_len~r~_. In this packet _len~r~_ has the value `003c`. For some
+(at byte{nbsp}``20``) has the value `00` here, rather than `02` as we
+saw in the <<startup#mixer-startup,startup packets>>. In packets of
+subtype `00` the subtype indicator is followed by the Device Number
+`D` at byte{nbsp}``21``; this is the Player Number as displayed on the
+CDJ itself, or `21` for the mixer, or another value for a computer
+running rekordbox. And that is followed by a different kind of length
+indicator: _len~r~_ at bytes{nbsp}``22``-`23` reports the length of
+the rest of the packet, in other words, the number of bytes which come
+after _len~r~_. In this packet _len~r~_ has the value `003c`. For some
 reason, there is a redundant copy of _D_ at the end of the packet, in
-byte `5f`. That seems common in packets with subtype `00`, and is one
-of many inefficiencies in the protocol.
+byte{nbsp}``5f``. That seems common in packets with subtype `00`, and
+is one of many inefficiencies in the protocol.
+
+To facilitate synchronization of variable-tempo tracks, the number of
+milliseconds after which a variety of upcoming beats will occur are
+reported.
+
+NOTE: The timing values for all these upcoming beats are always
+reported as if the track was being played at normal speed, with a
+pitch adjustment of 0%. If a pitch adjustment is in effect, you will
+need to perform the calculation to scale the beat timing values
+yourself.
+
+_nextBeat_ at bytes{nbsp}``24``-`27` is the number of milliseconds in
+which the very next beat will arrive. _2ndBeat_
+(bytes{nbsp}``28``-`2b`) is the number of milliseconds until the beat
+after that. _nextBar_ (bytes{nbsp}``2c``-`2f`) reports the number of
+milliseconds until the next measure of music begins, which may be from
+1 to 4 beats away. _4thBeat_ (bytes{nbsp}``30``-`33`) reports how many
+milliseconds will elapse until the fourth upcoming beat; _2ndBar_
+(bytes{nbsp}``34``-`37`) the interval until the second measure after
+the current one begins (which will occur in 5 to 8 beats, depending
+how far into the current measure we have reached); and _8thBeat_
+(bytes{nbsp}``38``-`3b`) tells how many millieconds we have to wait
+until the eighth upcoming beat will arrive.
+
+The player’s current pitch adjustment{empty}footnote:[The mixer always
+reports a pitch of +0%.] can be found in bytes{nbsp}``54``–`57`,
+labeled _Pitch_. It represents a four-byte pitch adjustment
+percentage, where `0x00100000` represents no adjustment (0%),
+`0x00000000` represents slowing all the way to a complete stop (−100%,
+reachable only in Wide tempo mode), and `0x00200000` represents
+playing at double speed (+100%).
+
+The pitch adjustment percentage represented by _Pitch_ is calculated by
+multipyling the following (hexadecimal) equation by decimal 100:
+
+[stem]
+++++
+\frac{(byte[{\tt 55}] \times {\tt 10000} + byte[{\tt 56}] \times
+  {\tt 100} + byte[{\tt 57}]) - {\tt 100000}}{\tt 100000}
+++++
+
+The current BPM of the track playing on the device{empty}footnote:[The
+mixer passes along the BPM of the master player.] can be found at
+bytes{nbsp}``5a``-`5b` (labeled _BPM_). It is a two-byte integer
+representing one hundred times the current track BPM. So, the current
+track BPM value to two decimal places can be calculated as (in this
+case only the byte offsets are hexadecimal):
+
+[stem]
+++++
+\frac{byte[{\tt 5a}] \times 256 + byte[{\tt 5b}]}{100.0}
+++++
+
+In order to obtain the actual playing BPM (the value shown in the BPM
+display), this value must be multiplied by the current pitch
+adjustment. Since calculating the effective BPM reported by a CDJ is a
+common operation, here a simplified hexadecimal equation that results
+in the effective BPM to two decimal places, by combinining the _BPM_
+and _Pitch_ values:footnote:[Since the mixer always reports a pitch
+adjustment of _+0%_, its _BPM_ value can be used directly without
+this additional step.]
+
+[stem]
+++++
+\frac{(byte[{\tt 5a}] \times {\tt 100} + byte[{\tt 5b}]) \times
+(byte[{\tt 55}] \times {\tt 10000} + byte[{\tt 56}] \times {\tt 100}
++ byte[{\tt 57}])} {\tt 6400000}
+++++
+
+The counter _B~b~_ at byte{nbsp}``5c`` counts out the beat within each
+bar, cycling _1→2→3→4_ repeatedly, and can be used to identify the
+down beat if it is coming from the master player.
+
+
 
 
 include::partial$Footer.adoc[]

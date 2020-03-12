@@ -75,9 +75,9 @@ respectively.
 
 === Number Fields
 
-Number fields are indicated by an initial byte `0f`, `10`, or `11`
-which is followed by big-endian integer value of length `1`, `2`, or
-`4` bytes respectively, as shown below. So, as noted above, the
+Number fields are indicated by an initial byte{nbsp}``0f``, `10`, or
+`11` which is followed by big-endian integer value of length `1`, `2`,
+or `4` bytes respectively, as shown below. So, as noted above, the
 initial greeting packet sent to and received back from the database
 server is a number field, four bytes long, representing the value 1.
 
@@ -113,11 +113,11 @@ include::example$dbserver_shared.edn[]
 
 === Binary Fields
 
-Variable-length binary (blob) fields are indicated by an initial byte
-`14`, followed by a `4` byte big-endian integer which specifies the
-length of the field payload. This length is followed by the specified
-number of bytes (for example, an album art image, waveform or beat
-grid):
+Variable-length binary (blob) fields are indicated by an initial
+byte{nbsp}``14``, followed by a `4` byte big-endian integer which
+specifies the length of the field payload. This length is followed by
+the specified number of bytes (for example, an album art image,
+waveform or beat grid):
 
 .Binary (Blob) Field.
 [bytefield]
@@ -130,12 +130,12 @@ include::example$dbserver_shared.edn[]
 
 === String Fields
 
-Variable-length string fields are indicated by an initial byte `26`,
-followed by a `4` byte big-endian integer which specifies the length
-of the string, in two-byte UTF-16 big-endian characters. So the length
-is folowed by 2 × _length_ bytes containing the actual string
-characters. The last character of the string is always `NUL`,
-represented by `0000`:
+Variable-length string fields are indicated by an initial
+byte{nbsp}``26``, followed by a `4` byte big-endian integer which
+specifies the length of the string, in two-byte UTF-16 big-endian
+characters. So the length is folowed by 2 × _length_ bytes containing
+the actual string characters. The last character of the string is
+always `NUL`, represented by `0000`:
 
 .String Field.
 [bytefield]

@@ -69,14 +69,14 @@ Byte `0a` (inside the green header section) is shown in bold because
 its value changes in the different types of packets that devices send,
 and can be used to tell them apart.
 
-The byte following the device name (at byte `20`) seems to always have
-the value 1 in every kind of packet seen. The next byte is in bold as
-well because it seems to indicate the structure of the remainder of
-the packet. The value `02` is followed by a two-byte value _len~p~_
-that indicates the length of the entire packet (including the
-preceding header bytes), and followed by the payload. In the case of
-this kind of packet, the length is `0025`, and the payload is the
-single-byte value `02`.
+The byte following the device name (at byte{nbsp}``20``) seems to
+always have the value 1 in every kind of packet seen. The next byte is
+in bold as well because it seems to indicate the structure of the
+remainder of the packet. The value `02` is followed by a two-byte
+value _len~p~_ that indicates the length of the entire packet
+(including the preceding header bytes), and followed by the payload.
+In the case of this kind of packet, the length is `0025`, and the
+payload is the single-byte value `02`.
 
 After about three of these packets are sent, another series of three
 begins. It is not clear what purpose these packets serve, because they
@@ -85,10 +85,11 @@ used when CDJs are powering up as part of the mechanism the mixer can
 use to tell them which device number to use based on which network
 port they are connected to?
 
-In any case, these three packets have the value `00` at byte `0a`, a
-data length of `2c` bytes (reflected in _len~p~_), are again sent to
-UDP port 50000 on the local network broadcast address, at roughly 300
-millisecond intervals, and have the following content:
+In any case, these three packets have the value `00` at
+byte{nbsp}``0a``, a data length of `2c` bytes (reflected in _len~p~_),
+are again sent to UDP port 50000 on the local network broadcast
+address, at roughly 300 millisecond intervals, and have the following
+content:
 
 [[mixer-assign-stage-1]]
 .First-stage mixer device number assignment packets.
@@ -104,7 +105,7 @@ include::example$startup_shared.edn[]
 (draw-box "MAC address" {:span 6})
 ----
 
-The value _N_ at byte `24` is `01`, `02`, or `03`, depending on
+The value _N_ at byte{nbsp}``24`` is `01`, `02`, or `03`, depending on
 whether this is the first, second, or third time the packet is sent.
 
 After these comes another series of three numbered packets. These
@@ -132,13 +133,14 @@ include::example$startup_shared.edn[]
 ----
 
 I identify these as claiming/identifying the device number because the
-value _D_ at byte `2e` is the same as the device number that the mixer
-uses to identify itself (`21`) and the same is true for the
+value _D_ at byte{nbsp}``2e`` is the same as the device number that
+the mixer uses to identify itself (`21`) and the same is true for the
 corresponding packets seen from my CDJs (they use device numbers `02`
 and `03`, as they are connected to those ports/channels on the mixer).
 
-As with the previous series of three packets, the value _N_ at byte
-`2f` takes on the values `01`, `02`, and `03` in the three packets.
+As with the previous series of three packets, the value _N_ at
+byte{nbsp}``2f`` takes on the values `01`, `02`, and `03` in the three
+packets.
 
 These are followed by another three packets, perhaps the last stage of
 claiming the device number, again at 300 millisecond intervals, to the
@@ -159,9 +161,10 @@ include::example$startup_shared.edn[]
 (draw-boxes (map #(text % :math) ["D" "N"]))
 ----
 
-As before the value _D_ at byte `24` is the same as the device number
-that the mixer uses to identify itself (`21`) and _N_ at byte `25`
-takes on the values `01`, `02`, and `03` in the three packets.
+As before the value _D_ at byte{nbsp}``24`` is the same as the device
+number that the mixer uses to identify itself (`21`) and _N_ at
+byte{nbsp}``25`` takes on the values `01`, `02`, and `03` in the three
+packets.
 
 Once those are sent, the mixer seems to settle down and send what
 looks like a keep-alive packet to retain presence on the network and
@@ -212,8 +215,8 @@ include::example$startup_shared.edn[]
 Similarly, the next series of three packets from the CDJ are nearly
 identical to those from the mixer. The only difference between the
 following figure and <<#mixer-assign-stage-1,the mixer version>> is
-byte `25` (immediately after the packet counter `N`), which again is
-`01` for the CDJ, and was `02` for the mixer.
+byte{nbsp}``25`` (immediately after the packet counter `N`), which
+again is `01` for the CDJ, and was `02` for the mixer.
 
 .First-stage CDJ device number assignment packets.
 [bytefield]
@@ -239,10 +242,10 @@ if anyone wants to fill in these details, new captures and pull
 requests to this document are welcome.)
 
 Instead, it jumps right to the end of the third and final stage,
-sending a single `26`-byte packet with header byte `0a` set to `04`
-(which identified the three packets of the third stage when the mixer
-was starting up), with content identical to <<#mixer-assign-final,the
-mixer version>>.
+sending a single `26`-byte packet with header byte{nbsp}``0a`` set to
+`04` (which identified the three packets of the third stage when the
+mixer was starting up), with content identical to
+<<#mixer-assign-final,the mixer version>>.
 
 Even though the value of _N_ is `01`, this is the only packet in this
 series that the CDJ sends. It would probably behave differently if
@@ -270,10 +273,10 @@ include::example$startup_shared.edn[]
 
 As seems to always be the case when comparing mixer and CDJ packets,
 the difference between this and <<#mixer-keep-alive,the mixer
-version>> is that byte `25` (following the device number `D`) has the
-value `01` rather than `02`, and the same is true of the
-second-to-last byte in each of the packets. (Byte `34` is `01` here
-and and `02` in <<#mixer-keep-alive,the mixer version>>.)
+version>> is that byte{nbsp}``25`` (following the device number `D`)
+has the value `01` rather than `02`, and the same is true of the
+second-to-last byte in each of the packets. (Byte{nbsp}``34`` is `01`
+here and and `02` in <<#mixer-keep-alive,the mixer version>>.)
 
 
 include::partial$Footer.adoc[]
