@@ -202,6 +202,156 @@ include::example$status_shared.edn[]
 (draw-related-boxes (repeat 7 0))
 ----
 
+These use yet another packet structure variant following the device
+name. As always the byte after the name has the value `01`, but the
+subtype value which follows that (at byte{nbsp}``20``) has the value
+`03` here, rather than `00` as we saw in the mixer status packets.
+Packets of subtype `03` seem structurally equivalent to subtype `00`
+however: the subtype indicator is followed by the Device Number _D_ at
+byte{nbsp}``21`` and a length-remaining value _len~r~_ at
+bytes{nbsp}``22``–`23`. If anyone can think of a reason why these
+packets don’t simply reuse subtype `00`, please share it!
+
+The Device Number in _D_ (bytes{nbsp}``21`` and `24`) is the Player
+Number as displayed on the CDJ itself. In the case of this capture,
+the value of _len~r~_ was `00b0`.
+
+The activity flag _A_ at byte{nbsp}``27`` seems to be `00` when the
+player is idle, and `01` when it is playing, searching, or loading a
+track.
+
+When a track is loaded, the device from which the track was loaded is
+reported in _D~r~_ at byte{nbsp}``28`` (if the track was loaded from
+the local device, this will be the same as _D_; if it was loaded over
+the Link, it will be the number of a different device). When no track
+is loaded, _D~r~_ has the value `00`.
+
+Similarly, _S~r~_ at byte{nbsp}``29`` reports the slot from which the
+track was loaded: the value `00` means no track is loaded, `01` means
+the CD drive, `02` means the SD slot, and `03` means the USB slot.
+When a track is loaded from a rekordbox collection on a laptop, _S~r~_
+has the value `04`. _T~r~_ at byte{nbsp}``2a`` indicates the track
+type. It has the value `00` when no track is loaded, `01` when a
+rekordbox track is loaded, `02` when an unanalyzed track is loaded
+(from a media slot without a rekordbox database, including from a data
+disc), and `05` when an audio CD track is loaded.
+
+The field _rekordbox_ at bytes{nbsp}``2c``–`2f` contains the rekordbox
+database ID of the loaded track when a rekordbox track is being
+played. When a non-rekordboxtrack is loaded from a media slot, it is
+still a unique ID by which the track can be identified for metadata
+requests, and when an audio CD track is loaded, this is just the track
+number. In all cases, combined with the player number and slot
+information, this can be used to request the track metadata as
+described in TODO: Section 6.
+
+The track number being played (its position within a playlist or other
+scrolling list of tracks, as displayed on the CDJ) can be found at
+bytes{nbsp}``32`` and `33`, labeled _Track_. (It may be a 4-byte value
+and also include bytes `30` and `31`, but that would seem an
+unmanageable number of tracks to search through.)
+
+The field _d~l~_ at byte{nbsp}``37`` was given this label because we
+first believed it to indicate when a disc is loaded. It has the value
+`00` when the disc slot is empty, and seems to have the value `1e`
+when a CD Audio disc is loaded, and `11` when a data disc containing
+files in MP3, AAC, WAV or AIFF format is loaded. However, we later
+noticed that it also gets non-zero values when a track is loaded from
+a playlist (`05`) or another player menu (different values, depending
+on the type of menu; if anyone would like to take the time to record
+all the different values and their meanings, a report on the
+https://gitter.im/brunchboy/beat-link-trigger[Gitter channel] or--if
+you are willing to fork the project and update this document, a pull
+request--would be extremely welcome). Relatedly, when a track is
+loaded from a disc, playlist, or menu, the field _d~n~_ at
+bytes{nbsp}``46``–`47` changes from `0000` to the number of tracks on
+the disc or in the playlist or menu (a data disc will generally have
+one track).
+
+Some of the fields shown as having value `00` in this region will
+sometimes have other values in them; their meanings are simply not yet
+known. If you notice any patterns or figure anything out _please_ let
+us know on https://gitter.im/brunchboy/beat-link-trigger[Gitter] or
+open a pull request!
+
+Byte{nbsp}``6a``, labeled _U~a~_ (for “USB activity”), alternates
+between the values `04` and `06` when there is USB activity—it may
+even alternate in time with the flashing USB indicator LED on the
+player, although visual inspection suggests there is not a perfect
+correlation. Byte{nbsp}``6b``, _S~a~_, is the same kind of activity
+indicator for the SD slot.
+
+Byte{nbsp}``6f`` (_U~l~_ for “USB local”) has the value `04` when
+there is no USB media loaded, `00` when USB is loaded, and `02` or
+`03` when the USB Stop button has been pressed and the USB media is
+being unmounted. Byte{nbsp}``73`` (_S~l~_ for “SD local”) has the
+value `04` when there is no SD media loaded, `00` when SD is loaded,
+and `02` or `03` when the SD door has been opened and the SD media is
+being unmounted.
+
+Byte{nbsp}``75``, labeled _L_ (for “Link available”), appears to have
+the value `01` whenever USB, SD, or CD media is present in any player
+on the network, whether or not the Link option is chosen in the other
+players, and `00` otherwise.
+
+Byte{nbsp}``7b``, labeled _P~1~_, appears to describe the current play
+mode. The values seen so far, and their apparent meanings, are:
+
+[[known-p1-values]]
+.Known _P~1~_ values.
+[cols=">1m,<14"]
+|===
+|Value |Meaning
+
+|00 |No track is loaded.
+|02 |A track is in the process of loading.
+|03 |Player is playing normally.
+|04 |Player is playing a loop.
+|05 |Player is paused anywhere other than the cue point.
+|06 |Player is paused at the cue point.
+|07 |Cue Play is in progress (playback while the cue button is held down).
+|08 |Cue scratch is in progress.
+|09 |Player is searching forwards or backwards.
+|0e |Audio CD has spun down due to lack of use.
+|11 |Player reached the end of the track and stopped.
+|===
+
+The value _Firmware_ at bytes{nbsp}``7c``–`7f` is an ASCII
+represenation of the firmware version running in the player.
+
+The value _Sync~n~_ at bytes{nbsp}``84``–`87` changes whenever a
+player gives up being the tempo master; at that point it gets set to a
+value one higher than the highest _Sync~n~_ value reported by any
+other player on the network. This is part of the Baroque master
+handoff dance described in TODO: Section 5.3.
+
+Byte{nbsp}`89`, labeled _F_, is a bit field containing some very
+useful state flags, detailed below.footnote:[We have not yet seen any
+other values for bits 0, 1, 2, or 7 in _F_, so we’re unsure if they
+also carry meaning. If you ever find different values for them, please
+let us know by filing an
+https://github.com/deep-symmetry/dysentery/issues[Issue].] It seems to
+only be available on nexus (and later) players, and older ones always
+send 00 for this byte, which greatly limits the inferences we can make
+about their state.
+
+[[cdj-state-flag-bits]]
+.CDJ state flag bits.
+[bytefield]
+----
+(def boxes-per-row 8)
+(def box-width 70)
+(def left-margin 1)
+(draw-column-headers {:labels (str/split "7,6,5,4,3,2,1,0" #",")})
+(draw-box (hex-text 1 1))
+(draw-box "Play")
+(draw-box "Master")
+(draw-box "Sync")
+(draw-box "On-Air")
+(draw-box (hex-text 1 1))
+(draw-box (hex-text 0 1))
+(draw-box (hex-text 0 1))
+----
 
 
 include::partial$Footer.adoc[]
