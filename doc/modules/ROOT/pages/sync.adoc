@@ -1,0 +1,139 @@
+= Sync and Tempo Master
+James Elliott <james@deepsymmetry.org>
+:icons: font
+:experimental:
+:stem: latexmath
+
+The DJM 2000 nexus has a mode for its touchscreen which allows you to
+see and control which players are synced and which is the tempo
+master, and of course individual players can take over being master as
+well. This section describes the packets used to implement these
+features.
+
+== Sync Control
+
+To tell a player to turn Sync mode on or off, send a packet like the
+one shown below to port 50001 of the target device, with the player
+number that you are pretending to be as the value of _D_, and set the
+value of _S_ to `0x10` if you want the player to turn on Sync, and
+`0x20` if you want it to leave Sync mode.
+
+[[sync-control-packet]]
+.Sync control packet.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x2a)
+
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-related-boxes [0 0 0])
+(draw-box (text "D" :math))
+(draw-related-boxes [0 0 0])
+(draw-box (text "S" :math))
+----
+
+Since this packet uses subtype 00, the length sent in _len~r~_ has the
+value `0008`, reflecting the eight bytes which follow it.
+
+== Tempo Master Assignment
+
+To tell a player to become tempo master, the same type of packet shown
+above is used, with a value of `01` for _S_. This will cause the
+player to behave as if the DJ had pressed its Master button, following
+the steps described in the next section. This packet can be sent to a
+CDJ or DJM mixer.
+
+[[tempo-master-handoff]]
+== Tempo Master Handoff
+
+When a player or mixer is to become tempo master, regardless of
+whether this was initiated by pressing its Master button or by receipt
+of the packet described in the preceding section, the same process is
+followed.
+
+If there is currently no tempo master, the device simply becomes
+master, and starts sending status packets with appropriate values of
+_F_ and _M~m~_ (mixer status packets only have _F_ in them).
+
+If another player is currently tempo master, however, a coordinated
+handoff takes place. The device that wants to become tempo master
+first sends a takeover request packet like the one shown below
+to port 50001 of the current tempo master, with the player number of
+the device wanting to become master as the value of _D_:
+
+[[master-takeover-request-packet]]
+.Tempo master takeover request packet.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x26)
+
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-related-boxes [0 0 0])
+(draw-box (text "D" :math))
+----
+
+Since this packet uses subtype `00`, the length sent in _len~r~_ has
+the value `0004`, reflecting the four bytes which follow it.
+
+The current tempo master will agree to the handoff by sending a packet
+like the following to port 50001 of the device that sent the takeover
+request, with the its own device number as the value of _D_:
+
+[[master-takeover-response-packet]]
+.Tempo master takeover response packet.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x27)
+
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-related-boxes [0 0 0])
+(draw-box (text "D" :math))
+(draw-related-boxes [0 0 0 1])
+----
+
+Since this packet uses subtype 00, the length sent in _len~r~_ has the
+value `0008`, reflecting the eight bytes which follow it.
+
+Once that is done, the outgoing master will continue to report itself
+as the master according to its status packets (bit 5 of _F_ , and for
+CDJs, the value of _M~m~_) but it will announce to the world that the
+handoff is taking place by sending the device number of the device
+that is about to become tempo master as the value of _M~h~_. (See the
+<<vcdj#mixer-status-packet,mixer>> and <<vcdj#cdj-status-packet,CDJ>>
+status packet diagrams for the locations of these bytes.)
+
+As soon as the device becoming tempo master sees its device number in
+_M~h~_ in the status packets from the outgoing tempo master, it starts
+reporting itself as the tempo master using _F_ and, for CDJs, _M~m~_
+in its own status packets.
+
+And as soon as the outgoing tempo master sees the new master has
+asserted this role in its status packets, it stops reporting itself as
+tempo master in its own status packets, goes back to sending the value
+`ff` in _M~h~_, and sets its _Sync~n~_ value to be one greater than
+the _Sync~n~_ value reported by any other player on the network
+(although mixers do not report this value at all). This concludes the
+(rather Baroque) handoff protocol.
+
+== Unsolicited Handoff
+
+While working on synchronizing Pro DJ Link devices with Ableton Link,
+I accidentally discovered that there is another way the tempo master
+role can be handed off. If the device that is currently tempo master
+is stopped (not playing a track), and it sees another device that is
+both synced and playing, it will set _M~h~_ to the device number of
+the synced, playing device, telling it to become the new master. As
+soon as the device named by _M~h~_ sees that status packet, it should
+take over the role as described in the second-to-last paragraph of the
+previous section, even though it did not start the process.
+
+
+include::partial$Footer.adoc[]

@@ -129,7 +129,7 @@ value `00` when there is no Master player, but as soon as one appears
 it becomes `ff`. If the mixer has been the tempo master and it is
 currently yielding this role to another player, this value will be the
 player number that is becoming tempo master during that handoff, as
-described in TODO: Section 5.
+described in <<sync#tempo-master-handoff,Tempo Master Handoff>>.
 
 [[cdj-status-packets]]
 == CDJ Status Packets
@@ -323,7 +323,8 @@ The value _Sync~n~_ at bytes{nbsp}``84``–`87` changes whenever a
 player gives up being the tempo master; at that point it gets set to a
 value one higher than the highest _Sync~n~_ value reported by any
 other player on the network. This is part of the Baroque master
-handoff dance described in TODO: Section 5.3.
+handoff dance described in <<sync#tempo-master-handoff,Tempo Master
+Handoff>>.
 
 Byte{nbsp}``89``, labeled _F_, is a bit field containing some very
 useful status flags.footnote:[We have not yet seen any other values for
@@ -488,12 +489,13 @@ track, so it is unable to send tempo and beat information to other
 players.
 
 The following byte, `9f` (labeled _M~h~_ for “Master handoff“), is
-related. As described in TODO: Section 5, this normally has the value
-`ff`. But when this player is giving up the role of tempo master in
-response to a request from another player that wants to take over, it
-holds that player’s device number until it sees that device announce
-itself as the new master, at which point it turns off its own master
-flags, and this value goes back to `ff`.
+related. As described in <<sync#tempo-master-handoff,Tempo Master
+Handoff>>, this normally has the value `ff`. But when this player is
+giving up the role of tempo master in response to a request from
+another player that wants to take over, it holds that player’s device
+number until it sees that device announce itself as the new master, at
+which point it turns off its own master flags, and this value goes
+back to `ff`.
 
 The 4-byte beat counter (which counts each beat from 1 through the end
 of the track) is found in bytes `a0`–`a3`, labeled _Beat_. When the

@@ -1,4 +1,5 @@
 * xref:startup.adoc[Mixer and CDJ Startup]
 * xref:beats.adoc[Tracking BPM and Beats]
 * xref:vcdj.adoc[Detailed Device Status]
+* xref:sync.adoc[Sync and Tempo Master]
 * xref:track_metadata.adoc[Track Metadata]
