@@ -325,15 +325,14 @@ value one higher than the highest _Sync~n~_ value reported by any
 other player on the network. This is part of the Baroque master
 handoff dance described in TODO: Section 5.3.
 
-Byte{nbsp}`89`, labeled _F_, is a bit field containing some very
-useful state flags, detailed below.footnote:[We have not yet seen any
-other values for bits 0, 1, 2, or 7 in _F_, so we’re unsure if they
-also carry meaning. If you ever find different values for them, please
-let us know by filing an
-https://github.com/deep-symmetry/dysentery/issues[Issue].] It seems to
-only be available on nexus (and later) players, and older ones always
-send 00 for this byte, which greatly limits the inferences we can make
-about their state.
+Byte{nbsp}``89``, labeled _F_, is a bit field containing some very
+useful state flags.footnote:[We have not yet seen any other values for
+bits 0, 1, 2, or 7 in _F_, so we’re unsure if they also carry meaning.
+If you ever find different values for them, please let us know by
+filing an https://github.com/deep-symmetry/dysentery/issues[Issue].]
+It seems to only be available on nexus (and later) players, and older
+ones always send 00 for this byte, which greatly limits the inferences
+we can make about their state:
 
 [[cdj-state-flag-bits]]
 .CDJ state flag bits.
