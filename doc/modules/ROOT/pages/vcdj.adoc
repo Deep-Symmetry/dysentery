@@ -534,5 +534,19 @@ enough for the count to need more than the last three bytes).
 Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus
 players, `1f` for the XDJ-XZ, and `05` for older players.
 
+[[rekordbox-status-packets]]
+== Rekordbox Status packets
+
+Rekordbox sends status packets which appear to be essentially
+identical to those <<#mixer-status-packet,sent by a mixer>>, sending
+“rekordbox” as its device name. The device number _D_
+(bytes{nbsp}``21`` and `24`) seems to be 29, although it will probably
+use conflict resolution to pick an unused number if multiple copies
+are running on the network. The _F_ value we have seen remains
+consistent as a status flag, showing `c0` which would indicate that it
+is always “playing” but not synced, tempo master, nor on the air. The
+_BPM_ value seems to track that of the master player, and the same
+potential pitch values (fixed at `100000`, or +0%) are present, as is
+_M~h~_. _B~b~_ always seems to be zero.
 
 include::partial$Footer.adoc[]
