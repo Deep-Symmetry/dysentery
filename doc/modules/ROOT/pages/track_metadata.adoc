@@ -147,6 +147,119 @@ include::example$dbserver_shared.edn[]
 (draw-bottom)
 ----
 
+== Messages
+
+Messages are introduced by a 4{nbsp}byte Number field containing a
+“magic“ value (it is always `872349ae`). This is followed by another
+4{nbsp}byte number field that contains a transaction ID (_TxID_),
+which starts at 1 and is incremented for each query sent, and all
+messages sent in response to that query will contain the same
+transaction ID. This is followed by a 2{nbsp}byte number field
+containing the message _type_, a 1{nbsp}byte number field (_n_)
+containing the number of argument fields present in the message, and a
+blob field containing a series of bytes which identify the types of
+each argument field (shown as _t~1~_ through _t~12~_ below). This blob
+is always twelve bytes long, regardless of how few arguments there are
+(and presumably this means no message ever has more than twelve
+arguments). Tag bytes past the actual argument count of the message
+are set to 0.
+
+This header is followed by the fields that make up the message
+arguments, if any. In other words, the message body consists of
+arguments identified by the header.
+
+.Message structure showing header fields.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-column-headers)
+(draw-number-field 0x872349ae 4 :bg-green)
+(draw-number-field (text "TxID" :math) 4 :bg-yellow)
+(draw-number-field (text "type" :math) 2 :bg-pink)
+(draw-number-field (text "n" :math) 1 :bg-cyan)
+(draw-box 0x14 [:bg-purple {:borders {:left   :border-unrelated
+                                      :top    :border-unrelated
+                                      :right  :border-related
+                                      :bottom :border-related}}])
+
+(draw-box (text "0000000c" :hex [[:plain {:font-weight "light" :font-size 16}] " (12)"])
+          [{:span 4} [:bg-purple {:borders {:left   :border-related
+                                            :top    :border-unrelated
+                                            :right  :border-related
+                                            :bottom :border-unrelated}}]])
+(doseq [i (map inc (range 11))]
+  (draw-box (text "t" :math [:sub i]) [:box-related :bg-purple]))
+(draw-box (text "t" :math [:sub 12]) [:bg-purple {:borders {:left   :border-related
+                                                  :top    :border-related
+                                                  :right  :border-unrelated
+                                                  :bottom :border-unrelated}}])
+(draw-gap "Arguments")
+(draw-bottom)
+----
+
+The argument type tags use different values than the field type tags
+themselves, for some reason, and it is not clear why this redundant
+information is necessary at all—but that is true a number of places in
+the protocol as we have seen before and will see again. Here are the
+known tag values and their meanings:
+
+[[message-argument-tag-values]]
+.Argument tag values.
+[cols=">1m,<15"]
+|===
+|Tag |Meaning
+
+|02 |A string in UTF-16 big-endian encoding, with trailing NUL (zero) character.
+|03 |A binary blob.
+|06 |A 4 byte big-endian integer.
+|===
+
+I am guessing that if we ever see them, a tag of `04` would represent
+a 1{nbsp}byte integer, and `05` would represent a 2{nbsp}byte integer.
+But so far no such messages have been seen.
+
+Before you can send your first actual query, you need to send a
+special message which seems to be necessary for establishing the
+context for queries. It has a _type_ of `0000`, a special _TxID_ value
+of `fffffffe`, and a single numeric argument, like this:
+
+.Query context setup message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0 6)
+(draw-number-field (text "D" :math [:sub "ours"]))
+----
+
+The value _D_ is, like in the other packets we have seen, a player
+device number. In this case it is the device that is asking for
+metadata information. It must be a valid player number between 1 and
+4, and that player must actually be present on the network, must not
+be the same player that you are contacting to request metadata from,
+and must not be a player that has connected to that player via Link
+and loaded a track from it. So the safest device number to use is the
+device number you are using for your virtual CDJ, but since it must be
+between 1 and 4, you can only do that if there are fewer than four
+actual CDJs on the network.
+
+The player will respond with a message of type `4000`, which is the
+common “success” response when requested data is available. The
+response message has two numeric arguments, the first of which is the
+message type of the request we sent (which was `0000`), and the second
+usually tells you the number of items that are available in response
+to the query you made, but in this special setup query, it returns its
+own player number:
+
+.Query context setup response.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header "0 response" 6 6)
+(draw-number-field 0)
+(draw-number-field (text "D" :math [:sub "theirs"]))
+----
+
+
 
 To be continued...
 

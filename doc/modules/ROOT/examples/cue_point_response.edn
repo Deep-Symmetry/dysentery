@@ -1,4 +1,4 @@
-(draw-remotedb-header 0x4702 9)
+(draw-remotedb-header 0x4702 6 6 6 3 6 6 6 6 3)
 
 (draw-number-field 0x2104)
 (draw-number-field 0)

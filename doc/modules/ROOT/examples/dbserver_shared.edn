@@ -96,8 +96,15 @@
 (defn draw-remotedb-header
   "Generates the byte and field labels and standard header fields of a
   request or response message for the remotedb database server with
-  the specified kind and args values."
-  [kind args]
+  the specified kind and sequence of argument tag values (the number
+  of arguments can be determined by the count of the tags).
+
+  If `kind` is 0 or \"0 response\" the message is a query context
+  setup request or response, and so we know that the transaction ID
+  will have the magic value 0xfffffffe (and we translate \"0
+  response\" to the standard query response kind of 0x4000, which is
+  what is actually sent)."
+  [kind & tags]
   (draw-column-headers)
   (draw-group-label-header 5 "start")
   (draw-group-label-header 5 "TxID")
@@ -107,9 +114,11 @@
   (next-row 18)
 
   (draw-number-field 0x872349ae 4 :bg-green)
-  (draw-number-field (text "TxID" :math) 4 :bg-yellow)
-  (draw-number-field (hex-text kind 4 :bold) 2 :bg-pink)
-  (draw-number-field (hex-text args 2 :bold) 1 :bg-cyan)
+  (let [txid (if (#{0 "0 response"} kind) 0xfffffffe (text "TxID" :math))
+        kind (if (= kind "0 response") 0x4000 kind)]
+    (draw-number-field txid 4 :bg-yellow)
+    (draw-number-field (hex-text kind 4 :bold) 2 :bg-pink))
+  (draw-number-field (hex-text (count tags) 2 :bold) 1 :bg-cyan)
   (draw-box 0x14 [:bg-purple {:borders {:left   :border-unrelated
                                         :top    :border-unrelated
                                         :right  :border-related
@@ -120,12 +129,14 @@
                                               :top    :border-unrelated
                                               :right  :border-related
                                               :bottom :border-unrelated}}]])
-  (draw-box (hex-text 6 2 :bold) [:box-related :bg-purple])
-  (doseq [val [6 6 3 6 6 6 6 3]]
+  (doseq [val tags]
     (draw-box (hex-text val 2 :bold) [:box-related :bg-purple]))
-  (doseq [val [0 0]]
-    (draw-box val [:box-related :bg-purple]))
-  (draw-box 0 [:bg-purple {:borders {:left   :border-related
-                                     :top    :border-related
-                                     :right  :border-unrelated
-                                     :bottom :border-unrelated}}]))
+  (let [unused (- 12 (count tags))]
+    (when (> unused 1)
+      (doseq [_ (range (dec unused))]
+        (draw-box 0 [:box-related :bg-purple])))
+    (when (pos? unused)
+      (draw-box 0 [:bg-purple {:borders {:left   :border-related
+                                         :top    :border-related
+                                         :right  :border-unrelated
+                                         :bottom :border-unrelated}}]))))
