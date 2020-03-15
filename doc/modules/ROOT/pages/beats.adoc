@@ -15,8 +15,8 @@ equipment by observing packets broadcast by the mixer to port 50001.
 Using just that approach, however, it was not possible to tell which
 player was the master, so there was no way to determine the down beat
 (the start of each measure). Now that it is possible to to determine
-which CDJ is the master player using the packets described in TODO:
-Section 4, these beat packets have become far more useful, and
+which CDJ is the master player using the <<vcdj#cdj-status-packets,CDJ
+status packets>>, these beat packets have become far more useful, and
 Afterglow now uses
 https://github.com/Deep-Symmetry/beat-link#beat-link[Beat Link], the
 library that resulted from this analysis, to track the down beat based
@@ -143,7 +143,7 @@ this additional step.]
 ++++
 
 The counter _B~b~_ at byte{nbsp}``5c`` counts out the beat within each
-bar, cycling _1→2→3→4_ repeatedly, and can be used to identify the
+bar, cycling 1 → 2 → 3 → 4 repeatedly, and can be used to identify the
 down beat if it is coming from the master player (and if the DJ has
 properly established the track's beat grid).
 

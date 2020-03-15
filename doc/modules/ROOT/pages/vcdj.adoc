@@ -89,10 +89,10 @@ length of the entire packet, rather than the number of bytes remaining
 in the packet. The packets are otherwise identical.
 
 The value marked _F_ at byte{nbsp}``27`` is evidently a status flag
-equivalent to the one shown in TODO: Figure 12, although on a mixer
-the only two values seen so far are `f0` when it is the tempo master,
-and `d0` when it is not. So evidently the mixer always considers
-itself to be playing and synced, but never on-air.
+equivalent to the CDJ version shown <<#cdj-status-flag-bits,below>>,
+although on a mixer the only two values seen so far are `f0` when it
+is the tempo master, and `d0` when it is not. So evidently the mixer
+always considers itself to be playing and synced, but never on-air.
 
 There are two places that might contain pitch values,
 bytes{nbsp}``28``–`2b` and bytes{nbsp}``30``–`33`, but since they
@@ -326,16 +326,16 @@ other player on the network. This is part of the Baroque master
 handoff dance described in TODO: Section 5.3.
 
 Byte{nbsp}``89``, labeled _F_, is a bit field containing some very
-useful state flags.footnote:[We have not yet seen any other values for
+useful status flags.footnote:[We have not yet seen any other values for
 bits 0, 1, 2, or 7 in _F_, so we’re unsure if they also carry meaning.
 If you ever find different values for them, please let us know by
 filing an https://github.com/deep-symmetry/dysentery/issues[Issue].]
 It seems to only be available on nexus (and later) players, and older
-ones always send 00 for this byte, which greatly limits the inferences
+ones always send `00` for this byte, which greatly limits the inferences
 we can make about their state:
 
-[[cdj-state-flag-bits]]
-.CDJ state flag bits.
+[[cdj-status-flag-bits]]
+.CDJ status flag bits.
 [bytefield]
 ----
 (def boxes-per-row 8)
@@ -351,6 +351,188 @@ we can make about their state:
 (draw-box (hex-text 0 1))
 (draw-box (hex-text 0 1))
 ----
+
+Byte `8b`, labeled _P~2~_ seems to be another play state indicator,
+having the value `7a` when playing and `7e` when stopped. When the CDJ
+is trying to play, but is being held in place by the DJ holding down
+on the jog wheel, _P~1~_ considers it to be playing (value `03`),
+while _P~2~_ considers it to be stopped (value `7e`). Non-nexus
+players seem to use the value `6a` when playing and `6e` when stopped,
+while nxs2 players use the values `fa` and `fe`, and the XDJ-XZ uses
+the values `9a` and `9e` so this seems to be another bit field like
+_F_.
+
+There are four different places where pitch information appears in
+these packets: _Pitch~1~_ at bytes{nbsp}``8c``–`8f`, _Pitch~2~_ at
+bytes{nbsp}``98``–`9b`, _Pitch~3~_ at bytes{nbsp}``c0``–`c3`, and
+_Pitch~4~_ at bytes{nbsp}``c4``–`c7`.
+
+Each of these values represents a four-byte pitch adjustment
+percentage, where `00100000` represents no adjustment (0%), `00000000`
+represents slowing all the way to a complete stop (−100%, reachable
+only in Wide tempo mode), and `00200000` represents playing at double
+speed (+100%).
+
+Note that if playback is stopped by pushing the pitch fader all the
+way to −100% in Wide mode, both _P~1~_ and _P~2~_ still show it as
+playing, which is different than when the jog wheel is held down,
+since _P~2~_ shows a stop in the latter situation.
+
+The pitch adjustment percentage represented by _Pitch~1~_ would be
+calculated by multiplying decimal 100 by the following hexadecimal
+equation:
+
+[stem]
+++++
+\frac{(byte[{\tt 8d}] \times {\tt 10000} + byte[{\tt 8e}] \times
+  {\tt 100} + byte[{\tt 8f}]) - {\tt 100000}}{{\tt 100000}}
+++++
+
+We don’t know why there are so many copies of the pitch information,
+or all circumstances under which they might differ from each other,
+but it seems that _Pitch~1~_ and _Pitch~3~_ report the current pitch
+adjustment actually in effect (as reflected on the BPM display),
+whether it is due to the local pitch fader, or a synced tempo master.
+
+_Pitch~2~_ and _Pitch~4~_ are always tied to the position of the local
+pitch fader, unless Tempo Reset is active, effectively locking the
+pitch fader to 0% and _Pitch~2~_ and _Pitch~4~_ to `100000`, or the
+player is paused or the jog wheel is being held down, freezing
+playback and locking the local pitch to −100%, in which case they both
+have the value `000000`.
+
+When playback stops, either due to the play button being pressed or
+the jog wheel held down, the value of _Pitch~4~_ drops to `000000`
+instantly, while the value of _Pitch~2~_ drops over time, reflecting
+the gradual slowdown of playback which is controlled by the player’s
+brake speed setting. When playback starts, again either due to the
+play button being pressed or the jog wheel being released, both
+_Pitch~2~_ and _Pitch~4~_ gradually rise to the target pitch, at a
+speed controlled by the player’s release speed setting.
+
+If the player is not synced, but the current pitch is different than
+what the pitch fader would indicate (in other words, the player is in
+the state where it tells you to move the pitch fader to the current
+BPM in order to change the pitch), moving the pitch fader changes the
+values of _Pitch~2~_ and _Pitch~4~_ until they match _Pitch~1~_ and
+_Pitch~3~_ and begin to affect the actual effective pitch. From that
+point on, moving the pitch fader sets the value of all of _Pitch~1~_,
+_Pitch~2~_, _Pitch~3~_, and _Pitch~4~_. This all seems more
+complicated than it really needs to be...
+
+The current BPM of the track (the BPM at the point that is currently
+being played, or at the location where the player is currently paused)
+can be found at bytes{nbsp}``92``–`93` (labeled _BPM_). It is a
+two-byte integer representing one hundred times the current track BPM.
+So, the current track BPM value to two decimal places can be
+calculated as (only byte offsets are hexadecimal):
+
+[stem]
+++++
+\frac{byte[{\tt 92}] \times 256 + byte[{\tt 93}]}{100}
+++++
+
+In order to obtain the actual playing BPM (the value shown in the BPM
+display), this value must be multiplied by the current effective
+pitch, calculated from _Pitch~1~_ as described above. Since
+calculating the effective BPM reported by a CDJ is a common operation,
+here a simplified hexadecimal equation that results in the effective
+BPM to two decimal places, by combinining the _BPM_ and _Pitch~1~_
+values:
+
+[stem]
+++++
+\frac{(byte[{\tt 92}] \times {\tt 100} + byte[{\tt 93}]) \times (byte[{\tt 8d}]
+    \times {\tt 10000} + byte[{\tt 8e}] \times {\tt 100} + byte[{\tt 8f}])}
+  {{\tt 100000}}
+++++
+
+Because Rekordbox and the CDJs support tracks with variable BPM, this
+value can and does change over the course of playing such tracks. When
+no track is loaded, _BPM_ has the value `ffff`.
+
+_M~v~_ (bytes `90`–`91`) seems to control whether the _BPM_ value is
+accepted when this player is the master. It has the value `7fff` when
+no track is loaded, `8000` when a rekordbox track is loaded, and
+`0000` when a non-rekordbox track (like from a physical CD) is loaded,
+and only when the value is `8000` are tempos from this player accepted
+when it is acting as master (otherwise the mixer shows the master to
+have a tempo of “`---.-`” and other players do not respond to its
+tempo changes).
+
+Byte{nbsp}``9d`` (labeled _P~3~_) seems to communicate additional
+information about the current play mode. The meanings that we have
+found so far are:
+
+[[known-p3-values]]
+.Known _P~3~_ values.
+[cols=">1m,<14"]
+|===
+|Value |Meaning
+
+|00 |No track is loaded.
+|01 |Player is paused or playing in Reverse mode.
+|09 |Player is playing in Forward mode with jog mode set to Vinyl.
+|0d |Player is playing in Forward mode with jog mode set to CDJ.
+|===
+
+Byte `9e` (labeled _M~m~_ for “Master meaningful“) is another
+representation of whether this player is currently the tempo master
+(in addition to bit 5 of _F_, as shown in <<#cdj-status-flag-bits,the
+status flag bits diagram>>). It has the value `00` when the player is
+not the master, the value `01` when it is tempo master and is playing
+a rekordbox-analyzed track, so that actually has a meaningful effect,
+and the value `02` when it is supposed to be the master (and the value
+of _F_ still indicates that it is), but it is playing a non-rekordbox
+track, so it is unable to send tempo and beat information to other
+players.
+
+The following byte, `9f` (labeled _M~h~_ for “Master handoff“), is
+related. As described in TODO: Section 5, this normally has the value
+`ff`. But when this player is giving up the role of tempo master in
+response to a request from another player that wants to take over, it
+holds that player’s device number until it sees that device announce
+itself as the new master, at which point it turns off its own master
+flags, and this value goes back to `ff`.
+
+The 4-byte beat counter (which counts each beat from 1 through the end
+of the track) is found in bytes `a0`–`a3`, labeled _Beat_. When the
+player is paused at the start of the track, this seems to hold the
+value 0, even though it is beat 1, and when no rekordbox-analyzed
+track is loaded, and in packets from non-nexus players, this holds the
+value `ffffffff`.
+
+The counter _B~b~_ at byte{nbsp}``a6`` counts out the beat within each
+bar, cycling 1 → 2 → 3 → 4 repeatedly, and can be used to identify the
+down beat (as is used in the Master Player display on the CDJs as a
+mixing aid). Again, when no reckordbox-analyzed track is loaded, this
+holds the value 0. If you want to synchronize events to the down beat,
+use the CDJ status packets’ _F_ value to identify the master player,
+but use the beat packets sent by that player (described in
+<<beats#beat-packets,Tracking BPM and Beats>>) to determine when the
+beats are actually happening.
+
+A countdown timer to the next saved cue point is available in
+bytes{nbsp}``a4``–`a5` (labeled _Cue_). If there is no saved cue point
+after the current play location in the track, or if it is further than
+64 bars ahead, these bytes contain the value `01ff` and the CDJ
+displays “`--.- bars`”. As soon as there are just 64 bars (256 beats)
+to go before the next cue point, this value becomes `0100`. This is
+the point at which the CDJ starts to display a countdown, which it
+displays as “`63.4 bars`”. As each beat goes by, this value decreases
+by 1, until the cue point is about to be reached, at which point the
+value is `0001` and the CDJ displays “`00.1 bars`”. On the beat on
+which the cue point was saved the value is `0000` and the CDJ displays
+“`00.0 Bars`”. On the next beat, the value becomes determined by the
+next cue point (if any) in the track.
+
+Bytes `c8`-`cb` seem to contain a 4-byte packet counter labeled
+_Packet_, which is incremented for each packet sent by the player. (I
+am just guessing it is four bytes long, I have not yet watched long
+enough for the count to need more than the last three bytes).
+
+Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus
+players, `1f` for the XDJ-XZ, and `05` for older players.
 
 
 include::partial$Footer.adoc[]
