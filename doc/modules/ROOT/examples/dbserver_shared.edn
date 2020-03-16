@@ -44,6 +44,20 @@
                 4 0x11)]
      (draw-field kind label size attr-spec))))
 
+(defn draw-dmst-field
+  "Generates the number field variant used to specify the device, menu,
+  slot, and track about which a media query is being made. Although it
+  is tagged as a normal four-byte number field, the individual bytes
+  have independent meaning. If the desired menu identifier is known,
+  pass that as `menu`. Otherwise a generic _M_ will be rendered for
+  that byte."
+  ([]
+   (draw-dmst-field (text "M" :math)))
+  ([menu]
+   (draw-box 0x11 :box-first)
+   (draw-boxes [(text "D" :math) menu (text "S" :math [:sub "r"])] :box-related)
+   (draw-box (text "T" :math [:sub "r"]) :box-last)))
+
 (defn draw-gap-field
   "Generates the related multi-row structures that represent a variable
   length field in a database transaction. `kind` is the tag byte that
@@ -129,14 +143,18 @@
                                               :top    :border-unrelated
                                               :right  :border-related
                                               :bottom :border-unrelated}}]])
-  (doseq [val tags]
+  (doseq [val (take 11 tags)]
     (draw-box (hex-text val 2 :bold) [:box-related :bg-purple]))
   (let [unused (- 12 (count tags))]
     (when (> unused 1)
       (doseq [_ (range (dec unused))]
         (draw-box 0 [:box-related :bg-purple])))
-    (when (pos? unused)
+    (if (pos? unused)
       (draw-box 0 [:bg-purple {:borders {:left   :border-related
                                          :top    :border-related
                                          :right  :border-unrelated
-                                         :bottom :border-unrelated}}]))))
+                                         :bottom :border-unrelated}}])
+      (draw-box (hex-text (last tags) 2 :bold) [:bg-purple {:borders {:left   :border-related
+                                                                      :top    :border-related
+                                                                      :right  :border-unrelated
+                                                                      :bottom :border-unrelated}}]))))

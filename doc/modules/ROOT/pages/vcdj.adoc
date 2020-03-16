@@ -31,10 +31,10 @@ sending packets directly to the socket you have opened on port 50002.
 
 NOTE: Be forewarned that use of a non-standard player number (outside
 the range 1–4) will interfere with your ability to perform metadata
-requests using `dbserver` queries as described in TODO: Section 6.2.
-In situations where there are four actual players on the network you
-can use alternate ways to get the data, as described in TODO: Section
-12.3.
+requests using `dbserver` queries as described in
+<<track_metadata#messages,the Track Metadata section>>. In situations
+where there are four actual players on the network you can use
+alternate ways to get the data, as described in TODO: Section 12.3.
 
 Each device seems to send status packets roughly every 200 milliseconds.
 
@@ -226,6 +226,7 @@ the local device, this will be the same as _D_; if it was loaded over
 the Link, it will be the number of a different device). When no track
 is loaded, _D~r~_ has the value `00`.
 
+[[slot-identifiers]]
 Similarly, _S~r~_ at byte{nbsp}``29`` reports the slot from which the
 track was loaded: the value `00` means no track is loaded, `01` means
 the CD drive, `02` means the SD slot, and `03` means the USB slot.
@@ -243,7 +244,8 @@ still a unique ID by which the track can be identified for metadata
 requests, and when an audio CD track is loaded, this is just the track
 number. In all cases, combined with the player number and slot
 information, this can be used to request the track metadata as
-described in TODO: Section 6.
+described in <<track_metadata#track-metadata,the Track Metadata
+section>>.
 
 The track number being played (its position within a playlist or other
 scrolling list of tracks, as displayed on the CDJ) can be found at

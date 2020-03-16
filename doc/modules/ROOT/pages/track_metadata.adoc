@@ -42,7 +42,7 @@ to the device from which the track was loaded, using the port that it
 gave you in response to the DB Server query packet, then send the
 following four packets. (You can also get metadata for non-rekordbox
 tracks, even for CD Audio tracks being played in the CD slot, using
-the variation described in TODO: _Section 6.6_.)
+the variation described in TODO: Section 6.6.)
 
 Once you have determined the database port, send it a setup packet
 with the following content, and the server will send the same five
@@ -147,6 +147,7 @@ include::example$dbserver_shared.edn[]
 (draw-bottom)
 ----
 
+[[messages]]
 == Messages
 
 Messages are introduced by a 4{nbsp}byte Number field containing a
@@ -250,6 +251,7 @@ usually tells you the number of items that are available in response
 to the query you made, but in this special setup query, it returns its
 own player number:
 
+[[query-context-setup-response]]
 .Query context setup response.
 [bytefield]
 ----
@@ -258,6 +260,211 @@ include::example$dbserver_shared.edn[]
 (draw-number-field 0)
 (draw-number-field (text "D" :math [:sub "theirs"]))
 ----
+
+[[track-metadata]]
+== Rekordbox Track Metadata
+
+To ask for metadata about a particular rekordbox track, send a packet
+like this:
+
+.Rekordbox track metadata request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x2002 6 6)
+(draw-dmst-field 1)
+(draw-number-field (text "rekordbox" :math))
+----
+
+As described above, _TxID_ should be 1 for the first query packet you
+send, 2 for the next, and so on.
+
+The first argument of this message requires a little explanation: it
+is sent as a four-byte number field, but each byte has a separate
+meaning. _D_ should have the same value you used in your initial query
+context setup packet, identifying the device that is asking the
+question. The second byte is referred to as _M_, and seems to identify
+the particular menu location on the CDJ where results are going to be
+displayed. For this kind of metadata request it always has the value
+`01`.
+
+_S~r~_ is the slot in which the track being asked about can be found,
+and has the same values used in CDJ status packets, as described in
+the <<vcdj#slot-identifiers,CDJ status packet description>>.
+Similarly, _T~r~_ identifies the type of track we want information
+about; for rekordbox tracks this always has the value `01`.
+
+This first argument format is used for many different requests about
+tracks, so it is given the acronym _DMST_ in future discussion.
+
+The second message argument, _rekordbox_, identifies the local
+rekordbox database ID of the track being asked about, as found in the
+<<vcdj#cdj-status-packet,CDJ status packet>>.
+
+As suggested in the above description, track metadata requests are
+built on the mechanism that is used to request and draw scrollable
+menus on the CDJs, so the request is essentially interpreted as
+setting up to draw the “menu” of information that is known about the
+track. The player responds with a success indicator, saying it is
+ready to send these “menu items” and reporting how many of them are
+available:
+
+.Track metadata available response.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4000 6 6)
+(draw-number-field 0x2002)
+(draw-number-field 0xb)
+----
+
+We’ve seen this type of “data available” response already in the
+<<query-context-setup-response,query context setup response>>, but
+this one is a more typical example. As usual, _TxID_ matches the value
+we sent in our request, and the first argument, with value `2002`,
+reflects the _type_ field of our request. The second argument reports
+that there are 11 (`0b`) entries of track metadata available to be
+retrieved for the track we asked about, and that the player is ready
+to send them to us.
+
+If there was no track with ID _rekordbox_ in that media slot, the
+second argument would have the value `ffffffff` to let us know. If we
+messed up something else about the request, we will get a response
+with a _type_ other than `4000`. See TODO: Section 6.16 for
+instructions on how to explore these variations on your own.
+
+But assuming everything went well, we can get the player to send us
+all eleven of those metadata entries by telling it to render all of
+the current menu, using a “render menu” request with _type_ `3000`
+like this:
+
+.Render Menu request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x3000 6 6 6 6 6 6)
+(draw-dmst-field 1)
+(draw-number-field (text "offset" :math))
+(draw-number-field (text "limit" :math))
+(draw-number-field 0)
+(draw-number-field (text "total" :math))
+(draw-number-field 0)
+----
+
+As always, the value of _TxID_ should be one higher than the one you
+sent in your setup packet, while the values of _D_, _S~r~_, and _T~r~_
+should be identical to what you sent in it.
+
+The request has six numeric arguments. At this point it is worth
+talking a bit more about the byte after _D_ in the first argument.
+This seems to specify the location of the menu being drawn, with the
+value 1 meaning the main menu on the left-hand half of the CDJ
+display, while 2 means the submenu (for example the info popup when it
+is open) which overlays the right-hand half of the display. We don’t
+yet know exactly what, if any, difference there is between the
+response details when 2 is used instead of 1 here. And special data
+requests use different values: for example, the track waveform
+summary, which is drawn in a strip along the entire bottom of the
+display, is requested with a menu location number of 8 in this second
+byte.
+
+As described above, _T~r~_ has the value 1 for rekordbox tracks.
+
+The second argument, _offset_, specifies which menu entry is the first
+one you want to see, and the third argument, _limit_, specifies how
+many should be sent. In this case, since there are only 11 entries, we
+can request them all at once, so we will set _offset_ to 0 and _limit_
+to 11. But for large playlists, for example, you need to request
+batches of entries that are smaller than the total available, or the
+player will be unable to send them to you. We have not found what the
+exact limit is, but getting 64 at a time seems to work on Nexus 2
+players.
+
+We don’t know the purpose of the fourth argument, but sending a value
+of 0 works. The fifth argument, _total_, seems to usually contain the
+total number of items reported in the intial menu response, but
+sending a second copy of _limit_ here works too; it may not matter much.
+And the sixth and final argument also has an unknown purpose, but 0
+works.
+
+So, for our metadata request, the packet we want to send in order to
+get all the metadata will have the specific values shown here:
+
+.Render track metadata request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x3000 6 6 6 6 6 6)
+(draw-dmst-field 1)
+(draw-number-field 0)
+(draw-number-field 0xb)
+(draw-number-field 0)
+(draw-number-field 0xb)
+(draw-number-field 0)
+----
+
+This causes the player to send us 13 messages: The 11 metadata items
+we requested are sent (with _type_ `4101`, <<menu-item-response,second
+figure below>>), but they are preceded by a menu header message (with
+_type_ `4001`, <<menu-header-response,first figure below>>), and
+followed by a menu footer message (with _type_ `4201`,
+<<menu-footer-response,third figure below>>). This wrapping happens
+with all “render menu” requests, and the menu footer is an easy way to
+know you are done, although you can also count the messages.
+
+[[menu-header-response]]
+.Menu header response.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4001 6 6)
+(draw-number-field 1)
+(draw-number-field 0)
+----
+
+The menu item responses all have the same structure, and use all
+twelve message argument slots, containing ten numbers and two strings,
+although they generally don’t have meaningful values in all of the
+slots. They have the general structure shown here, and the arguments
+are listed in the Table <<menu-item-arguments,below>>:
+
+[[menu-item-response]]
+.Menu item response.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4101 6 6 6 2 6 2 6 6 6 6 6 6)
+(draw-gap "Arguments")
+(draw-bottom)
+----
+
+[[menu-footer-response]]
+.Menu footer response.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4201)
+----
+
+[[menu-item-arguments]]
+.Menu item arguments.
+[cols=">1,^3,<12"]
+|===
+|Arg |Type |Meaning
+
+|1 |number |Parent ID, such as an artist for a track item.
+|2 |number |Main ID, such as _rekordbox_ for a track item.
+|3 |number |Length in bytes of Label 1.
+|4 |string |Label 1 (main text, such as the track title or artist name, as appropriate for the item type).
+|5 |number |Length in bytes of Label 2.
+|6 |string |Label 2 (secondary text, e.g. artist name for playlist entries, where Label 1 holds the title).
+|7 |number |Type of this item (see TODO: Section 6.5).
+|8 |number |Some sort of flags field, details still unclear.
+|9 |number |Holds _artwork_ ID when type is Track Title.
+|10 |number |Playlist position when relevant, e.g. when listing a playlist.
+|11 |number |Unknown.
+|12 |number |Unknown.
+|===
 
 
 
