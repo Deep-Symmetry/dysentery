@@ -7,6 +7,9 @@ content:
   - url: https://github.com/Deep-Symmetry/dysentery.git
     branches: [master]
     start_path: doc
+asciidoc:
+  extensions:
+  - asciidoctor-mathjax
 plugins:
   - path: ./extension
     config:

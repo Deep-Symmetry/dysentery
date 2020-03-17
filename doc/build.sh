@@ -5,6 +5,7 @@
 # database analysis.
 
 npm install yarn
+npm install asciidoctor-mathjax
 cd doc
 
 # Build the unreleased branch of Antora that supports plugins
