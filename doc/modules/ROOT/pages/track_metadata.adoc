@@ -699,7 +699,7 @@ of the image in bytes, which seems redundant, because that is also
 conveyed in the fourth argument itself, a blob containing the actual
 bytes of the image data, as shown below. However, if there is no image
 data, this value will be 0, and the blob field will be completely
-omitted from the response, so you must not try to read it!
+omitted from the response, so you _must not_ try to read it!
 
 .Track artwork response message.
 [bytefield]
@@ -732,6 +732,88 @@ image::Album-art-example.png[alt=Album Art,width=213,height=152]
 To load artwork for a non-rekordbox track, add an additional argument
 with the value 2 at the end.
 
+== Beat Grids
+
+The CDJs do not send any timing information other than beat numbers
+during playback, which has made it difficult to offer absolute
+timecode information. The discovery of beat grid requests provides a
+clean answer to the problem. The beat grid for a track is a list of
+every beat which occurs in the track, along with the point in time at
+which that beat would occur if the track were played at its standard
+(100%) tempo. Armed with this table, it is possible to translate any
+beat packet into an absolute position within the track, and, combined
+with the tempo information, to generate timecode signals allowing
+other software (such as video resources) to sync tightly with DJ
+playback.
+
+To request the beat grid of a track, send a message with _type_ `2204`
+containing the _rekordbox_ ID of the track:
+
+.Track beat grid request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x2204 6 6)
+(draw-dmst-field 8)
+(draw-number-field (text "rekordbox" :math))
+----
+
+As usual, _TxID_ should be incremented each time you send a query, and
+will be used to identify the response messages. _D_ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. _S~r~_ and _T~r~_
+are the slot in which the track being asked about can be found and its
+track type; each has the same values used in
+<<vcdj#cdj-status-packet,CDJ status packets>>. Finally, _rekordbox_
+identifies the specific beat grid you are requesting, as found in a
+CDJ status packet or playlist response. As with graphical requests,
+the value after 𝐷, which identifies the location of the menu for which
+data is being loaded, is 8.
+
+The response will be a message with _type_ `4602`, containing four
+arguments. The first argument echoes back our request type, which was
+`2204`. The second always seems to be 0. The third contains the length
+of the beat grid in bytes, which seems redundant, because that is also
+conveyed in the fourth argument itself, which is a blob containing the
+actual bytes of the beat grid, as shown below. However, if there is no
+beat grid available, this value will be 0, and the blob field will be
+completely omitted from the response, so you _must not_ try to read it!
+
+.Track beat grid response message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4602 6 6 6 3)
+(draw-number-field 0x2204)
+(draw-number-field 0)
+(draw-number-field (text "length" :math))
+(draw-binary-field "Beat grid bytes" {:length-label (text "length" :math)})
+(draw-bottom)
+----
+
+The beat grid itself is spread through the value returned as argument
+4, consisting of one-byte beat-within-bar numbers (labeled _B~b~_ in
+the <<vcdj#cdj-status-packet,CDJ status packet diagram>>), followed by
+four-byte timing information, specifying the number of milliseconds
+after the start of the track (when played at its native tempo) at
+which that beat falls.
+
+The _B~b~_ value of the first beat in the track is found at byte
+`0x14` of argument 4, and the time at which that beat occurs, in
+milliseconds, is encoded as a 4-byte
+little-endian{empty}footnote:[Yes, unlike almost all numbers in the
+protocol, beat grid and cue point times are little-endian.] integer at
+bytes{nbsp}``15``–`18`. Subsequent beats are found at `0x10`-byte
+intervals, so the second _B~b~_ value is found at byte{nbsp}``24``,
+and the second beat’s time, in milliseconds from the start of the
+track, is the big-endian integer at bytes{nbsp}``25``–`28`. The _B~b~_
+value for the third beat is at byte{nbsp}``34``, and its millisecond
+time is at bytes{nbsp}``35``–`38`, and so on.
+
+The purpose of the other bytes within the beat grid is so far
+undetermined. It looks like there may be some sort of monotonically
+increasing value following the beat millisecond value, but what it
+means, and why it sometimes skips values, is mysterious.
 
 
 To be continued...
