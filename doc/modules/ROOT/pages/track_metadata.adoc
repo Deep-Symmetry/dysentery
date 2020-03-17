@@ -42,7 +42,7 @@ to the device from which the track was loaded, using the port that it
 gave you in response to the DB Server query packet, then send the
 following four packets. (You can also get metadata for non-rekordbox
 tracks, even for CD Audio tracks being played in the CD slot, using
-the variation described in TODO: Section 6.6.)
+the variant described in <<non-rekordbox-metadata>>.)
 
 Once you have determined the database port, send it a setup packet
 with the following content, and the server will send the same five
@@ -267,6 +267,7 @@ include::example$dbserver_shared.edn[]
 To ask for metadata about a particular rekordbox track, send a packet
 like this:
 
+[[track-metadata-request-message]]
 .Rekordbox track metadata request message.
 [bytefield]
 ----
@@ -458,7 +459,7 @@ include::example$dbserver_shared.edn[]
 |4 |string |Label 1 (main text, such as the track title or artist name, as appropriate for the item type).
 |5 |number |Length in bytes of Label 2.
 |6 |string |Label 2 (secondary text, e.g. artist name for playlist entries, where Label 1 holds the title).
-|7 |number |Type of this item (see TODO: Section 6.5).
+|7 |number |Type of this item (see <<menu-item-types>>).
 |8 |number |Some sort of flags field, details still unclear.
 |9 |number |Holds _artwork_ ID when type is Track Title.
 |10 |number |Playlist position when relevant, e.g. when listing a playlist.
@@ -466,6 +467,7 @@ include::example$dbserver_shared.edn[]
 |12 |number |Unknown.
 |===
 
+[[track-metadata-title]]
 === Track Metadata Item 1: Title
 
 The first item returned after the menu header is the track title, so
@@ -475,7 +477,7 @@ second argument seems to always be the main ID, and for this response
 it holds the _rekordbox_ ID of the track. Argument 4 holds the track
 title text, and argument 9 holds the album _artwork_ ID if any is
 available for the track. This ID can be used to retrieve the actual
-album art image as described in TODO: Section 6.7.
+album art image as described in <<album-art>>.
 
 === Track Metadata Item 2: Artist
 
@@ -523,9 +525,10 @@ the number of stars the DJ has assigned the track in rekordbox.
 
 The ninth item contains color information, so argument 7 has a value
 between `13` and `1b` identifying the color, if any, assigned to the
-track (see TODO: Section 6.5 for the color choices), and if the value
-is anything other than `13`, Argument 4 contains the text that the DJ
-has assigned for that color meaning in rekordbox.
+track (see <<menu-item-types-colors,Menu Item Types>> for the color
+choices), and if the value is anything other than `13`, Argument 4
+contains the text that the DJ has assigned for that color meaning in
+rekordbox.
 
 === Track Metadata Item 10: Genre
 
@@ -548,7 +551,186 @@ has a header only, and is always made up of the
 <<menu-footer-response,exact same sequence of bytes>> (apart from the
 _TxID_).
 
+[[menu-item-types]]
+== Menu Item Types
 
+As noted above, the seventh argument in a menu item response
+identifies the type of the item. The meanings we have identified so
+far are:
+
+.Known menu item types.
+[cols=">1m,<11"]
+|===
+|Type |Meaning
+
+|0001 |Folder (such as in the playlists menu)footnote:[A nested list of playlists rather than an individual playlist.]
+|0002 |Album title
+|0003 |Disc
+|0004 |Track Title
+|0006 |Genre
+|0007 |Artist
+|0008 |Playlist
+|000a |Rating
+|000b |Duration (in seconds)
+|000d |Tempo
+|000e |Label
+|000f |Key
+|0010 |Bit Rate
+|0011 |Year
+| |
+[[menu-item-types-colors]]
+|0013 |Color None
+|0014 |Color Pink
+|0015 |Color Red
+|0016 |Color Orange
+|0017 |Color Yellow
+|0018 |Color Green
+|0019 |Color Aqua
+|001a |Color Blue
+|001b |Color Purple
+| |
+|0023 |Comment
+|0024 |History Playlist
+|0028 |Original Artist
+|0029 |Remixer
+|002e |Date Added
+| |
+|0080 | Genre menu
+|0081 | Artist menu
+|0082 | Album menu
+|0083 | Track menu
+|0084 | Playlist menu
+|0085 | BPM menu
+|0086 | Rating menu
+|0087 | Year menu
+|0088 | Remixer menu
+|0089 | Label menu
+|008a | Original Artist menu
+|008b | Key menu
+|008e | Color menu
+|0090 | Folder menu
+|0091 | Search “menu”
+|0092 | Time menu
+|0093 | Bit Rate menu
+|0094 | Filename menu
+|0095 | History menu
+|00a0 | All
+| |
+|0204 | Track Title and Album
+|0604 | Track Title and Genre
+|0704 | Track Title and Artist
+|0a04 | Track Title and Rating
+|0b04 | Track Title and Time
+|0d04 | Track Title and BPM
+|0e04 | Track Title and Label
+|0f04 | Track Title and Key
+|1004 | Track Title and Bit Rate
+|1a04 | Track Title and Bit Color
+|2304 | Track Title and Comment
+|2804 | Track Title and Original Artist
+|2904 | Track Title and Remixer
+|2a04 | Track Title and DJ Play Count
+|2e04 | Track Title and Date Added
+|===
+
+As noted above, track metadata responses use many of these types.
+Others are used in different kinds of menus and queries.
+
+[[non-rekordbox-metadata]]
+== Non-Rekordbox Track Metadata
+
+As discussed in the introduction to this section, you can get metadata
+for non-rekordbox tracks as well (although they don’t have beat grids,
+waveforms, or album art available). All you need to do is use a slight
+variant of the <<track-metadata-request-message,metadata request
+message>>, using the value `2202` (instead of `2002`) for the message
+type, and a value of _T~r~_ that is appropriate for the kind of track
+you are asking about (`02` for non-rekordbox tracks loaded from media
+slots, and `05` for CD audio tracks playing in the CD slot, which has
+a _S~r~_ value of `01`). After the initial query setup message, the
+other message types are the same as in the above discussion, but you
+will continue using the _S~r~_ and _T~r~_ values appropriate for the
+slot and media type you are asking about.
+
+Since these tracks don’t have rekordbox IDs, you will need to use the
+_rekordbox_ value reported in CDJ status packets in order to find out
+the values used to request the metadata for tracks loaded from solid
+state media; CD tracks are requested using the simple track number
+as the _rekordbox_ value.
+
+TIP: It seems that to reliably get data back when requesting metadata
+for non-rekordbox tracks, your virtual CDJ needs to be sending
+properly-formatted status packets, not just device announcement
+packets.
+
+[[album-art]]
+== Album Art
+
+To request the artwork image associated with a track, send a message
+with _type_ `2003` containing the _artwork_ ID that was specified in
+the track title item (as described in <<track-metadata-title>>), like
+this:
+
+.Track artwork request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x2003 6 6)
+(draw-dmst-field 8)
+(draw-number-field (text "artwork" :math))
+----
+
+As usual, _TxID_ should be incremented each time you send a query, and
+will be used to identify the response messages. _D_ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. _S~r~_ and _T~r~_
+are the slot in which the track being asked about can be found and its
+track type; each has the same values used in
+<<vcdj#cdj-status-packet,CDJ status packets>>. Finally, _artwork_
+identifies the specific artwork image you are requesting, as it was
+specified in the track medatata response. As with other graphical
+requests, the value after _D_, which identifies the location of the
+menu for which data is being loaded, is 8.
+
+The response will be a message with _type_ `4002`, containing four
+arguments. The first argument echoes back our request type, which was
+`2003`. The second always seems to be 0. The third contains the length
+of the image in bytes, which seems redundant, because that is also
+conveyed in the fourth argument itself, a blob containing the actual
+bytes of the image data, as shown below. However, if there is no image
+data, this value will be 0, and the blob field will be completely
+omitted from the response, so you must not try to read it!
+
+.Track artwork response message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4002 6 6 6 3)
+(draw-number-field 0x2003)
+(draw-number-field 0)
+(draw-number-field (text "length" :math))
+(draw-binary-field "Image bytes" {:length-label (text "length" :math)})
+(draw-bottom)
+----
+
+To experiment with this, start up dysentery in a Clojure REPL and
+connect to a player as described in TODO: Section 6.16, then evaluate
+an expression like:
+
+[source,clojure]
+----
+(def art (db/request-album-art p2 3 3))
+----
+
+Replace the arguments with the `var` holding your player connection,
+the proper _S~r~_ number for the media slot holding the art, and the
+_artwork_ ID of the album art, and dysentery will open a window like
+this showing the image:
+
+image::Album-art-example.png[alt=Album Art,width=213,height=152]
+
+To load artwork for a non-rekordbox track, add an additional argument
+with the value 2 at the end.
 
 
 
