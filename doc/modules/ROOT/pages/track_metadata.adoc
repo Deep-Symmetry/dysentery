@@ -824,7 +824,7 @@ preview, which is used by older players such as the pre-Nexus CDJ 900,
 returned as the final 100 bytes of the preview response.
 
 NOTE: We also know how to request Nxs2-style higher resolution and
-color waveforms, see TODO: Section 6.10 for details.
+color waveforms, see <<requesting-nxs2-waveforms>> for details.
 
 === Waveform Previews
 
@@ -990,6 +990,7 @@ three high-order bits encode the color, ranging from darkest blue at 0
 to near-white at 7. The five low-order bits encode the height of the
 waveform at that point, from 0 to 31 pixels.
 
+[[requesting-nxs2-waveforms]]
 == Requesting Nxs2 Track Waveforms
 
 Thanks to some
@@ -1180,12 +1181,14 @@ bits each of red, green, and blue intensity, arranged as shown below:
 (draw-related-boxes [0 0])
 ----
 
+[[requesting-cues]]
 == Requesting Cue Points and Loops
 
 NOTE: This section discusses how to obtain cue points and loops which
-are compatible with original nexus players. See TODO: Section 6.12 for
-how you can obtain a newer format which includes hot cue colors, DJ-
-assigned comment text, and hot cues beyond C.
+are compatible with original nexus players. See
+<<requesting-nxs2-cues>> for how you can obtain a newer format which
+includes hot cue colors, DJ-assigned comment text, and hot cues
+beyond C.
 
 The locations of the cue points and loops stored in a track can be
 obtained with a request like this:
@@ -1207,7 +1210,7 @@ are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
 <<vcdj#cdj-status-packet,CDJ status packets>>. The value after _D_,
 which identifies the location of the menu for which data is being
-loaded, is 8 which is what we expect for a graphical data request.
+loaded, is 8 which is what we expect for a graphical or data request.
 _rekordbox_ is the datbase ID of the specific track whose cue points
 you are requesting, as found in a CDJ status packet or playlist
 response.
@@ -1278,6 +1281,146 @@ point in the track, in stem:[\frac{1}{150}] second units. For loops,
 _cue_ identifies the start of the loop, and _loop_ identifies the end
 of the loop, again in stem:[\frac{1}{150}] second units.
 
+[[requesting-nxs2-cues]]
+== Requesting Nxs2 Cue Points and Loops
 
+For tracks that have been exported since the introduction of the nxs2
+series of players, rekordbox includes a richer set of information
+about cue points and loops. In addition to the information described
+in <<requesting-cues>>, you can learn about any custom colors a DJ has
+assigned to their hot cues, as well as optional text comments
+describing hot cues, memory points, and loops. And while older players
+only supported hot cues A through C, this new format returns more.
+
+TIP: In order to work well in mixed-player environments, the firmware
+of even older players has been updated to return this information if
+it is found in the exported data, so it is worth trying to ask for it.
+If the query described in this section fails, then you can fall back
+on the one shown in <<requesting-cues>>.
+
+Enhanced information about the cue points and loops stored in a track
+can be obtained with a request like this:
+
+.Extended cue point request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x2b04 6 6 6)
+(draw-dmst-field 8)
+(draw-number-field (text "rekordbox" :math))
+(draw-number-field 0)
+----
+
+As always, _TxID_ should be incremented each time you send a query,
+and will be used to identify the response messages. _D_ should have
+the same value you used in your initial query context setup packet,
+identifying the device that is asking the question. _S~r~_ and _T~r~_
+are the slot in which the track being asked about can be found and its
+track type; each has the same values used in
+<<vcdj#cdj-status-packet,CDJ status packets>>. The value after _D_,
+which identifies the location of the menu for which data is being
+loaded, is 8 which is what we expect for a graphical or data request.
+_rekordbox_ is the datbase ID of the specific track whose extended cue
+information you are requesting, as found in a CDJ status packet or
+playlist response.
+
+The response will be a message with _type_ `4e02`, containing five
+arguments. The first argument echoes back our request type, which was
+`2b04`. The second always seems to be 0. The third contains the length
+of the blob containing cue and loop points in bytes, which seems
+redundant, because that is also conveyed in the fourth argument
+itself, which is a blob containing the actual bytes of the cue and
+loop points, as shown below. However, if there are no cue or loop
+points, this value will be 0, and the following blob field will be
+completely omitted from the response, so you _must not_ try to read
+it!
+
+.Extended cue point response message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4e02 6 6 6 3 6)
+(draw-number-field 0x2b04)
+(draw-number-field 0)
+(draw-number-field (text "length" :math))
+(draw-binary-field "Cue and loop point bytes" {:length-label (text "length" :math)})
+(draw-bottom)
+(draw-number-field (text "num" :math [:sub "entries"]))
+----
+
+The fifth argument reports the number of cue point entries found in
+the blob. Because each extended cue entry can include a comment
+string, they have variable lengths, so each entry needs to be examined
+in order to figure out where it ends, and therefore the next one
+begins. The extended entry structure is shown below:footnote:[Thanks
+to Matt Positive, https://soundcloud.com/mattpositive, for packet
+captures!]
+
+.Extended cue/loop point entry.
+[bytefield]
+----
+(draw-column-headers)
+(draw-box (text "length" :math) {:span 4})
+(draw-box (text "H" :math))
+(draw-box 0)
+(draw-box (text "F" :math [:sub "l"]))
+(draw-related-boxes (repeat 5 nil))
+(draw-box (text "cue" :math) {:span 4})
+(draw-box (text "loop" :math) {:span 4})
+(draw-related-boxes (repeat 0x34 nil))
+(draw-box (text "len" :math [:sub "c"]) {:span 2})
+(draw-gap (text "comment" :math) {:min-label-columns 5})
+(draw-box (text "c" :math))
+(draw-box (text "r" :math))
+(draw-box (text "g" :math))
+(draw-box (text "b" :math))
+(draw-related-boxes (repeat 0x14 nil))
+----
+
+The first four bytes, _length_, hold the length of the current entry,
+and so can be used to find the start of the next entry. Like other
+numbers in cue point responses (and unlike most numbers in the
+protocol), this is sent in little-endian byte order. The fourth byte,
+labeled _H_, is `00` for ordinary cue points, but has a non-zero value
+if this entry defines a hot cue. Hot cues A through H are represented
+by the values `01` through `08`.
+
+_F~l~_, at byte{nbsp}``06`` has the value `01` if this entry specifies
+a memory point and `02` if it is a loop. If both _H_ and _F~l~_ are
+`00`, the entry should be ignored (it is probably a leftover cue point
+that was deleted by the DJ).
+
+The actual location of the cue and loop points are in the values _cue_
+and _loop_. These are both 4-byte integers, and as noted above, they
+are sent in a little-endian byte order. For non-looping cue points,
+only _cue_ has a meaning, and it identifies the position of the cue
+point in the track, in stem:[\frac{1}{150}] second units. For loops,
+_cue_ identifies the start of the loop, and _loop_ identifies the end
+of the loop, again in stem:[\frac{1}{150}] second units.
+
+_len~c~_ at byte{nbsp}``48`` is a two-byte, little-endian integer that
+contains the length of the comment. If it is zero, there is no
+comment. Otherwise, _comment_ will follow _len~c~_, taking up that
+many bytes, as a string (in UTF-16 encoding with a trailing `0000`
+character). So if _len~c~_ isn’t zero, it will be an even number with
+minimum value four, representing a comment that is one character long.
+
+Immediately after _comment_ (in other words, starting _len~c~_ + `4a`
+past the start of the entry) there are four one-byte values containing
+color information. 𝑐 appears to be a code identifying the color with
+which rekordbox displays the cue, by looking it up in a table. There
+have been sixteen codes identified, and their corresponding RGB colors
+can be found by looking at the `findRecordboxColor` static method in
+the Beat Link library’s
+https://github.com/Deep-Symmetry/beat-link/blob/master/src/main/java/org/deepsymmetry/beatlink/data/CueList.java[`CueList`
+class]. The next three bytes, _r_, _g_, and _b_, make up an RGB color
+specification which is similar, but not identical, to the color that
+rekordbox displays. We believe these are the values used to illuminate
+the RGB LEDs in a player that has loaded the cue. When no color is
+associated with the cue, all four of these bytes have the value `00`.
+
+We do not know what, if anything, is sent in the remaining bytes of
+the the entry, so they are shown as blank in the byte field diagram
+above.
 
 include::partial$Footer.adoc[]
