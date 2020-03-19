@@ -7,7 +7,7 @@
   (draw-number-field label)
   (draw-binary-field "Cue and loop point bytes" {:length-label label}))
 
-(draw-number-field 0x36)
+(draw-number-field 0x24)
 (draw-number-field (text "num" :math [:sub "hot"]))
 (draw-number-field (text "num" :math [:sub "cue"]))
 

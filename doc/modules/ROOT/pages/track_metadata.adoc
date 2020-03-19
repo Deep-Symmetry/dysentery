@@ -1180,15 +1180,104 @@ bits each of red, green, and blue intensity, arranged as shown below:
 (draw-related-boxes [0 0])
 ----
 
+== Requesting Cue Points and Loops
 
-To be continued...
+NOTE: This section discusses how to obtain cue points and loops which
+are compatible with original nexus players. See TODO: Section 6.12 for
+how you can obtain a newer format which includes hot cue colors, DJ-
+assigned comment text, and hot cues beyond C.
+
+The locations of the cue points and loops stored in a track can be
+obtained with a request like this:
+
+.Cue point request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x2104 6 6)
+(draw-dmst-field 8)
+(draw-number-field (text "rekordbox" :math))
+----
+
+As always, _TxID_ should be incremented each time you send a query,
+and will be used to identify the response messages. _D_ should have
+the same value you used in your initial query context setup packet,
+identifying the device that is asking the question. _S~r~_ and _T~r~_
+are the slot in which the track being asked about can be found and its
+track type; each has the same values used in
+<<vcdj#cdj-status-packet,CDJ status packets>>. The value after _D_,
+which identifies the location of the menu for which data is being
+loaded, is 8 which is what we expect for a graphical data request.
+_rekordbox_ is the datbase ID of the specific track whose cue points
+you are requesting, as found in a CDJ status packet or playlist
+response.
+
+The response will be a message with _type_ `4702`, containing nine
+arguments. The first argument echoes back our request type, which was
+`2104`. The second always seems to be 0. The third contains the length
+of the blob containing cue and loop points in bytes, which seems
+redundant, because that is also conveyed in the fourth argument
+itself, which is a blob containing the actual bytes of the cue and
+loop points, as shown below. However, if there are no cue or loop
+points, this value will be 0, and the following blob field will be
+completely omitted from the response, so you _must not_ try to read
+it!
 
 .Cue point response message.
 [bytefield]
 ----
-;; Figure 48
 include::example$dbserver_shared.edn[]
 include::example$cue_point_response.edn[]
 ----
+
+The fifth argument is a number with uncertain purpose. It always seems
+to have the value `0x24`, which may be telling us the size of each
+cue/loop point entry in argument 4 (they do seem to each take up `24`
+bytes, as shown below). The sixth argument, shown as _num~hot~_, seems
+to contain the number of hot cue entries found in argument 4, and the
+seventh, _num~cue~_ seems to contain the number of ordinary memory
+point cues. The eighth argument is a number containing the length of
+the second binary field which follows it. We don’t know the meaning of
+the final, binary, argument.
+
+As described above, the first binary field in the cue point response
+is divided up in to `24`-byte entries, each of which potentially holds
+a cue or loop point. They are not in any particular order, with
+respect to the time at which they occur in the track. They each have
+the structure shown below:
+
+.Cue/loop point entry.
+[bytefield]
+----
+(draw-column-headers)
+(draw-box (text "F" :math [:sub "l"]))
+(draw-box (text "F" :math [:sub "c"]))
+(draw-box (text "H" :math))
+(draw-related-boxes (repeat 9 0))
+(draw-box (text "cue" :math) {:span 4})
+(draw-box (text "loop" :math) {:span 4})
+(draw-related-boxes (repeat 16 0))
+----
+
+The first byte, _F~l~_, has the value `01` if this entry specifies a
+loop, or `00` otherwise. The second byte, _F~c~_, has the value `01`
+if this entry contains a cue point, and `00` otherwise. Entries with
+loops have the value `01` in both of these bytes, because loops also
+act as cue points. If both values are `00`, the entry is ignored (it
+is probably a leftover cue point that was deleted by the DJ). The
+third byte, labeled _H_, is `00` for ordinary cue points, but has a
+non-zero value if this entry defines a hot cue. Hot cues A through C
+are represented by the values `01`, `02`, and `03`.
+
+The actual location of the cue and loop points are in the values _cue_
+and _loop_. These are both 4-byte integers, and like beat grid
+positions, but unlike essentially every other number in the protocol,
+they are sent in little-endian byte order. For non-looping cue points,
+only _cue_ has a meaning, and it identifies the position of the cue
+point in the track, in stem:[\frac{1}{150}] second units. For loops,
+_cue_ identifies the start of the loop, and _loop_ identifies the end
+of the loop, again in stem:[\frac{1}{150}] second units.
+
+
 
 include::partial$Footer.adoc[]
