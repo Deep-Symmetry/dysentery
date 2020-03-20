@@ -117,7 +117,9 @@
   setup request or response, and so we know that the transaction ID
   will have the magic value 0xfffffffe (and we translate \"0
   response\" to the standard query response kind of 0x4000, which is
-  what is actually sent)."
+  what is actually sent). If `kind` is `0x100` then the message is a
+  disconnection request, which uses the same magic transaction ID
+  value."
   [kind & tags]
   (draw-column-headers)
   (draw-group-label-header 5 "start")
@@ -128,7 +130,7 @@
   (next-row 18)
 
   (draw-number-field 0x872349ae 4 :bg-green)
-  (let [txid (if (#{0 "0 response"} kind) 0xfffffffe (text "TxID" :math))
+  (let [txid (if (#{0 "0 response" 0x100} kind) 0xfffffffe (text "TxID" :math))
         kind (if (= kind "0 response") 0x4000 kind)]
     (draw-number-field txid 4 :bg-yellow)
     (draw-number-field (hex-text kind 4 :bold) 2 :bg-pink))

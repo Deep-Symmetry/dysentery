@@ -310,6 +310,7 @@ track. The player responds with a success indicator, saying it is
 ready to send these “menu items” and reporting how many of them are
 available:
 
+[[metadata-available-response]]
 .Track metadata available response.
 [bytefield]
 ----
@@ -331,14 +332,15 @@ to send them to us.
 If there was no track with ID _rekordbox_ in that media slot, the
 second argument would have the value `ffffffff` to let us know. If we
 messed up something else about the request, we will get a response
-with a _type_ other than `4000`. See TODO: Section 6.16 for
-instructions on how to explore these variations on your own.
+with a _type_ other than `4000`. See <<experimenting-with-metadata>>
+for instructions on how to explore these variations on your own.
 
 But assuming everything went well, we can get the player to send us
 all eleven of those metadata entries by telling it to render all of
 the current menu, using a “render menu” request with _type_ `3000`
 like this:
 
+[[render-menu-request]]
 .Render Menu request message.
 [bytefield]
 ----
@@ -714,8 +716,8 @@ include::example$dbserver_shared.edn[]
 ----
 
 To experiment with this, start up dysentery in a Clojure REPL and
-connect to a player as described in TODO: Section 6.16, then evaluate
-an expression like:
+connect to a player as described in <<experimenting-with-metadata>>,
+then evaluate an expression like:
 
 [source,clojure]
 ----
@@ -903,8 +905,8 @@ to the highest bit of whiteness, drawing the waveform as either very
 dark or light blue accordingly.
 
 To experiment with this, start up dysentery in a Clojure REPL and
-connect to a player as described in TODO: Section 6.16, then evaluate
-an expression like:
+connect to a player as described in <<experimenting-with-metadata>>,
+then evaluate an expression like:
 
 [source,clojure]
 ----
@@ -1422,5 +1424,353 @@ associated with the cue, all four of these bytes have the value `00`.
 We do not know what, if anything, is sent in the remaining bytes of
 the the entry, so they are shown as blank in the byte field diagram
 above.
+
+[[requesting-all-tracks]]
+== Requesting All Tracks
+
+If you want to cache all the metadata associated with a media stick,
+this query is a good starting point. Send a packet with _type_ `1004`:
+
+.Full track list request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x1004 6 6)
+(draw-dmst-field 1)
+(draw-number-field (text "sort" :math))
+----
+
+As always, _TxID_ should be 1 for the first query packet you send, 2
+for the next, and so on. _D_ should have the same value you used in
+your initial query context setup packet, identifying the device that
+is asking the question. _S~r~_ is the slot in which the track being
+asked about can be found, and _T~r~_ is the type of the track; these
+two bytes have the same values used in <<vcdj#cdj-status-packet,CDJ
+status packets>>. The _sort_ parameter determines the order in which
+the tracks are sorted, and that also affects the item type returned,
+along with the secondary information (beyond the title) that it
+contains about the track, as described in
+<<alternate-track-sort-orders>> below. We will start out assuming the
+tracks are being requested in title order, which can be done by
+sending a _sort_ argument value of 0, and that the DJ has configured
+the media device to show artists as the second column.
+
+Track list requests (just like metadata requests) are built on the
+mechanism that is used to request and draw scrollable menus on the
+CDJs, explored in more breadth in TODO: Section 7. The player responds
+with a success indicator, saying it is ready to send these “menu
+items” and reporting how many of them are available, much like shown
+in the <<metadata-available-response,metadata available response>>,
+although the first argument will be `1004` to reflect the message type
+we just sent, rather than `2002` as it was for the metadata request.
+
+As with metadata, the next step is to send a
+<<render-menu-request,“render menu” request>> to get the actual
+results. But the number of results available is likely to be much
+higher than in the earlier example, because we have asked about all
+tracks in the media slot. That means we will probably need more than
+one “render menu” request to get them all.
+
+I don’t know how many items you can safely ask for at one time. I have
+had success with values as high as 64 on my CDJ-2000 nexus players,
+but they failed when asking for numbers in the thousands. So to be
+safe, you should ask for the results in chunks of 64 or smaller, by
+setting _limit_ and _total_ to the lesser of 64 and the remaining
+number of results you want, and incrementing _offset_ by 64 in each
+request until you have retrieved them all.
+
+As with metadata requests, you will get back two more messages than
+you ask for, because you first get a <<menu-header-response,menu
+header message>> (with _type_ `4001`), then the requested
+<<menu-item-response,menu items>> are sent (with _type_ `4101`), and
+finally these are followed by a <<menu-footer-response,menu footer
+message>> (with _type_ `4201`). This wrapping happens with all “render
+menu” requests, and the menu footer is an easy way to know you are
+done, although you can also count the messages.
+
+The details of the menu items are slightly different than in the case
+of a metadata request. In the example where you are retrieving tracks
+in the default order, with the second column configured to be artists,
+they will have the content shown in the following table:
+
+.Track List entries with Artists.
+[cols=">1,^2,<13"]
+|===
+|Arg |Type |Meaning
+
+|1 |number |artist id
+|2 |number |_rekordbox_ id of track
+|3 |number |length in bytes of Label 1
+|4 |string |Label 1: Track Title
+|5 |number |length in bytes of Label 2
+|6 |string |Label 2: Artist Name
+|7 |number |type of this item, `0704` for “Title and Artist”
+|8 |number |some sort of flags field, details still unclear
+|9 |number |unknown
+|10|number |unknown
+|11|number |unknown
+|12|number |unknown
+|===
+
+[[alternate-track-sort-orders]]
+== Alternate Track List Sort Orders
+
+As noted above, you can request the track list in a diferent order by
+supplying a different value for the _sort_ parameter. The value 0
+gives the order just described, with the default second column
+information configured for the media. The _sort_ values discovered so
+far are shown in the following table, and return menu items with the
+specified item type values in argument 7.
+
+In all these alternate orders, Arg 2 still holds the ID of the track,
+and Arg 4 (Label 1) its title, but Arg 1 holds a different ID
+depending on the sort chosen, and Arg 6 (Label 2) a different string,
+as described in the table:
+
+.Sort Orders.
+[cols=">1m,^1m,<2,<2,<2"]
+|===
+|Sort |Type |Sorted By |Arg 1 |Arg 6 (Label 2)
+
+|01 |0704 |Title |Artist ID |Artist name
+|02 |0704 |Artist name |Artist ID |Artist name
+|03 |0204 |Album name | Album ID |Album name
+|04 |0d04 |BPM | BPM × 100 |empty
+|05 |0a04 |Rating |Rating |empty
+|06 |0604 |Genre |Genre ID |Genre name
+|07 |2304 |Comment |Comment ID |Comment text
+|08 |0b04 |Time (track duration) |Length in seconds |empty
+|09 |2904 |Remixer |Remixer ID |Remixer name
+|0a |0e04 |Label |Label ID |Label name
+|0b |2804 |Original Artist |Original Artist ID |Original Artist name
+|0c |0f04 |Key |Key ID |Key text
+|0d |1004 |Bit rate |Bit rate |empty
+|10 |2a04 |DJ play count |Play count |empty
+|11 |2e04 |Date added |Date ID |Date text
+|===
+
+To experiment with this, start up dysentery in a Clojure REPL and
+connect to a player as described in <<experimenting-with-metadata>>,
+then evaluate an expression like:
+
+[source,clojure]
+----
+(db/request-track-list p2 3)
+----
+
+Replace the arguments with the `var` holding your player connection
+and the proper _S~r~_ number for the media slot containing the tracks
+you want to list. You can also add a third argument to specify a sort
+order, like this to sort all the tracks in the USB slot by BPM:
+
+[source,clojure]
+----
+(db/request-track-list p2 3 4)
+----
+
+== Playlists
+
+If you want to allow your user to browse the content of the media, you
+can navigate the playlist folder hierarchy and deal with only specific
+playlists. This process is essentially the same as asking for all
+tracks, except that in the playlist request you specify the playlist
+or folder that you want to list. To start at the root of the playlist
+folder hierarchy, you request folder 0. A playlist request has the
+following structure:
+
+[[playlist-request-message]]
+.Playlist request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x1105 6 6 6 6)
+(draw-dmst-field 1)
+(draw-number-field (text "sort" :math))
+(draw-number-field (text "id" :math))
+(draw-number-field (text "folder?" :math))
+----
+
+As always, _TxID_ should be 1 for the first query packet you send, 2
+for the next, and so on. _D_ should have the same value you used in
+your initial query context setup packet, identifying the device that
+is asking the question. _S~r~_ is the slot in which the track being
+asked about can be found, and _T~r~_ is the type of the track; these
+two bytes have the same values used in <<vcdj#cdj-status-packet,CDJ
+status packets>>. You specify the ID of the playlist or folder you
+want to list in the _id_ argument, and set _folder?_ 1 if you are
+asking for a folder, and 0 if you are asking for a playlist. As noted
+above, to get the top-level list of playlists, ask for folder 0, by
+passing an _id_ of 0 and passing _folder?_ as 1.
+
+Much as when listing all tracks, the response may tell you there are
+more entries in the playlist than you can retreive in a single
+request, so you should follow the procedure outlined in
+<<requesting-all-tracks>> to request your results in smaller batches.
+The followup queries that you send are identical for playlists as they
+are described in that section. The actual menu items returned when you
+are asking for a folder have the content shown in the following table:
+
+.Folder List entries.
+[cols=">1,^2,<13"]
+|===
+|Arg |Type |Meaning
+
+|1 |number |parent folder id
+|2 |number |id of playlist or folder
+|3 |number |length in bytes of Label 1
+|4 |string |Label 1: Name of playlist or folder
+|5 |number |length in bytes of Label 2
+|6 |string |Label 2: empty
+|7 |number |type of this item, `01` for folder, `08` for playlist
+|8 |number |unknown
+|9 |number |unknown
+|10|number |playlist position
+|11|number |unknown
+|12|number |unknown
+|===
+
+When you have requested a playlist (by passing its _id_ and a value of
+0 for _folder?_) the responses you get are track list entries, just
+like when you request all tracks as shown in
+<<requesting-all-tracks>>. And just as in that section, you can get
+the results in a particular order by specifying a value for _sort_.
+The supported values and corresponding item types returned seem to be
+the same as described there. Additionally, if you pass a _sort_ value
+of `09`, the playlist entries will come back sorted by track title,
+Label 2 will be empty, and the item type will be `2904`.
+
+To experiment with this, start up dysentery in a Clojure REPL and
+connect to a player as described in <<experimenting-with-metadata>>,
+then evaluate an expression like:
+
+[source,clojure]
+(db/request-playlist p2 3 1)
+
+Replace the arguments with the `var` holding your player connection,
+the proper _S~r~_ number for the media slot containing the playlist
+you want to list, and the playlist ID. You can also add a third
+argument to specify that you want to list a folder, like this using
+folder ID 0 to request the root folder:
+
+[source,clojure]
+(db/request-playlist p2 3 0 true)
+
+Finally, you can add a fourth argument to specify a sort order,
+like this to sort all the tracks in playlist 12 by genre:
+
+[source,clojure]
+(db/request-playlist p2 3 12 false 6)
+
+== Disconnecting
+
+If you want to be polite about the fact that you are done talking to
+the `dbserver`, you can send it a message like the one shown below.
+This will cause the player to disconnect from its side.
+
+.Connection teardown message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x0100)
+----
+
+Note that this uses the same “magic” _TxID_ value, `fffffffe`, that is
+used by the query context setup message.
+
+[[experimenting-with-metadata]]
+== Experimenting with Metadata
+
+The best way to get a feel for the details of working with these
+messages is to load dysentery into a Clojure REPL, as described on the
+https://github.com/Deep-Symmetry/dysentery#dysentery[project page],
+and play with some of the functions in the `dysentery.dbserver`
+namespace. Have no more than three players connected and active on
+your network, so you have an unused player number for dysentery to
+use. In this example, player number 1 is available, so we set
+dysentery up to pose as player 1 (user input is shown in bold):
+
+[subs="quotes"]
+----
+> *lein repl*
+nREPL server started on port 53806 on host 127.0.0.1 -
+ nrepl://127.0.0.1:53806
+REPL-y 0.3.7, nREPL 0.2.12
+Clojure 1.8.0
+Java HotSpot(TM) 64-Bit Server VM 1.8.0_77-b03
+dysentery loaded.
+
+dysentery.core> *(view/watch-devices :player-number 1)*
+Looking for DJ Link devices...
+Found:
+   DJM-2000nexus 33 /172.16.42.3
+   CDJ-2000nexus 2 /172.16.42.4
+To communicate create a virtual CDJ with address
+  /172.16.42.2, MAC address 3c:15:c2:e7:08:6c,
+  and use broadcast address /172.16.42.255
+:socket \#object[java.net.DatagramSocket 0x22b952b1
+                 "java.net.DatagramSocket@22b952b1"],
+:watcher #future[:status :pending, :val nil 0x3eb8f41b]
+
+dysentery.core> *(def p2 (db/connect-to-player 2 1))*
+Transaction: 4294967294, message type: 0x4000
+ (requested data available), argument count: 2, arguments:
+  number:          0 (0x00000000) [request type]
+  number:          2 (0x00000002) [# items available]
+\#'dysentery.core/p2
+
+dysentery.core> *(def md (db/request-metadata p2 2 1))*
+Sending > Transaction: 1, message type: 0x2002
+ (request track metadata), argument count: 2, arguments:
+  number:   16843265 (0x01010201) [player, menu, media, 1]
+  number:          1 (0x00000001) [rekordbox ID]
+Received > Transaction: 1, message type: 0x4000
+ (requested data available), argument count: 2, arguments:
+  number:       8194 (0x00002002) [request type]
+  number:         11 (0x0000000b) [# items available]
+      Sending > Transaction: 2, message type: 0x3000
+       (render menu), argument count: 6, arguments:
+  number: 16843265 (0x01010201) [player, menu, media, 1]
+  number:        0 (0x00000000) [offset]
+  number:       11 (0x0000000b) [limit]
+  number:        0 (0x00000000) [unknown (0)?]
+  number:       11 (0x0000000b) [len_a (= limit)?]
+  number:        0 (0x00000000) [unknown (0)?]
+Received 1  > Transaction: 2, message type: 0x4001
+ (rendered menu header), argument count: 2, arguments:
+  number:          1 (0x00000001) [unknown]
+  number:          0 (0x00000000) [unknown]
+Received 2  > Transaction: 2, message type: 0x4101
+ (rendered menu item), argument count: 12, arguments:
+  number:        1 (0x00000001) [numeric 1 (parent id)]
+  number:        1 (0x00000001) [numeric 2 (this id)]
+  number:       80 (0x00000050) [label 1 byte size]
+  string: "Escape ft. Zoë Phillips" [label 1]
+  number:        2 (0x00000002) [label 2 byte size]
+  string: "" [label 2]
+  number:        4 (0x00000004) [item type: Track Title]
+  number: 16777216 (0x01000000) [column configuration?]
+  number:        0 (0x00000000) [album art id]
+  number:        0 (0x00000000) [playlist position]
+  number:      256 (0x00000100) [unknown]
+  number:        0 (0x00000000) [unknown]
+...
+
+Received 13  > Transaction: 2, message type: 0x4201
+ (rendered menu footer), argument count: 0, arguments:
+#'dysentery.core/md
+dysentery.core>
+----
+
+In this interaction, after setting up the watcher so we can find
+players on the network, we set the `var` `p2` to be a connection to
+player 2, in which we are posing as player 1. Then we submit a
+metadata request to `p2`, requesting the track in slot 2 (SD card),
+with _rekordbox_ id 1. You can see the messages being sent and
+received to accomplish that. For more functions that you can call,
+including the very flexible `experiment` function, look at the source
+for the `dysentery.dbserver` namespace. Most of the response messages
+containing track metadata were omitted for brevity; you will get more
+meaningful results trying it with your own tracks, and then you can
+see all the details.
 
 include::partial$Footer.adoc[]
