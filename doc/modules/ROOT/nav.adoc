@@ -5,4 +5,5 @@
 * xref:track_metadata.adoc[Track Metadata]
 * xref:menus.adoc[Menu Requests]
 * xref:mixer_integration.adoc[Mixer Integration]
+* xref:loading_tracks.adoc[Loading Tracks]
 * xref:media.adoc[Media Slot Queries]
