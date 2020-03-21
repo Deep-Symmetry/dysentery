@@ -26,8 +26,9 @@ To track beats, open a socket and bind it to port 50001. The devices
 seem to broadcast two different kinds of packets to this port, a
 shorter packet containing `2d` bytes of data, and a longer packet
 containing `60` bytes. The shorter packets contain information about
-which channels are on-air, and fader start/stop commands to the
-players, as described in TODO: Section 9.
+which <<mixer_integration#channels-on-air,channels are on-air>>, and
+<<mixer_integration#fader-start,fader start/stop commands>> to the
+players.
 
 The `60`-byte packets are sent on each beat, so even the arrival of
 the packet is interesting information, it means that the player is

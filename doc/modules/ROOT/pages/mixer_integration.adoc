@@ -43,4 +43,38 @@ include::example$status_shared.edn[]
 Since this packet uses subtype 00, the length sent in _len~r~_ has the
 value `0004`, reflecting the four bytes which follow it.
 
+[[channels-on-air]]
+== Channels on Air
+
+Thanks to https://github.com/jan2000[@jan2000] we know how the mixer
+reports which channels are currently on-air, and we can simulate
+this feature ourselves when there is no DJM on the network. (If there
+is a DJM present, it will quickly reassert its own on-air state for
+all the channels.)
+
+The mixer broadcasts a packet like the one shown below to port 50001,
+with appropriate flag values for _F~1~_ through _F~4~_ telling each
+player whether its channel is on-air. A flag value of `00` tells the
+corresponding player it is off the air (silenced, either due to the
+cross fader, channel fader, or input source switch for that channel),
+while `01` means the player’s channel is on the air.
+
+[[on-air-packet]]
+.On Air flags packet.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x03)
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(doseq [i (range 1 5)]
+  (draw-box (text "F" :math [:sub i])))
+(draw-related-boxes (repeat 5 (hex-text 0)))
+----
+
+Since this packet uses subtype 00, the length sent in _len~r~_ has the
+value `0009`, reflecting the nine bytes which follow it.
+
+
 include::partial$Footer.adoc[]
