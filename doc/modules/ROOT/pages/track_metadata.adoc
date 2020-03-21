@@ -919,6 +919,7 @@ the proper _S~r~_ number for the media slot the track is found in, and
 the _rekordbox_ ID of the track, and dysentery will open a window
 like this showing the waveform preview:
 
+[[player-display]]
 image::Wave-preview-example.png[alt=Waveform preview,width=433,height=86]
 
 The remaining hundred bytes appear to contain an even more compact
@@ -987,11 +988,27 @@ include::example$dbserver_shared.edn[]
 The content of the waveform detail is simpler and more compact than
 the waveform preview. Every byte reperesents one segment of the
 waveform, and there are 150 segments per second of audio. (These seem
-to correspond to “half frames” counted as `03.5~F~` following the seconds
-in the player display.) Each byte encodes both a color and height. The
-three high-order bits encode the color, ranging from darkest blue at 0
-to near-white at 7. The five low-order bits encode the height of the
+to correspond to “half frames” following the seconds in the player
+display.) Each byte encodes both a color and height. The three
+high-order bits encode the color, ranging from darkest blue at 0 to
+near-white at 7. The five low-order bits encode the height of the
 waveform at that point, from 0 to 31 pixels.
+
+[[frames]]
+.Frames
+****
+There are various places in the protocol and exported database files
+that refer to track playback positions in terms of frames or half
+frames. This probably comes from the language of digital audio files.
+In the case of CDJs, audio is played at the rate of 75 frames per
+second, and the formats can address locations that are at half-frame
+boundaries, or 150 distinct track locations per second of audio.
+
+You can see this reflected on the <<player-display,player display>>
+where time is counted in units of minutes, seconds, and frames, and
+the frame field has a decimal point, but the value displayed always
+ends with `.0` or `.5`, and ranges from `00.0` to `74.5`.
+****
 
 [[requesting-nxs2-waveforms]]
 == Requesting Nxs2 Track Waveforms
@@ -1167,10 +1184,10 @@ The extended waveform detail data begins at byte `34` and has a
 variable length, but a vastly simpler structure than the waveform
 preview. Every pair of bytes represents one segment of the waveform,
 and there are 150 (decimal) segments per second of audio. (These seem
-to correspond to “half frames” counted as `03.5~F_` following the
-seconds in the player display.) Each pair of bytes encodes the height
-of the waveform at that segment as a five bit value, along with three
-bits each of red, green, and blue intensity, arranged as shown below:
+to correspond to “half <<frames,frames>>” following the seconds in the
+player display.) Each pair of bytes encodes the height of the waveform
+at that segment as a five bit value, along with three bits each of
+red, green, and blue intensity, arranged as shown below:
 
 .Nxs2 waveform detail segment bits.
 [bytefield]
