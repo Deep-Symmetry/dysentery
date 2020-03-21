@@ -34,7 +34,8 @@ the range 1–4) will interfere with your ability to perform metadata
 requests using `dbserver` queries as described in
 <<track_metadata#messages,the Track Metadata section>>. In situations
 where there are four actual players on the network you can use
-alternate ways to get the data, as described in TODO: Section 12.3.
+alternate ways to get the data, as described in
+<<missing#four-players,Reading Data with Four Players>>.
 
 Each device seems to send status packets roughly every 200 milliseconds.
 

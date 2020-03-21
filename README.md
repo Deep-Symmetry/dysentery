@@ -54,10 +54,10 @@ together.
 ## Analysis
 
 A major goal of this project is the [Packet
-Analysis](http://deepsymmetry.org/dysentery/Analysis.pdf), which is
-intended to be useful to anyone who wants to write code to interact
-with DJ Link networks. Check out what we have learned so far, and
-please help us figure out more if you can!
+Analysis](https://djl-analysis.deepsymmetry.org/), which is intended
+to be useful to anyone who wants to write code to interact with DJ
+Link networks. Check out what we have learned so far, and please help
+us figure out more if you can!
 
 The packet captures used to create that document can be downloaded
 ([Sections 1 and 2](doc/assets/powerup.pcapng),
@@ -156,9 +156,12 @@ black over the next second, until the next packet is received.
 
 Beneath the timestamp is a an interpretation of the meaning of the
 packet, as best we can currently understand it, with italic field
-labels corresponding to the byte fields identified in Figures
-9&ndash;12 of the [Packet Analysis
-document](http://deepsymmetry.org/dysentery/Analysis.pdf).
+labels corresponding to the byte fields identified in the
+[beats](https://djl-analysis.deepsymmetry.org/djl-analysis/beats.html)
+and
+[status](https://djl-analysis.deepsymmetry.org/djl-analysis/vcdj.html)
+sections of the [Packet
+Analysis](https://djl-analysis.deepsymmetry.org/).
 
 > If you have access to any Pioneer Nexus gear, please run Dysentery
 > and see if the results it gives seem to make sense for your
