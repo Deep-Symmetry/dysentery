@@ -4,3 +4,4 @@
 * xref:sync.adoc[Sync and Tempo Master]
 * xref:track_metadata.adoc[Track Metadata]
 * xref:menus.adoc[Menu Requests]
+* xref:mixer_integration.adoc[Mixer Integration]

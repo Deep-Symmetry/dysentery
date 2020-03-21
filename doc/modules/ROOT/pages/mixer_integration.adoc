@@ -1,0 +1,46 @@
+= Mixer Integration
+James Elliott <james@deepsymmetry.org>
+:icons: font
+:experimental:
+
+This section describes a couple of packet types that support the tight
+interaction between DJM mixers and CDJs, specifically the “Fader
+Start” feature that can start and stop playback in response to
+movements of channel faders and the cross-fader, and the “Channels on
+Air” feature that allows players to change the color with which their
+platter is illuminated depending on whether their output is currently
+audible in the mix.
+
+[[fader-start]]
+== Fader Start
+
+Thanks to https://github.com/ErikMinekus[@ErikMinekus] we know that we
+can cause players to start or stop playing by sending a packet like
+the one shown below to port 50001 of the players, with appropriate
+command values for _C~1~_ through _C~4~_ telling that player what to
+do. A command value of `00` tells the corresponding player to start
+playing if it isn’t already, as long as it is positioned at the
+current cue point. The command `01` tells that player to stop playing
+and return to the cue point, and the value `02` tells the player to
+stay in its current state. (It also seems to work to broadcast the
+packet on port 50001, which makes sense, since it can be interpreted
+individually by each player, so a single packet can be used to affect
+the states of all four players if desired.)
+
+[[fader-start-packet]]
+.Fader start packet.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x02)
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(doseq [i (range 1 5)]
+  (draw-box (text "C" :math [:sub i])))
+----
+
+Since this packet uses subtype 00, the length sent in _len~r~_ has the
+value `0004`, reflecting the four bytes which follow it.
+
+include::partial$Footer.adoc[]
