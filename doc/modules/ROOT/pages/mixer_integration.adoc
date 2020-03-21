@@ -70,11 +70,10 @@ include::example$status_shared.edn[]
 (draw-box (text "len" :math [:sub "r"]) {:span 2})
 (doseq [i (range 1 5)]
   (draw-box (text "F" :math [:sub i])))
-(draw-related-boxes (repeat 5 (hex-text 0)))
+(draw-related-boxes (repeat 5 0))
 ----
 
 Since this packet uses subtype 00, the length sent in _len~r~_ has the
 value `0009`, reflecting the nine bytes which follow it.
-
 
 include::partial$Footer.adoc[]

@@ -1,0 +1,114 @@
+= Media Slot Queries
+James Elliott <james@deepsymmetry.org>
+:icons: font
+:experimental:
+
+In order to correctly ask for the root menu for a media slot, you need
+to know what kind of media (rekordbox or unanalyzed) is present in the
+slot so you can send the proper _T~r~_ value in your menu requests.
+You might also want to show information about the entire media
+collection, such as its name, size, date created, number of tracks,
+number of playlists, and free space. All of these things can be
+determined by sending a packet like the one shown below to port 50002
+on the player that holds the slot, with appropriate values for _D_
+(the device number you are posing as), _D~r~_ (the device owning the
+slot), and _S~r~_ (the slot you’re interested in). These bytes have
+the same values used in <<vcdj#cdj-status-packet,CDJ status packets>>.
+
+[[media-query-packet]]
+.Media query packet.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x05)
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-box "IP address" {:span 4})
+(draw-related-boxes (repeat 3 0))
+(draw-box (text "D" :math [:sub "r"]))
+(draw-related-boxes (repeat 3 0))
+(draw-box (text "S" :math [:sub "r"]))
+----
+
+Since this packet uses subtype 00, the length sent in _len~r~_ has the
+value `000c`, reflecting the twelve bytes which follow it.
+
+The player will respond by sending a packet like the one shown below
+to port 50002 on the IP address specified in your query packet (so you
+want to supply your own address to get the response). This contains
+the information about the media mounted in the slot.
+
+[[media-response-packet]]
+.Media response packet.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x06)
+(draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-related-boxes (repeat 3 0))
+(draw-box (text "D" :math [:sub "r"]))
+(draw-related-boxes (repeat 3 0))
+(draw-box (text "S" :math [:sub "r"]))
+(draw-box nil [:box-above {:span 4}])
+(draw-box (text "Media Name (UTF-16, padded with " :plain [:hex "0000"] ")") {:span 16 :borders #{:left :right}})
+(draw-box nil {:span 16 :borders #{:left :right}})
+(draw-box nil {:span 16 :borders #{:left :right}})
+(draw-box nil [:box-below {:span 12}])
+(draw-box nil [:box-above {:span 4}])
+(draw-box (text "Creation Date (UTF-16, padded with " :plain [:hex "0000"] ")") {:span 16 :borders #{:left :right}})
+(draw-box nil [:box-below {:span 4}])
+(draw-box nil [:box-above {:span 12}])
+(draw-box "unknown UTF-16 text (sometimes “1000”)" {:span 16 :borders #{:left :right}})
+(draw-box nil [:box-below {:span 6}])
+(draw-box (text "tracks" :math) {:span 2})
+(draw-box (text "x" :math))
+(draw-box 0)
+(draw-box (text "T" :math [:sub "r"]))
+(draw-box (text "a" :math))
+(draw-related-boxes [0 0])
+(draw-box (text "plists" :math) {:span 2})
+(draw-box "Total space" {:span 8})
+(draw-box "Free space" {:span 8})
+----
+
+Since this packet uses subtype `00`, the length sent in _len~r~_ has
+the value `009c`, reflecting the number of bytes which follow it.
+
+The name of the media stick (as assigned in rekordbox) can be found as
+a UTF-16 encoded string starting at byte{nbsp}``2c``, and up to `40`
+bytes long, padding with trailing null characters. This is followed by
+a textual representation of the creation date of the media database,
+encoded in the same way, starting at byte{nbsp}``6c``, up to `28`
+bytes long. (Neither of these fields have meaningful values for
+“media” served by rekordbox mobile from its collection on a phone.)
+
+The number of rekordbox tracks present in the database is found in
+bytes{nbsp}``a6`` and `a7` (this will be zero if there is no rekordbox
+database present). The purpose of value _x_ at byte{nbsp}``a8`` is
+uncertain, we have seen values of `06` and `00`, but don’t know what
+they mean.
+
+_T~r~_ at byte{nbsp}``aa`` reports the type of tracks available, with
+the same values used in <<vcdj#cdj-status-packet,CDJ status packets>>.
+In other words, it will have the value `01` when a rekordbox database
+is present, and `02` otherwise; this is the same value that must be
+sent as _T~r~_ in order to make a successful request for the root menu
+associated with this media. Again, we don’t know the purpose of _a_ at
+byte{nbsp}``ab``, though it seems that it might have the value `01`
+when there is a rekordbox database present, and `00` otherwise, hence
+the use of _a_ to suggest “analyzed.”
+
+The number of rekordbox playlists present on the media (also zero if
+there is no rekordbox database) is found at bytes{nbsp}``ae`` and
+`af`.
+
+Finally, there are two eight-byte numbers at the end of the packet.
+The value at bytes{nbsp}``b0`` through `b7` is the total capacity of
+the media (in bytes), and the value at bytes{nbsp}``b8`` through `bf`
+is the number of unused bytes left on it.
+
+
+include::partial$Footer.adoc[]

@@ -5,3 +5,4 @@
 * xref:track_metadata.adoc[Track Metadata]
 * xref:menus.adoc[Menu Requests]
 * xref:mixer_integration.adoc[Mixer Integration]
+* xref:media.adoc[Media Slot Queries]
