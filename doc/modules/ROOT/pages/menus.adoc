@@ -1,0 +1,135 @@
+= Menu Requests
+James Elliott <james@deepsymmetry.org>
+:icons: font
+:experimental:
+
+We have already seen many examples of the menu mechanism in action,
+most clearly with <<track_metadata#track-metadata,metadata requests>>,
+<<track_metadata#requesting-all-tracks,track list requests>>, and
+<<track_metadata#playlist-requests,playlist requests>>. We’ll round
+out what is known about the other types of menu request here.
+
+The overall flow starts off by sending a menu request message whose
+type identifies the kind of menu desired (in the message _type_
+field), along with some parameters that control the specific content
+to be shown, and perhaps establishing a sort order. See, for example,
+a <<track_metadata#playlist-request-message,playlist request>>. If all
+goes well, the player responds with a packet with _type_ `4000` like
+<<track_metadata#metadata-available-response,this one>>, containing
+two numeric fields that hold the original menu _type_ value you
+requested, followed by the number of menu entries that are available
+for you to load.
+
+To actually obtain those menu entries, you send one or more
+<<track_metadata#render-menu-request,“render menu” request>> messages
+with _type_ `3000`, allowing you to paginate through the results. This
+gets you a number of responses: a
+<<track_metadata#menu-header-response,menu header>> message (with
+_type_ `4001`), followed by the number of
+<<track_metadata#menu-item-response,menu item>> messages you requested
+(with _type_ `4101` and the content described in
+<<track_metadata#menu-item-types,Menu Item Types>>), and finally a
+<<track_metadata#menu-footer-response,menu footer>> message (with
+_type_ `4201`).
+
+== Known Menu Request Types
+
+The table below shows the menu requests we have figured out so far.
+Not all menus are available in all rekordbox databaes; the DJ can
+decide what indices and categories to include, and that will determine
+which of these requests succeed. To find out what is available, you
+can request the root menu, which gives you access to all available
+menus. That is what a player will do when you use the kbd:[Link]
+button to connect to media mounted on another player. The menus
+available to you will be returned as entries in the root menu
+response, with Item Type values in the range `80`–`95`, as shown in
+the <<track_metadata#types-for-menus,known menu item types table>>.
+
+.Menu request types.
+[cols=">1m,<4,<7"]
+|===
+|Type |Meaning |Arguments
+
+|1000 |Root Menu |_r:m:s:t_, sort, `00ffffff`
+|1001 |Genre Menu |_r:m:s:t_, sort
+|1002 |Artist Menu |_r:m:s:t_, sort
+|1003 |Album Menu |_r:m:s:t_, sort
+|1004 |<<track_metadata#requesting-all-tracks,Track Menu>> |_r:m:s:t_, sort
+|1006 |BPM Menu |_r:m:s:t_, sort
+|1007 |Rating Menu |_r:m:s:t_, sort
+|1008 |Year Menu |_r:m:s:t_, sort
+|100a |Label Menu |_r:m:s:t_, sort
+|100d |Color Menu |_r:m:s:t_, sort
+|1010 |Time Menu |_r:m:s:t_, sort
+|1011 |Bitrate Menu |_r:m:s:t_, sort
+|1012 |History Menu |_r:m:s:t_, sort?
+|1013 |Filename Menu |_r:m:s:t_, sort?
+|1014 |Key Menu |_r:m:s:t_, sort?
+|1302 |Original Artist Menu |_r:m:s:t_, sort
+|1602 |Remixer Menu |_r:m:s:t_, sort
+| | |
+|1101 | Artists for Genre | _r:m:s:t_, sort, genre ID
+|1102 | Albums for Artist | _r:m:s:t_, sort, artist ID
+|1103 | Tracks for Album | _r:m:s:t_, sort, album ID
+|1107 | Tracks for Rating | _r:m:s:t_, sort, rating ID
+|1108 | Years for Decade | _r:m:s:t_, sort, decade
+|110a | Artists for Label | _r:m:s:t_, sort, label ID
+|110d | Tracks for Color | _r:m:s:t_, sort, color ID
+|1110 | Tracks for Time | _r:m:s:t_, sort, time
+|1112 | Tracks for History | _r:m:s:t_, sort, history ID
+|1114 | Distances for Key | _r:m:s:t_, sort, key ID
+|1402 | Albums for Original Artist | _r:m:s:t_, sort, artist ID
+|1702 | Albums for Remixer | _r:m:s:t_, sort, artist ID
+| | |
+|1201 | Albums for Genre and Artist | _r:m:s:t_, sort, genre ID, artist ID{empty}footnote:all-flag[Use -1 for “all”.]
+|1202 | Tracks for Artist and Album | _r:m:s:t_, sort, artist ID, album ID{empty}footnote:all-flag[]
+|1206 | Tracks for BPM +/- % | _r:m:s:t_, sort, bpm ID, distance (+/- %, can be 0-6)
+|1208 | Tracks for Decade and Year | _r:m:s:t_, sort, decade, year{empty}footnote:all-flag[]
+|120a | Albums for Label and Artist | _r:m:s:t_, sort, label ID, artist ID{empty}footnote:all-flag[]
+|1214 | Tracks near Key | _r:m:s:t_, sort, key ID, distance
+|1502 | Tracks for Original Artist and Album | _r:m:s:t_, sort, artist ID, album ID{empty}footnote:all-flag[]
+|1802 | Tracks for Remixer and Album | _r:m:s:t_, sort, artist ID, album ID{empty}footnote:all-flag[]
+| | |
+|1301 | Tracks for Genre, Artist, and Album | _r:m:s:t_, sort, genre ID, artist ID{empty}footnote:all-flag[], album ID{empty}footnote:all-flag[]
+|130a | Tracks for Label, Artist, and Album | _r:m:s:t_, sort, label ID, artist ID{empty}footnote:all-flag[], album ID{empty}footnote:all-flag[]
+| | |
+|1105 |<<track_metadata#playlist-requests,Playlist Menu>> | _r:m:s:t_, sort, playlist or folder id, type (0:playlist, 1:folder)
+|1300 |Search by substring | _r:m:s:t_, sort, search string byte size, search string (uppercase), unknown (0)
+|2006 |Folder Menu | _r:m:s:t_, sort?, folder id, unknown (0)
+|===
+
+The first argument to every menu request is a four-byte number where
+each byte means something different. This byte is referred to as
+_r:m:s:t_ in the Beat Link code because of the function of its
+component bytes (_requester:menu:slot:type_):
+
+The first byte is always the device number _D_ of the player making
+the request.
+
+The second byte of the first argument identifies which menu location
+on the player will be used to display the result (for example, the
+screen is sometimes split with the user scrolling down the left, which
+is menu location 1, while displaying the contents of the selected item
+on the right, which is menu location 2, and the response format can
+be different in these cases). When showing metadata preview for a
+selected track, the menu “location” value is 3, and when loading
+non-text data like waveforms, album art or beat grids, the value of
+this byte is 8.
+
+The third byte of this argument identifies the media slot, _S~r~_,
+that information is being requested from. It has the same values used
+in <<vcdj#cdj-status-packet,CDJ status packets>>.
+
+And the final byte identifies fhe media type, _T~r~_ being asked
+about, with values also as used in <<vcdj#cdj-status-packet,CDJ status
+packets>>.
+
+== Search
+
+As noted in the above table, there is a search “menu”. This is how the
+text-search feature of CDJs with touch-strips is implemented. By
+passing an uppercase string argument (in UTF-16 with a trailing `0000`
+character), preceded by its byte length, you can obtain a list of all
+matching database entries (tracks, albums, artists, etc.)
+
+include::partial$Footer.adoc[]

@@ -597,6 +597,7 @@ far are:
 |0029 |Remixer
 |002e |Date Added
 | |
+[[types-for-menus]]
 |0080 | Genre menu
 |0081 | Artist menu
 |0082 | Album menu
@@ -1457,12 +1458,13 @@ the media device to show artists as the second column.
 
 Track list requests (just like metadata requests) are built on the
 mechanism that is used to request and draw scrollable menus on the
-CDJs, explored in more breadth in TODO: Section 7. The player responds
-with a success indicator, saying it is ready to send these “menu
-items” and reporting how many of them are available, much like shown
-in the <<metadata-available-response,metadata available response>>,
-although the first argument will be `1004` to reflect the message type
-we just sent, rather than `2002` as it was for the metadata request.
+CDJs, explored in more breadth in <<menus#menu-requests,Menu
+Requests>>. The player responds with a success indicator, saying it is
+ready to send these “menu items” and reporting how many of them are
+available, much like shown in the
+<<metadata-available-response,metadata available response>>, although
+the first argument will be `1004` to reflect the message type we just
+sent, rather than `2002` as it was for the metadata request.
 
 As with metadata, the next step is to send a
 <<render-menu-request,“render menu” request>> to get the actual
@@ -1568,6 +1570,7 @@ order, like this to sort all the tracks in the USB slot by BPM:
 (db/request-track-list p2 3 4)
 ----
 
+[[playlist-requests]]
 == Playlists
 
 If you want to allow your user to browse the content of the media, you
