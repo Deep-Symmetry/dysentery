@@ -1117,10 +1117,16 @@ stripe is his approach for deriving the blue preview from that and the
 other two stripes.
 
 The calculations used by Beat Link to build its own color previews can
-be found in the `segmentColor` and `segmentHeight` methods of the
+be found in
+https://github.com/Deep-Symmetry/beat-link/blob/v0.6.1/src/main/java/org/deepsymmetry/beatlink/data/WaveformPreview.java#L234-L262[the
+`segmentColor`] and
+https://github.com/Deep-Symmetry/beat-link/blob/v0.6.1/src/main/java/org/deepsymmetry/beatlink/data/WaveformPreview.java#L208-L232[`segmentHeight`
+methods] of the
 https://deepsymmetry.org/beatlink/apidocs/org/deepsymmetry/beatlink/data/WaveformPreview.html[`WaveformPreview`
 class], and the way they are used to draw the actual graphical
-representation can be found in the `updateWaveform` method of the
+representation can be found in the
+https://github.com/Deep-Symmetry/beat-link/blob/v0.6.1/src/main/java/org/deepsymmetry/beatlink/data/WaveformPreviewComponent.java#L426-L448[`updateWaveform`
+method] of the
 https://deepsymmetry.org/beatlink/apidocs/org/deepsymmetry/beatlink/data/WaveformPreviewComponent.html[`WaveformPreviewComponent`
 class]. These produce attractive results, but it is certainly possible
 that refinements can be found in the future.
