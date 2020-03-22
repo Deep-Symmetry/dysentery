@@ -46,11 +46,15 @@ https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/powerup.pcapng]
 simply announcing its existence to UDP port 50000 on the broadcast
 address of the local network.
 
-These have a data length{empty}footnote:[Values within packets, packet
-lengths, and byte offsets are all shown in hexadecimal in `code` font.
-Other numbers are in normal body text font and are decimal.] of `25`
-bytes, appear roughly every 300 milliseconds, and have the following
-content:
+.Numbers in this document
+****
+Values within packets, packet lengths, and byte offsets are all shown
+in hexadecimal in `code` font. Other numbers are in normal body text
+font and are decimal.
+****
+
+These have a data length of `25` bytes, appear roughly every 300
+milliseconds, and have the following content:
 
 [[mixer-initial-announcement]]
 .Initial announcement packets from mixer.
