@@ -1085,6 +1085,7 @@ The extended preview data begins at byte `34` and is 7,200 (decimal)
 bytes long, representing 1,200 columns of waveform preview
 information.
 
+[[color-preview-analysis]]
 The color waveform preview entries are the most complex of any of the
 waveform tags. See the
 https://github.com/Deep-Symmetry/dysentery/issues/9[discussion on

@@ -1,7 +1,7 @@
 name: djl-analysis
 title: DJ Link Packet Analysis
 version: 'master'
-prerelease: true
+prerelease: false
 start_page: ROOT:startup.adoc
 nav:
 - modules/ROOT/nav.adoc

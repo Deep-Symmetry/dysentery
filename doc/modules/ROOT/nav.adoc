@@ -8,3 +8,4 @@
 * xref:loading_tracks.adoc[Loading Tracks]
 * xref:media.adoc[Media Slot Queries]
 * xref:missing.adoc[What’s Missing?]
+* xref:rekordbox-export-analysis:ROOT:exports.adoc[_Database Exports_]
