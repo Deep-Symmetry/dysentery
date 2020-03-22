@@ -1,5 +1,5 @@
 site:
-  title: DJ Link Packet Analysis
+  title: DJ Link Ecosystem Analysis
   url: https://djl-analysis.deepsymmetry.org
   start_page: djl-analysis::startup.adoc
 content:
