@@ -38,7 +38,7 @@ and these are released, but for now:
    directory in which you cloned and built that Antora branch.
 
 5. After confirming that you are back to the parent directory into
-   which you cloned the Antora branch, and also clone this branch of
+   which you cloned the Antora branch, also clone this branch of
    David's [SVG plugin
    framework](https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js/-/tree/issue-377-plugin).
 
