@@ -40,7 +40,7 @@ received by a virtual CDJ as described in
 <<vcdj#creating-vcdj,Creating a Virtual CDJ>>), open a TCP connection
 to the device from which the track was loaded, using the port that it
 gave you in response to the DB Server query packet, then send the
-following four packets. (You can also get metadata for non-rekordbox
+following four messages. (You can also get metadata for non-rekordbox
 tracks, even for CD Audio tracks being played in the CD slot, using
 the variant described in <<non-rekordbox-metadata>>.)
 
@@ -58,7 +58,7 @@ include::example$dbserver_shared.edn[]
 (draw-number-field 1)
 ----
 
-All further packets have a shared structure. They consist of lists of
+All further messages have a shared structure. They consist of lists of
 type-tagged fields (a type byte, followed some number of value bytes,
 although in the case of the variable-size types, the first four bytes
 are a big-endian integer that specifies the length of the additional
@@ -414,6 +414,17 @@ followed by a menu footer message (with _type_ `4201`,
 <<menu-footer-response,third figure below>>). This wrapping happens
 with all “render menu” requests, and the menu footer is an easy way to
 know you are done, although you can also count the messages.
+
+WARNING: When sending requests which result in multiple response
+messages, it is important to keep in mind the distinction between
+message boundaries and network packets. You might receive more than
+one message in a single network packet (especially when you are
+talking to rekordbox), so you need to look for message boundaries
+based on the length information in each message. Failure to do this
+initially led to a bug in Beat Link. It is also possible that a single
+message might be split into more than one network packet. I don't
+believe this has been seen, but coding defensively to handle it may be
+the reason why.
 
 [[menu-header-response]]
 .Menu header response.
