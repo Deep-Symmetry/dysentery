@@ -51,13 +51,19 @@ are released, but for now:
 
        npm install asciidoctor-mathjax
        npm install bytefield-svg
-       $ANTORA_DJ --fetch doc/local.yml
 
 Assuming everything got installed in the right places and your
 `ANTORA_DJ` envronment variable was properly set to point to the
-antora fork repository, that will result in the building of the
-documentation site in the `doc/build` directory. You can view it by
-telling a browser to open `doc/build/site/index.html`.
+antora fork repository, you can now successfully execute this command
+from the root of the `dysentery` repository whenever you want to build
+the documentation locally:
+
+       $ANTORA_DJ --fetch doc/local.yml
+
+Running that will result in building the documentation site in the
+`doc/build` subdirectory, based on the current source in your
+repository. You can view it by telling a browser to open
+`doc/build/site/index.html`.
 
 ## History
 
