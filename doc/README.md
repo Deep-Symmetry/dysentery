@@ -12,12 +12,11 @@ Analysis](https://djl-analysis.deepsymmetry.org/). It is built by
 If you would like to build the documentation site in order to preview
 changes you are making, there are some extra steps you need to take
 for the time being, because it relies on an as-yet-unreleased fork of
-Antora and a similarly-unreleased plugin framework that works with
-that version to host the
+Antora and a similarly-unreleased plugin framework that works with it
+to host the
 [bytefield-svg](https://github.com/Deep-Symmetry/bytefield-svg#bytefield-svg)
-diagram generator as a plugin which installs it as an Asciidoctor
-extension. This will get much easier once Antora catches up and these
-are released, but for now:
+diagram generator. This will get much easier once Antora catches up
+and these are released, but for now:
 
 1. Create a directory to host the projects you are going to clone,
    unless you want them in your normal git repository directory. As
