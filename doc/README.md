@@ -7,9 +7,62 @@ Analysis](https://djl-analysis.deepsymmetry.org/). It is built by
 [playbook](netlify.yml) on the [component descriptor](antora.yml) and
 [source](modules/ROOT).
 
+## Building Locally
+
+If you would like to build the documentation site in order to preview
+changes you are making, there are some extra steps you need to take
+for the time being, because it relies on an as-yet-unreleased fork of
+Antora and a similarly-unreleased plugin framework that works with
+that version to host the
+[bytefield-svg](https://github.com/Deep-Symmetry/bytefield-svg#bytefield-svg)
+diagram generator as a plugin which installs it as an Asciidoctor
+extension. This will get much easier once Antora catches up and these
+are released, but for now:
+
+1. Create a directory to host the projects you are going to clone,
+   unless you want them in your normal git repository directory. As
+   long as they are all in the same directory, this will work.
+
+2. Clone [this
+   branch](https://gitlab.com/djencks/antora/-/tree/issue-585-with-377-582-git-credential-plugin)
+   of the Antora fork that [David Jencks](https://gitlab.com/djencks)
+   created, which has the unreleased plugin feature.
+
+3. `cd` into that `antora` clone, and build it by running `yarn`.
+
+4. Set the environment variable `ANTORA_DJ` to the directory in which
+   you cloned that Antora branch.
+
+5. `cd` back to the parent directory into which you cloned the Antora
+   branch, and also clone David's [SVG plugin
+   framework](https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js).
+
+6. In the same directory, clone
+   [dysentery](https://github.com/Deep-Symmetry/dysentery) (or move it
+   there if you have already cloned it), and [crate
+   digger](https://github.com/Deep-Symmetry/crate-digger), the other
+   project which contributes to the documentation site.
+
+7. `cd` into the `dysentery` repository and run the following two
+   commands (you can ignore the warnings about there being no
+   `package.json` and therefore no description, repository, README, or
+   license fields):
+
+       npm install asciidoctor-mathjax
+       npm install bytefield-svg
+       $ANTORA_DJ --fetch doc/local.yml
+
+Assuming everything got installed in the right places and your
+`ANTORA_DJ` envronment variable was properly set to point to the
+antora fork repository, that will result in the building of the
+documentation site in the `doc/build` directory. You can view it by
+telling a browser to open `doc/build/site/index.html`.
+
+## History
+
 For historical interest, the [LaTeX document](Analysis.tex) used to be
 where the analysis lived, and it was used to produce a PDF version
 hosted online, but some of the underlying packages it depended on
 became unmaintained and unreliable, which led to it being ported to
 Asciidoctor with the help of a new byte field diagram generator,
-[bytefield-svg](https://github.com/Deep-Symmetry/bytefield-svg#bytefield-svg).
+[bytefield-svg]

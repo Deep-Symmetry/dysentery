@@ -1,18 +1,23 @@
 site:
-  title: DJ Link Packet Analysis
+  title: DJ Link Ecosystem Analysis
   url: https://djl-analysis.deepsymmetry.org
   start_page: djl-analysis::startup.adoc
 content:
   sources:
-  - url: ../dysentery
+  - url: ./..
     branches: [master]
     start_path: doc
+  - url: ./../../crate-digger
+    branches: [master]
+    start_path: doc
+asciidoc:
+  extensions:
+  - asciidoctor-mathjax
 plugins:
-  - path: ./extension
+  - path: ./../../asciidoctor-generic-svg-extension.js
     config:
-      generator: ./generator
+      generator: bytefield-svg
       name: bytefield
-  - path: ./antora-lunr
 ui:
   bundle:
     url: https://deepsymmetry.org/media/antora/ui-bundle.zip
