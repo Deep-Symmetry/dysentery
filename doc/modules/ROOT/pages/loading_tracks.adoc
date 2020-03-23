@@ -34,11 +34,17 @@ include::example$status_shared.edn[]
 (draw-box (text "T" :math [:sub "r"]))
 (draw-box 0)
 (draw-box (text "rekordbox" :math) {:span 4})
-(draw-related-boxes (concat [0 0 0 0x32] (repeat 0x24 0)))
+(draw-related-boxes (concat [0 0 0 0x32] (repeat 0x0c 0)))
+(draw-box (text "D" :math [:sub "d"]))
+(draw-related-boxes (repeat 0x17 0))
 ----
 
 Since this packet uses subtype 00, the length sent in _len~r~_ has the
 value `0034`, reflecting the number of bytes which follow it.
+
+_D~d~_ reflects the player number on which the track is supposed to be
+loaded. The number is 0-based so for instance when loading a track on
+player 1, this value will be `00`.
 
 Assuming the track can be loaded, the player will respond with a
 packet whose type indicator (at byte{nbsp}``0a``) has the value `1a`
