@@ -16,7 +16,7 @@ asciidoc:
 plugins:
   - path: ./extension
     config:
-      generator: ./generator
+      generator: bytefield-svg
       name: bytefield
   - path: ./antora-lunr
 ui:

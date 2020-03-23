@@ -6,6 +6,7 @@
 
 npm install yarn
 npm install asciidoctor-mathjax
+npm install bytefield-svg
 cd doc
 
 # Build the unreleased branch of Antora that supports plugins
@@ -37,18 +38,6 @@ then
     npm install
     cd ..
 fi
-
-# Build the unreleased byte field generator
-if [ ! -d "generator" ]
-then
-    export PATH="$PATH:$PWD/clojure/bin"
-    git clone https://github.com/Deep-Symmetry/bytefield-svg generator
-    cd generator
-    npm install
-    npm run build
-    cd ..
-fi
-
 
 # Finally, put them all together to build the documentation site.
 cd ..
