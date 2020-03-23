@@ -30,8 +30,9 @@ are released, but for now:
 
 3. `cd` into that `antora` clone, and build it by running `yarn`.
 
-4. Set the environment variable `ANTORA_DJ` to the directory in which
-   you cloned that Antora branch.
+4. Set the environment variable `ANTORA_DJ` to the absolute path of
+   the file `packages/cli/bin/antora` which was created in the
+   directory in which you cloned and built that Antora branch.
 
 5. `cd` back to the parent directory into which you cloned the Antora
    branch, and also clone David's [SVG plugin
