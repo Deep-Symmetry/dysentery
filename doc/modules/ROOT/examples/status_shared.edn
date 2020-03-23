@@ -3,6 +3,13 @@
 ;; Some nice default background colors, used to distinguish header sections.
 (defattrs :bg-green {:fill "#a0ffa0"})
 
+;; Support for superscript digits with subscritped text right below them.
+(defattrs :super {:font-size "70%"
+                  :font-style "normal"
+                  :baseline-shift   "super"})
+(defattrs :sub-below-super {:font-size      "70%"
+                            :baseline-shift "sub"
+                            :dx             -7})
 (defn draw-packet-header
   "Generates the byte labels and first two rows of a standard DJ Link
   status, beat, or control packet with the specified `kind` byte."

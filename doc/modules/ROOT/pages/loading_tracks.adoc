@@ -35,16 +35,21 @@ include::example$status_shared.edn[]
 (draw-box 0)
 (draw-box (text "rekordbox" :math) {:span 4})
 (draw-related-boxes (concat [0 0 0 0x32] (repeat 0x0c 0)))
-(draw-box (text "D" :math [:sub "d"]))
+(draw-box (text "D" :math [:super 0] [:sub-below-super "d"]))
 (draw-related-boxes (repeat 0x17 0))
 ----
 
 Since this packet uses subtype 00, the length sent in _len~r~_ has the
 value `0034`, reflecting the number of bytes which follow it.
 
-_D~d~_ reflects the player number on which the track is supposed to be
-loaded. The number is 0-based so for instance when loading a track on
-player 1, this value will be `00`.
+stem:[D_d^0] at byte{nbsp}``40`` (__destination_device__, zero-based)
+reflects the player number on which the track is supposed to be
+loaded. Unlike most device numbers in the protcol, this value numbers
+the players starting with 0 (for player number _D_ this has the value
+_D - 1_). So for instance when loading a track on player 1,
+stem:[D_d^0] will be `00`. Sending this seems not to be required, as
+the player will load the track even if this byte does not have the
+correct value.
 
 Assuming the track can be loaded, the player will respond with a
 packet whose type indicator (at byte{nbsp}``0a``) has the value `1a`
