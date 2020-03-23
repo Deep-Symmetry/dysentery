@@ -22,26 +22,39 @@ and these are released, but for now:
    unless you want them in your normal git repository directory. As
    long as they are all in the same directory, this will work.
 
-2. Clone [this
+2. Clone and build [this
    branch](https://gitlab.com/djencks/antora/-/tree/issue-585-with-377-582-git-credential-plugin)
    of the Antora fork that [David Jencks](https://gitlab.com/djencks)
    created, which has the unreleased plugin feature.
 
-3. `cd` into that `antora` clone, and build it by running `yarn`.
+       git clone https://gitlab.com/djencks/antora.git
+       cd antora
+       git checkout issue-585-with-377-582-git-credential-plugin
+       yarn
+       cd ..
 
 4. Set the environment variable `ANTORA_DJ` to the absolute path of
    the file `packages/cli/bin/antora` which was created in the
    directory in which you cloned and built that Antora branch.
 
-5. `cd` back to the parent directory into which you cloned the Antora
-   branch, and also clone David's [SVG plugin
-   framework](https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js).
+5. After confirming that you are back to the parent directory into
+   which you cloned the Antora branch, and also clone this branch of
+   David's [SVG plugin
+   framework](https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js/-/tree/issue-377-plugin).
+
+       git clone https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js.git
+       cd asciidoctor-generic-svg-extension.js
+       git checkout issue-377-plugin
+       cd ..
 
 6. In the same directory, clone
    [dysentery](https://github.com/Deep-Symmetry/dysentery) (or move it
    there if you have already cloned it), and [crate
    digger](https://github.com/Deep-Symmetry/crate-digger), the other
    project which contributes to the documentation site.
+
+       git clone https://github.com/Deep-Symmetry/dysentery.git
+       git clone https://github.com/Deep-Symmetry/crate-digger.git
 
 7. `cd` into the `dysentery` repository and run the following two
    commands (you can ignore the warnings about there being no
