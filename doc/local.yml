@@ -14,7 +14,7 @@ asciidoc:
   extensions:
   - asciidoctor-mathjax
 plugins:
-  - path: ./../../asciidoctor-generic-svg-extension.js
+  - path: antora-generic-svg-extension-plugin
     config:
       generator: bytefield-svg
       name: bytefield

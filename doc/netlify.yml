@@ -14,11 +14,11 @@ asciidoc:
   extensions:
   - asciidoctor-mathjax
 plugins:
-  - path: ./extension
+  - path: antora-generic-svg-extension-plugin
     config:
       generator: bytefield-svg
       name: bytefield
-  - path: ./antora-lunr
+  - path: antora-lunr
 ui:
   bundle:
     url: https://deepsymmetry.org/media/antora/ui-bundle.zip

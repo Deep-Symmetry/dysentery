@@ -1,0 +1,30 @@
+{
+  "private": true,
+  "description": "Used to build the documentation site, not the project itself.",
+  "dependencies": {},
+  "devDependencies": {
+    "antora-generic-svg-extension-plugin": "https://gitlab.com/djencks/antora-generic-svg-extension-plugin/-/jobs/artifacts/master/raw/antora-generic-svg-extension-plugin-v0.0.1.tgz?job=bundle-stable",
+    "antora-lunr": "https://github.com/djencks/antora-lunr#plugin-377",
+    "asciidoctor-mathjax": "0.0.4",
+    "bytefield-svg": "1.0.1",
+    "yarn": "^1.22.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deep-Symmetry/dysentery.git"
+  },
+  "keywords": [
+    "pioneer",
+    "dj-link",
+    "clojure"
+  ],
+  "author": {
+    "name": "James Elliott",
+    "email": "james@deepsymmetry.org"
+  },
+  "license": "EPL-1.0",
+  "bugs": {
+    "url": "https://github.com/Deep-Symmetry/dysentery/issues"
+  },
+  "homepage": "https://github.com/Deep-Symmetry/dysentery#readme"
+}
