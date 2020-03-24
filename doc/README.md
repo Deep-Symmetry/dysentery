@@ -9,61 +9,24 @@ Analysis](https://djl-analysis.deepsymmetry.org/). It is built by
 
 ## Building Locally
 
-If you would like to build the documentation site in order to preview
-changes you are making, there are some extra steps you need to take
-for the time being, because it relies on an as-yet-unreleased fork of
-Antora and a similarly-unreleased plugin framework that works with it
-to host the
-[bytefield-svg](https://github.com/Deep-Symmetry/bytefield-svg#bytefield-svg)
-diagram generator. This will get much easier once Antora catches up
-and these are released, but for now:
+This is thankfully much simpler than it used to be, and can now be
+fully driven by `npm`!
 
-1. Create a directory to host the projects you are going to clone,
-   unless you want them in your normal git repository directory. As
-   long as they are all in the same directory, this will work.
+1. `cd` into the top level folder of the `dysentery` repository and
+   run the following command:
 
-2. Clone and build [this
-   branch](https://gitlab.com/djencks/antora/-/tree/issue-585-with-377-582-git-credential-plugin)
-   of the Antora fork that [David Jencks](https://gitlab.com/djencks)
-   created, which has the unreleased plugin feature.
+        npm install
 
-       git clone https://gitlab.com/djencks/antora.git
-       cd antora
-       git checkout issue-585-with-377-582-git-credential-plugin
-       yarn
-       cd ..
+    This will install the dependencies needed for building the
+    documentation site, including David Jenks' not-yet-merged enhancements
+    to Antora.
 
-4. Set the environment variable `ANTORA_DJ` to the absolute path of
-   the file `packages/cli/bin/antora` which was created in the
-   directory in which you cloned and built that Antora branch.
+2. Then whenever you want to build a local preview of the
+   documentation site, you can run:
 
-5. After confirming that you are back to the parent directory into
-   which you cloned the Antora branch, clone
-   [dysentery](https://github.com/Deep-Symmetry/dysentery) (or move it
-   there if you have already cloned it), and [crate
-   digger](https://github.com/Deep-Symmetry/crate-digger), the other
-   project which contributes to the documentation site.
+        npm run local-docs
 
-       git clone https://github.com/Deep-Symmetry/dysentery.git
-       git clone https://github.com/Deep-Symmetry/crate-digger.git
-
-7. `cd` into the `dysentery` repository and run the following command:
-
-       npm install
-
-This will install the remaining development dependencies needed for
-building the documentation site. Assuming everything got installed in
-the right places and your `ANTORA_DJ` envronment variable was properly
-set to point to the antora fork repository, you can now successfully
-execute this command from the root of the `dysentery` repository
-whenever you want to build the documentation locally:
-
-       $ANTORA_DJ --fetch doc/local.yml
-
-Running that will result in building the documentation site in the
-`doc/build` subdirectory, based on the current source in your
-repository. You can view it by telling a browser to open
-`doc/build/site/index.html`.
+3. To view them in a browser, open the file `doc/build/site/index.html`
 
 ## History
 
