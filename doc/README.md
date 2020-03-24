@@ -38,16 +38,7 @@ and these are released, but for now:
    directory in which you cloned and built that Antora branch.
 
 5. After confirming that you are back to the parent directory into
-   which you cloned the Antora branch, also clone this branch of
-   David's [SVG plugin
-   framework](https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js/-/tree/issue-377-plugin).
-
-       git clone https://gitlab.com/djencks/asciidoctor-generic-svg-extension.js.git
-       cd asciidoctor-generic-svg-extension.js
-       git checkout issue-377-plugin
-       cd ..
-
-6. In the same directory, clone
+   which you cloned the Antora branch, clone
    [dysentery](https://github.com/Deep-Symmetry/dysentery) (or move it
    there if you have already cloned it), and [crate
    digger](https://github.com/Deep-Symmetry/crate-digger), the other
@@ -56,19 +47,16 @@ and these are released, but for now:
        git clone https://github.com/Deep-Symmetry/dysentery.git
        git clone https://github.com/Deep-Symmetry/crate-digger.git
 
-7. `cd` into the `dysentery` repository and run the following two
-   commands (you can ignore the warnings about there being no
-   `package.json` and therefore no description, repository, README, or
-   license fields):
+7. `cd` into the `dysentery` repository and run the following command:
 
-       npm install asciidoctor-mathjax
-       npm install bytefield-svg
+       npm install
 
-Assuming everything got installed in the right places and your
-`ANTORA_DJ` envronment variable was properly set to point to the
-antora fork repository, you can now successfully execute this command
-from the root of the `dysentery` repository whenever you want to build
-the documentation locally:
+This will install the remaining development dependencies needed for
+building the documentation site. Assuming everything got installed in
+the right places and your `ANTORA_DJ` envronment variable was properly
+set to point to the antora fork repository, you can now successfully
+execute this command from the root of the `dysentery` repository
+whenever you want to build the documentation locally:
 
        $ANTORA_DJ --fetch doc/local.yml
 
