@@ -1,6 +1,7 @@
 = Mixer and CDJ Startup
 James Elliott <james@deepsymmetry.org>
 :icons: font
+:toc:
 :experimental:
 
 == Background

@@ -1,6 +1,7 @@
 = Detailed Device Status
 James Elliott <james@deepsymmetry.org>
 :icons: font
+:toc: preamble
 :experimental:
 :stem: latexmath
 

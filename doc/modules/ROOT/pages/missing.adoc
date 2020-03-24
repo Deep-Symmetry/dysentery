@@ -1,6 +1,7 @@
 = What’s Missing?
 James Elliott <james@deepsymmetry.org>
 :icons: font
+:toc: preamble
 :experimental:
 
 We know this analysis isn’t complete. Here are some loose ends to explore.

@@ -1,6 +1,7 @@
 = Menu Requests
 James Elliott <james@deepsymmetry.org>
 :icons: font
+:toc:
 :experimental:
 
 We have already seen many examples of the menu mechanism in action,

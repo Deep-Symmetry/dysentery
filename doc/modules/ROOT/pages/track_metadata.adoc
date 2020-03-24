@@ -1,6 +1,7 @@
 = Track Metadata
 James Elliott <james@deepsymmetry.org>
 :icons: font
+:toc: preamble
 :experimental:
 
 Thanks to https://github.com/EvanPurkhiser[@EvanPurkhiser], we finally

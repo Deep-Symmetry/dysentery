@@ -2,6 +2,7 @@
 James Elliott <james@deepsymmetry.org>
 :icons: font
 :experimental:
+:stem: latexmath
 
 When running rekordbox, you can tell a player to load a track from the
 collection by dragging the track onto the player icon. This is
