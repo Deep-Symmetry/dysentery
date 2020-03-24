@@ -16,3 +16,5 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
+/node_modules
+/package-lock.json
