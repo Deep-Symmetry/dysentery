@@ -7,7 +7,7 @@ content:
   - url: ./..
     branches: HEAD
     start_path: doc
-  - url: ./../../crate-digger
+  - url: https://github.com/Deep-Symmetry/crate-digger.git
     branches: HEAD
     start_path: doc
 asciidoc:

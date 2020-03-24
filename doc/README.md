@@ -28,6 +28,13 @@ fully driven by `npm`!
 
 3. To view them in a browser, open the file `doc/build/site/index.html`
 
+If you are also working on the documentation for `crate-digger` and
+want to build against a local copy of that, make sure it is checked
+out in the same parent folder as `dysentery`, and then edit
+`doc/local.yml`, replacing the `crate-digger` Git URL with this:
+
+    - url: ./../../crate-digger
+
 ## History
 
 For historical interest, the [LaTeX document](Analysis.tex) used to be
