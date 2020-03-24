@@ -3,19 +3,12 @@
 ;; Some nice default background colors, used to distinguish header sections.
 (defattrs :bg-green {:fill "#a0ffa0"})
 
-;; Test redefining subscripts to use dy rather than baseline-shift for
-;; Firefox.
-(defattrs :sub {:font-size "70%" ; Style for subscripted nested tspan objects
-                :dy        "5"})
-
-
 ;; Support for superscript digits with subscritped text right below them.
-(defattrs :super {:font-size      "70%"
-                  :font-style     "normal"
-                  :dy "-7"})
-(defattrs :sub-below-super (merge (:sub @named-attributes)
-                                  {:dx -7
-                                   :dy 12}))
+(defattrs :super-digit (merge (:super @named-attributes)
+                              {:font-style "normal"}))
+(defattrs :sub-below-digit (merge (:sub @named-attributes)
+                                  {:dx "-0.75ex"
+                                   :dy "1.3ex"}))
 (defn draw-packet-header
   "Generates the byte labels and first two rows of a standard DJ Link
   status, beat, or control packet with the specified `kind` byte."

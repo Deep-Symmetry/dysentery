@@ -36,7 +36,7 @@ include::example$status_shared.edn[]
 (draw-box 0)
 (draw-box (text "rekordbox" :math) {:span 4})
 (draw-related-boxes (concat [0 0 0 0x32] (repeat 0x0c 0)))
-(draw-box (text "D" :math [:super 0] [:sub-below-super "d"]))
+(draw-box (text "D" :math [:super-digit 0] [:sub-below-digit "d"]))
 (draw-related-boxes (repeat 0x17 0))
 ----
 
