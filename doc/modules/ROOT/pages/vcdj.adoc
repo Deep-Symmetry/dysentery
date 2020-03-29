@@ -332,7 +332,7 @@ Handoff>>.
 
 Byte{nbsp}``89``, labeled _F_, is a bit field containing some very
 useful status flags.footnote:[We have not yet seen any other values for
-bits 0, 1, 2, or 7 in _F_, so we’re unsure if they also carry meaning.
+bits 0, 2, or 7 in _F_, so we’re unsure if they also carry meaning.
 If you ever find different values for them, please let us know by
 filing an https://github.com/deep-symmetry/dysentery/issues[Issue].]
 It seems to only be available on nexus (and later) players, and older
@@ -353,9 +353,20 @@ we can make about their state:
 (draw-box "Sync")
 (draw-box "On-Air")
 (draw-box (hex-text 1 1))
-(draw-box (hex-text 0 1))
+(draw-box "BPM")
 (draw-box (hex-text 0 1))
 ----
+
+> Bit 6, “Play”, is 1 when the player is playing, and 0 when it is
+idle. Bit 5, “Master”, indicates whether it is the current tempo
+master, while bit 4, “Sync” tracks whether it is in sync mode. Bit 3,
+“On-Air“, is 1 when it believes its output can be heard in the mix (so
+its platter lights will be red rather than white); this requires
+<<mixer_integration#channels-on-air,cooperation with the mixer>>.
+Finally, bit 1, “BPM”, is 1 when the player has degraded in to BPM
+Sync mode (that is, it is in Sync mode, but the DJ has used pitch
+bend, e.g. nudged the jog wheel, so while it is still tracking the
+tempo of the Master player, it is no longer trying to align beats).
 
 Byte `8b`, labeled _P~2~_ seems to be another play state indicator,
 having the value `7a` when playing and `7e` when stopped. When the CDJ

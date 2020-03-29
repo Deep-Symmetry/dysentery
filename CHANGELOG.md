@@ -24,6 +24,8 @@ This change log follows the conventions of
 - Documentation of nxs2-style extended cue list requests and
   responses.
 - Some preliminary discoveries about the XDJ-XZ.
+- Analysis of the BPM Sync bit in the state flag, thanks to
+  [https://github.com/nudge](@nudge).
 
 ## [0.2.1] - 2018-07-21
 
