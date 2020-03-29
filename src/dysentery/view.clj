@@ -1,7 +1,8 @@
 (ns dysentery.view
   "Provides a way to inspect DJ Link packets, watch for changing
   values, and develop an understanding of what they mean."
-  (:require [dysentery.finder :as finder]
+  (:require [clojure.java.io :as io]
+            [dysentery.finder :as finder]
             [dysentery.util :as util]
             [dysentery.vcdj :as vcdj]
             [clojure.math.numeric-tower :as math]
@@ -88,7 +89,7 @@
   "Given a packet which has been identified as coming from a mixer and a byte
   index that refers to one of the bytes not handled by [[byte-format]], see
   if it seems to be one that we expect, or something more surprising."
-  [packet index value hex]
+  [_ index value hex]
   (cond
     (#{0x2e 0x2f} index)  ; This is the current BPM
     [hex Color/green]
@@ -130,6 +131,13 @@
   air--that is, the mixer channel it is connected to is live and
   playing to the master output."
   2r00001000)
+
+(def cdj-status-flag-bpm-sync-bit
+  "The bit in the CDJ status flag byte which indicates it has degraded
+  into BPM sync mode (that is, the DJ used pitch bend, so while it is
+  still tracking the tempo of the master player, it is no longer
+  aligning beats)."
+  2r00000010)
 
 (defonce ^{:private true
            :doc "Used to log beats from a specific player for more detailed analysis."}
@@ -302,11 +310,12 @@
                                           0x0d "Forward CDJ"
                                           "???")
 
-                      :empty-f      (zero? flag-bits)
-                      :playing-flag (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
-                      :master-flag  (pos? (bit-and flag-bits cdj-status-flag-master-bit))
-                      :sync-flag    (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
-                      :on-air-flag  (pos? (bit-and flag-bits cdj-status-flag-on-air-bit))
+                      :empty-f       (zero? flag-bits)
+                      :playing-flag  (pos? (bit-and flag-bits cdj-status-flag-playing-bit))
+                      :master-flag   (pos? (bit-and flag-bits cdj-status-flag-master-bit))
+                      :sync-flag     (pos? (bit-and flag-bits cdj-status-flag-sync-bit))
+                      :on-air-flag   (pos? (bit-and flag-bits cdj-status-flag-on-air-bit))
+                      :bpm-sync-flag (pos? (bit-and flag-bits cdj-status-flag-bpm-sync-bit))
 
                       :sync-n (util/build-int packet 134 2)
 
@@ -316,7 +325,7 @@
                       :pitches       (mapv (partial format "%+.2f%%") pitches)
                       :beat          beat
                       :bar-beat      (get packet 166)
-                      :bar-image     (clojure.java.io/resource (str "images/Bar" (get packet 166) ".png"))
+                      :bar-image     (io/resource (str "images/Bar" (get packet 166) ".png"))
                       :mem           (format-cue-countdown cue-distance)
                       :near-cue      (< cue-distance 17)
                       :packet        (util/build-int packet 200 4)}]
@@ -450,7 +459,7 @@
     [hex (Color/green)]  ; All values are valid
 
     (= index 137)  ; State flags
-    [hex (recognized-if (or (= (bit-and value 2r10000111) 2r10000100)
+    [hex (recognized-if (or (= (bit-and value 2r10000101) 2r10000100)
                             (and (zero? value) (= 208 (count packet)))))]
 
     (= index 0x8b)  ; Play mode part 2?
