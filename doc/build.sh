@@ -4,5 +4,5 @@
 # Antora site hosting the DJ Link packet analysis and the devicesql
 # database analysis.
 
-DOCSEARCH_ENABLED=true DOCSEARCH_ENGINE=lunr npx antora --fetch --generator @djencks/site-generator-default \
+DOCSEARCH_ENABLED=true DOCSEARCH_ENGINE=lunr npx antora --fetch --generator antora-site-generator-lunr \
   doc/netlify.yml
