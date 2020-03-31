@@ -4,17 +4,13 @@
   "dependencies": {},
   "devDependencies": {
     "@antora/cli": "^2.2.0",
-    "@djencks/content-aggregator": "https://gitlab.com/djencks/antora/-/jobs/artifacts/djencks-issue-377-events/raw/packages/content-aggregator/djencks-content-aggregator-v2.3.0-beta.1.tgz?job=bundle-stable",
-    "@djencks/playbook-builder": "https://gitlab.com/djencks/antora/-/jobs/artifacts/djencks-issue-377-events/raw/packages/playbook-builder/djencks-playbook-builder-v2.3.0-beta.1.tgz?job=bundle-stable",
-    "@djencks/site-generator-default": "https://gitlab.com/djencks/antora/-/jobs/artifacts/djencks-issue-377-events/raw/packages/site-generator-default/djencks-site-generator-default-v2.3.0-beta.1.tgz?job=bundle-stable",
-    "antora-generic-svg-extension-plugin": "https://gitlab.com/djencks/antora-generic-svg-extension-plugin/-/jobs/artifacts/master/raw/antora-generic-svg-extension-plugin-v0.0.1.tgz?job=bundle-stable",
-    "antora-lunr": "https://github.com/djencks/antora-lunr#plugin-377",
+    "@deepsymmetry/asciidoctor-bytefield": "^1.0.0",
+    "antora-site-generator-lunr": "^0.3.0",
     "asciidoctor-mathjax": "0.0.4",
-    "bytefield-svg": "1.1.0",
     "yarn": "^1.22.4"
   },
   "scripts": {
-    "local-docs": "npx antora --fetch --generator @djencks/site-generator-default doc/local.yml"
+    "local-docs": "DOCSEARCH_ENABLED=true DOCSEARCH_ENGINE=lunr npx antora --fetch --generator antora-site-generator-lunr doc/local.yml"
   },
   "repository": {
     "type": "git",

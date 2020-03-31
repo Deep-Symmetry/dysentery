@@ -13,12 +13,7 @@ content:
 asciidoc:
   extensions:
   - asciidoctor-mathjax
-plugins:
-  - path: antora-generic-svg-extension-plugin
-    config:
-      generator: bytefield-svg
-      name: bytefield
-  - path: antora-lunr
+  - "@deepsymmetry/asciidoctor-bytefield"
 ui:
   bundle:
     url: https://deepsymmetry.org/media/antora/ui-bundle.zip

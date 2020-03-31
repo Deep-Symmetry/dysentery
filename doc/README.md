@@ -18,8 +18,7 @@ fully driven by `npm`!
         npm install
 
     This will install the dependencies needed for building the
-    documentation site, including David Jenks' not-yet-merged enhancements
-    to Antora.
+    documentation site.
 
 2. Then whenever you want to build a local preview of the
    documentation site, you can run:
