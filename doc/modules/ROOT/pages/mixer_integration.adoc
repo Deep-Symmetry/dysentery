@@ -1,7 +1,6 @@
 = Mixer Integration
 James Elliott <james@deepsymmetry.org>
 :icons: font
-:toc:
 :experimental:
 
 This section describes a couple of packet types that support the tight

@@ -1,7 +1,6 @@
 = Sync and Tempo Master
 James Elliott <james@deepsymmetry.org>
 :icons: font
-:toc: preamble
 :experimental:
 :stem: latexmath
 

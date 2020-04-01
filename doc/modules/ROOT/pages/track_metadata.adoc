@@ -1,7 +1,6 @@
 = Track Metadata
 James Elliott <james@deepsymmetry.org>
 :icons: font
-:toc: preamble
 :experimental:
 
 Thanks to https://github.com/EvanPurkhiser[@EvanPurkhiser], we finally
@@ -482,7 +481,7 @@ include::example$dbserver_shared.edn[]
 |===
 
 [[track-metadata-title]]
-=== Track Metadata Item 1: Title
+=== Item 1: Title
 
 The first item returned after the menu header is the track title, so
 argument 7 has the value `04`. Argument 1, which may always be some
@@ -493,49 +492,49 @@ title text, and argument 9 holds the album _artwork_ ID if any is
 available for the track. This ID can be used to retrieve the actual
 album art image as described in <<album-art>>.
 
-=== Track Metadata Item 2: Artist
+=== Item 2: Artist
 
 The second item contains artist information, so argument 7 has the
 value `07`. Argument 2 holds the artist ID, and argument 4 contains
 the text of the artist name.
 
-=== Track Metadata Item 3: Album Title
+=== Item 3: Album Title
 
 The third item contains album title information, so argument 7 has the
 value `02`. Argument 4 contains the text of the album name.
 
-=== Track Metadata Item 4: Duration
+=== Item 4: Duration
 
 The fourth item contains track duration information, so argument 7 has
 the value `0b`. Argument 2 contains the length, in seconds, of the
 track when played at normal tempo.
 
-=== Track Metadata Item 5: Tempo
+=== Item 5: Tempo
 
 The fifth item contains tempo information, so argument 7 has the value
 `0d`. Argument 2 contains the track’s starting tempo, in beats per
 minute, times 100, as reported in _BPM_ values in other packets
 described earlier.
 
-=== Track Metadata Item 6: Comment
+=== Item 6: Comment
 
 The sixth item contains comment information, so argument 7 has the
 value `23`. Argument 4 contains the text of the track comment entered
 by the DJ in rekordbox.
 
-=== Track Metadata Item 7: Key
+=== Item 7: Key
 
 The seventh item contains key information, so argument 7 has the value
 `0f`. Argument 4 contains the text of the track’s dominant key
 signature.
 
-=== Track Metadata Item 8: Rating
+=== Item 8: Rating
 
 The eighth item contains rating information, so argument 7 has the
 value `0a`. Argument 2 contains a value from 0 to 5 corresponding to
 the number of stars the DJ has assigned the track in rekordbox.
 
-=== Track Metadata Item 9: Color
+=== Item 9: Color
 
 The ninth item contains color information, so argument 7 has a value
 between `13` and `1b` identifying the color, if any, assigned to the
@@ -544,13 +543,13 @@ choices), and if the value is anything other than `13`, Argument 4
 contains the text that the DJ has assigned for that color meaning in
 rekordbox.
 
-=== Track Metadata Item 10: Genre
+=== Item 10: Genre
 
 The tenth item contains genre information, so argument 7 has the value
 `06`. Argument 2 contains the numeric genre ID, and argument 4
 contains the text of the genre name.
 
-=== Track Metadata Item 11: Date Added
+=== Item 11: Date Added
 
 The eleventh and final item contains information about the the date
 the track was added to the collection, so argument 7 has the value
