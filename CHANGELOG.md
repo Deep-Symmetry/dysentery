@@ -130,11 +130,11 @@ this breakthrough release!
 - Intial early release.
 
 
-[unreleased]: https://github.com/brunchboy/dysentery/compare/v0.2.1...HEAD
-[0.2.1]: https://github.com/brunchboy/dysentery/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/brunchboy/dysentery/compare/v0.1.5...v0.2.0
-[0.1.5]: https://github.com/brunchboy/dysentery/compare/v0.1.4...v0.1.5
-[0.1.4]: https://github.com/brunchboy/dysentery/compare/v0.1.3...v0.1.4
-[0.1.3]: https://github.com/brunchboy/dysentery/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/brunchboy/dysentery/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/brunchboy/dysentery/compare/v0.1.0...v0.1.1
+[unreleased]: https://github.com/Deep-Symmetry/dysentery/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/Deep-Symmetry/dysentery/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/Deep-Symmetry/dysentery/compare/v0.1.5...v0.2.0
+[0.1.5]: https://github.com/Deep-Symmetry/dysentery/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/Deep-Symmetry/dysentery/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/Deep-Symmetry/dysentery/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/Deep-Symmetry/dysentery/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/Deep-Symmetry/dysentery/compare/v0.1.0...v0.1.1
