@@ -4,10 +4,9 @@
   "dependencies": {},
   "devDependencies": {
     "@antora/cli": "^2.2.0",
-    "@deepsymmetry/asciidoctor-bytefield": "^1.0.0",
+    "@deepsymmetry/asciidoctor-bytefield": "^1.1.1",
     "antora-site-generator-lunr": "^0.3.0",
-    "asciidoctor-mathjax": "0.0.4",
-    "yarn": "^1.22.4"
+    "asciidoctor-mathjax": "0.0.4"
   },
   "scripts": {
     "local-docs": "DOCSEARCH_ENABLED=true DOCSEARCH_ENGINE=lunr npx antora --fetch --generator antora-site-generator-lunr doc/local.yml"
