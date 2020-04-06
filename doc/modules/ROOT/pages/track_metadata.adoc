@@ -183,7 +183,7 @@ include::example$dbserver_shared.edn[]
                                       :right  :border-related
                                       :bottom :border-related}}])
 
-(draw-box (text "0000000c" :hex [[:plain {:font-weight "light" :font-size 16}] " (12)"])
+(draw-box (text "0000000c" :hex [[:plain {:font-weight "lighter" :font-size 16}] " (12)"])
           [{:span 4} [:bg-purple {:borders {:left   :border-related
                                             :top    :border-unrelated
                                             :right  :border-related
