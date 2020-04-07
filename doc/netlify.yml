@@ -12,7 +12,7 @@ content:
     start_path: doc
 asciidoc:
   extensions:
-  - asciidoctor-mathjax
+  - "@djencks/asciidoctor-mathjax"
   - "@deepsymmetry/asciidoctor-bytefield"
 ui:
   bundle:
