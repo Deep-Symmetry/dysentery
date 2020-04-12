@@ -820,9 +820,9 @@ protocol, beat grid and cue point times are little-endian.] integer at
 bytes{nbsp}``15``–`18`. Subsequent beats are found at `0x10`-byte
 intervals, so the second _B~b~_ value is found at byte{nbsp}``24``,
 and the second beat’s time, in milliseconds from the start of the
-track, is the big-endian integer at bytes{nbsp}``25``–`28`. The _B~b~_
-value for the third beat is at byte{nbsp}``34``, and its millisecond
-time is at bytes{nbsp}``35``–`38`, and so on.
+track, is the little-endian integer at bytes{nbsp}``25``–`28`. The
+_B~b~_ value for the third beat is at byte{nbsp}``34``, and its
+millisecond time is at bytes{nbsp}``35``–`38`, and so on.
 
 The purpose of the other bytes within the beat grid is so far
 undetermined. It looks like there may be some sort of monotonically
