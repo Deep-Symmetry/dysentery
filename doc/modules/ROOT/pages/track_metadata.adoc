@@ -806,23 +806,39 @@ include::example$dbserver_shared.edn[]
 ----
 
 The beat grid itself is spread through the value returned as argument
-4, consisting of one-byte beat-within-bar numbers (labeled _B~b~_ in
-the <<vcdj#cdj-status-packet,CDJ status packet diagram>>), followed by
-four-byte timing information, specifying the number of milliseconds
-after the start of the track (when played at its native tempo) at
-which that beat falls.
+4, consisting of a series of sixteen-byte entries with the following
+structure:
 
-The _B~b~_ value of the first beat in the track is found at byte
-`0x14` of argument 4, and the time at which that beat occurs, in
-milliseconds, is encoded as a 4-byte
-little-endian{empty}footnote:[Yes, unlike almost all numbers in the
-protocol, beat grid and cue point times are little-endian.] integer at
-bytes{nbsp}``15``–`18`. Subsequent beats are found at `0x10`-byte
-intervals, so the second _B~b~_ value is found at byte{nbsp}``24``,
-and the second beat’s time, in milliseconds from the start of the
-track, is the little-endian integer at bytes{nbsp}``25``–`28`. The
-_B~b~_ value for the third beat is at byte{nbsp}``34``, and its
-millisecond time is at bytes{nbsp}``35``–`38`, and so on.
+.Beat Grid entry.
+[bytefield]
+----
+(def left-margin 1)
+(draw-column-headers)
+(draw-box (text "B" :math [:sub "b"]) {:span 2})
+(draw-box (text "tempo" :math) {:span 2})
+(draw-box (text "time" :math) {:span 4})
+(draw-box "Unknown" {:span 8})
+----
+
+Each entry begins with a two-byte little-endian{empty}footnote:[Yes,
+unlike almost all numbers in the protocol, beat grid and cue point
+times are little-endian.] integer holding the beat-within-bar number
+(labeled _B~b~_ in the <<vcdj#cdj-status-packet,CDJ status packet
+diagram>>) of the beat, which is always 1, 2, 3, or 4. This is
+followed by a two-byte little-endian _tempo_ value, which records the
+track tempo at the point where this beat occurs, in beats per minute
+multiplied by 100 (to allow a precision of stem:[\frac{1}{100}] BPM).
+Finally, there is a four-byte little-endian _time_ value, which
+specifies the time at which this beat would occur, in milliseconds,
+when playing the track at its normal speed.
+
+In other words, the _B~b~_ value of the first beat in the track is
+found at bytes{nbsp}``0x14``-`15` of argument 4, its _tempo_ at
+bytes{nbsp}``16``-`17`, and the _time_ at which that beat occurs at
+bytes{nbsp}``18``–`1b`. Subsequent beats are found at `0x10`-byte
+intervals, so the second _B~b~_ value is found at
+bytes{nbsp}``24``-`25`, its _tempo_ at bytes{nbsp}``26``-`27`, its
+_time_ at bytes{nbsp}``28``-`2b`, and so on.
 
 The purpose of the other bytes within the beat grid is so far
 undetermined. It looks like there may be some sort of monotonically
