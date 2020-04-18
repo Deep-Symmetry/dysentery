@@ -1453,6 +1453,12 @@ point in the track, in stem:[\frac{1}{150}] second units. For loops,
 _cue_ identifies the start of the loop, and _loop_ identifies the end
 of the loop, again in stem:[\frac{1}{150}] second units.
 
+WARNING: Some extended cue entries are incomplete, and their _length_
+indicates they end before the comment, or include the comment but end
+before the color information. Code that processes them needs to be
+prepared to handle this, and treat such partial cues as having no
+comment and/or color.
+
 _len~c~_ at byte{nbsp}``48`` is a two-byte, little-endian integer that
 contains the length of the comment. If it is zero, there is no
 comment. Otherwise, _comment_ will follow _len~c~_, taking up that
