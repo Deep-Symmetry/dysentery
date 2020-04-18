@@ -1424,11 +1424,12 @@ captures!]
 (draw-related-boxes (repeat 0x34 nil))
 (draw-box (text "len" :math [:sub "c"]) {:span 2})
 (draw-gap (text "comment" :math) {:min-label-columns 5})
+(draw-related-boxes (repeat 4 nil))
 (draw-box (text "c" :math))
 (draw-box (text "r" :math))
 (draw-box (text "g" :math))
 (draw-box (text "b" :math))
-(draw-related-boxes (repeat 0x14 nil))
+(draw-related-boxes (repeat 0x10 nil))
 ----
 
 The first four bytes, _length_, hold the length of the current entry,
@@ -1459,13 +1460,13 @@ many bytes, as a string (in UTF-16 encoding with a trailing `0000`
 character). So if _len~c~_ isn’t zero, it will be an even number with
 minimum value four, representing a comment that is one character long.
 
-Immediately after _comment_ (in other words, starting _len~c~_ + `4a`
-past the start of the entry) there are four one-byte values containing
-color information. 𝑐 appears to be a code identifying the color with
-which rekordbox displays the cue, by looking it up in a table. There
-have been sixteen codes identified, and their corresponding RGB colors
-can be found by looking at the `findRecordboxColor` static method in
-the Beat Link library’s
+Four bytes past the end of _comment_ (in other words, starting
+_len~c~_ + `4e` past the start of the entry) there are four one-byte
+values containing color information. 𝑐 appears to be a code
+identifying the color with which rekordbox displays the cue, by
+looking it up in a table. There have been sixteen codes identified,
+and their corresponding RGB colors can be found by looking at the
+`findRecordboxColor` static method in the Beat Link library’s
 https://github.com/Deep-Symmetry/beat-link/blob/master/src/main/java/org/deepsymmetry/beatlink/data/CueList.java[`CueList`
 class]. The next three bytes, _r_, _g_, and _b_, make up an RGB color
 specification which is similar, but not identical, to the color that
