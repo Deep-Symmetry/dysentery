@@ -64,10 +64,10 @@ include::example$status_shared.edn[]
 (draw-box "unknown UTF-16 text (sometimes “1000”)" {:span 16 :borders #{:left :right}})
 (draw-box nil [:box-below {:span 6}])
 (draw-box (text "tracks" :math) {:span 2})
-(draw-box (text "x" :math))
+(draw-box (text "col" :math))
 (draw-box 0)
 (draw-box (text "T" :math [:sub "r"]))
-(draw-box (text "a" :math))
+(draw-box (text "set" :math))
 (draw-related-boxes [0 0])
 (draw-box (text "plists" :math) {:span 2})
 (draw-box "Total space" {:span 8})
@@ -87,19 +87,46 @@ bytes long. (Neither of these fields have meaningful values for
 
 The number of rekordbox tracks present in the database is found in
 bytes{nbsp}``a6`` and `a7` (this will be zero if there is no rekordbox
-database present). The purpose of value _x_ at byte{nbsp}``a8`` is
-uncertain, we have seen values of `06` and `00`, but don’t know what
-they mean.
+database present). The value _col_ at byte{nbsp}``a8`` tells the
+player what color it should tint its user interface when it has loaded
+tracks from the media:
+
+[[ui-color-values]]
+.Media UI color values.
+[cols=">1m,<11"]
+|===
+|Value |Meaning
+
+|00 |Default
+|01 |Pink
+|02 |Red
+|03 |Orange
+|04 |Yellow
+|05 |Green
+|06 |Aqua
+|07 |Blue
+|08 |Purple
+|===
+
 
 _T~r~_ at byte{nbsp}``aa`` reports the type of tracks available, with
 the same values used in <<vcdj#cdj-status-packet,CDJ status packets>>.
 In other words, it will have the value `01` when a rekordbox database
 is present, and `02` otherwise; this is the same value that must be
 sent as _T~r~_ in order to make a successful request for the root menu
-associated with this media. Again, we don’t know the purpose of _a_ at
-byte{nbsp}``ab``, though it seems that it might have the value `01`
-when there is a rekordbox database present, and `00` otherwise, hence
-the use of _a_ to suggest “analyzed.”
+associated with this media. The value _set_ at byte{nbsp}``ab``
+indicates whether there is a “My Settings” file present on the media.
+If it has a non-zero value, when the user links to that media (or
+navigates to its root menu), the player will pop up an alert saying to
+press the kbd:[Menu] button to load My Settings (which allows the
+player configuration to be quickly restored to the DJ's preferred
+state).
+
+> The actual settings are found in the `/PIONEER/` folder at the
+> root of the mounted media, in the files `MYSETTING.DAT`,
+> `MYSETTING2.DAT`, and `DEVSETTING.DAT`. The DJ's Kuvo profile
+> information is in the same folder, in the file `djprofile.nxs.` The
+> details of these files have not yet been explored.
 
 The number of rekordbox playlists present on the media (also zero if
 there is no rekordbox database) is found at bytes{nbsp}``ae`` and
