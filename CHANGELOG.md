@@ -26,6 +26,9 @@ This change log follows the conventions of
 - Some preliminary discoveries about the XDJ-XZ.
 - Analysis of the BPM Sync bit in the state flag, thanks to
   [https://github.com/nudge](@nudge).
+- Explanation of how the mixer assigns device numbers to players
+  plugged into channel-specific ports, and all variations of the
+  startup process.
 
 ## [0.2.1] - 2018-07-21
 

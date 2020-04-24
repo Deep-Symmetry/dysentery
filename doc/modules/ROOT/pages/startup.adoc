@@ -40,8 +40,8 @@ https://github.com/flesniak/python-prodj-link[python-prodj-link].
 
 When the mixer starts up, after it obtains an IP address (or gives up
 on doing that and self-assigns an address), it sends out what look
-like a series of packets{empty}footnote:[The packet capture described
-in this analysis can be found at
+like a series of packets{empty}footnote:[The packet capture used for
+the first version of this analysis can be found at
 https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/powerup.pcapng]
 simply announcing its existence to UDP port 50000 on the broadcast
 address of the local network.
@@ -96,7 +96,7 @@ address, at roughly 300 millisecond intervals, and have the following
 content:
 
 [[mixer-assign-stage-1]]
-.First-stage mixer device number assignment packets.
+.First-stage mixer device number claim packets.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -119,7 +119,8 @@ a data length and _len~p~_ value of `32` bytes, and are again sent to
 UDP port 50000 on the local network broadcast address, at roughly 300
 millisecond intervals, with the following content:
 
-.Second-stage mixer device number assignment packets.
+[[mixer-assign-stage-2]]
+.Second-stage mixer device number claim packets.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -152,7 +153,7 @@ same port 50000. These shorter packets have `2a` bytes of data and the
 content shown here:
 
 [[mixer-assign-final]]
-.Final-stage mixer device number assignment packets.
+.Final-stage mixer device number claim packets.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -161,7 +162,6 @@ include::example$startup_shared.edn[]
 
 (draw-boxes [1 (hex-text 2 2 :bold)])
 (draw-box (text "len" :math [:sub "p"]) {:span 2})
-(draw-related-boxes [1 2 0 0x26])
 (draw-boxes (map #(text % :math) ["D" "N"]))
 ----
 
@@ -197,13 +197,22 @@ include::example$startup_shared.edn[]
 [[cdj-startup]]
 == CDJ Startup
 
-When a CDJ starts up the procedure and packets are nearly identical to
-the ones just described, with groups of three packets sent at 300
-millisecond intervals to port 50000 of the local network broadcast
-address. The only difference between the figure below and
+When a CDJ starts up, there are a variety of different paths that can
+be followed, depending on two different variables:
+
+* Is the player configured to try to automatically assign its channel
+  number, or to attempt to claim a specific channel?
+* Is the player plugged into a channel-specific Ethernet port on a
+  DJM-2000, or is it on a regular network port?
+
+However, regardless of these details, the initial series of three
+packets sent are always the same. They are nearly identical to the
+ones used by the mixer, and broadcast at 300 millisecond intervals as
+well. The only difference between the figure below and
 <<#mixer-initial-announcement,the mixer version>> is the final byte,
 which is `01` for the CDJ, and was `02` for the mixer.
 
+[[cdj-initial-announcement]]
 .Initial announcement packets from CDJ.
 [bytefield]
 ----
@@ -216,13 +225,19 @@ include::example$startup_shared.edn[]
 (draw-box 1)
 ----
 
-Similarly, the next series of three packets from the CDJ are nearly
-identical to those from the mixer. The only difference between the
-following figure and <<#mixer-assign-stage-1,the mixer version>> is
-byte{nbsp}``25`` (immediately after the packet counter `N`), which
-again is `01` for the CDJ, and was `02` for the mixer.
+=== Startup in a Generic Port
 
-.First-stage CDJ device number assignment packets.
+When not connected to a port that is specifically assigned a mixer
+channel, the process continues much as was seen for the Mixer startup.
+The next series of three messages, broadcast to port 50000 at 300
+millisecond intervals, are again nearly identical to those from the
+mixer. The only difference between the following figure and
+<<#mixer-assign-stage-1,the mixer version>> is byte{nbsp}``25``
+(immediately after the packet counter _N_), which again is `01` for
+the CDJ, and was `02` for the mixer.
+
+[[cdj-assign-stage-1]]
+.First-stage CDJ device number claim packets.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -235,29 +250,64 @@ include::example$startup_shared.edn[]
 (draw-box "MAC address" {:span 6})
 ----
 
-However it appears that in this capture the CDJ skips the second stage
-of claiming a device number, probably because when I made the packet
-capture I used my own players, which are configured to be
-automatically assigned a device number based on the port of the mixer
-to which they are connected, and we cannot see the packets that the
-mixer sent them assigning their device numbers. (At the time I didn't
-have a managed switch for spying on private traffic between devices;
-if anyone wants to fill in these details, new captures and pull
-requests to this document are welcome.)
+Three hundred milliseconds after sending the third such packet with
+_N_ set to `03`, the player moves on to trying to claim an unused
+device number _D_. It's not clear how it picks one, although by this
+time it has had plenty of time to observe the network to see what
+other channels are claimed by other devices, and it seems to prefer
+staying on the same channel that it was using the last time it was
+powered on as long as that is not currently in use.
 
-Instead, it jumps right to the end of the third and final stage,
-sending a single `26`-byte packet with header byte{nbsp}``0a`` set to
-`04` (which identified the three packets of the third stage when the
-mixer was starting up), with content identical to
-<<#mixer-assign-final,the mixer version>>.
+It uses packets again nearly identical to the ones the
+<<mixer-assign-stage-2,mixer used>> to claim its device number,
+broadcast at 300 millisecond intervals on port 50000, but it turns out
+the value of byte `31` has a meaning we didn’t appreciate until now:
+It has the value `01` when the CDJ is trying to auto-assign a device
+number, `02` when it it is trying to claim a specific number. We label
+this value _a_ for “auto-assign”:
 
-Even though the value of _N_ is `01`, this is the only packet in this
-series that the CDJ sends. It would probably behave differently if
-configured to assign its own device number (behaving like we saw the
-mixer behave in claiming its device number).
+[[cdj-assign-stage-2]]
+.Second-stage CDJ device number claim packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
 
-The CDJ then moves to the keep-alive stage, sending out `36`-byte
-packets with the following content:
+(draw-packet-header 2)
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-box "IP address" {:span 4})
+(draw-box "MAC address" {:span 6})
+(draw-boxes (map #(text % :math) ["D" "N"]))
+(draw-boxes [1 (text "a" :math)])
+----
+
+After sending the third such packet, with _N_ set to `03`, the player
+moves to the final stage of claiming its device number _D_,
+broadcasting packets at 300 millisecond intervals on port 50000, and
+this series is completely identical to the ones the
+<<mixer-assign-final,mixer used>>:
+
+[[cdj-assign-final]]
+.Final-stage CDJ device number claim packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 4)
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-boxes (map #(text % :math) ["D" "N"]))
+----
+
+NOTE: When the CDJ is configured to use a specific device number, it
+sends only one packet in this series, and then moves on to the next
+stage. When set to auto-assign, it sends all three like the mixer did.
+
+And just like the mixer, after sending the final such packet, the CDJ
+is done starting up, and settles down to broadcasting keep-alive
+packets on port 50000 at a less frequent interval:
 
 [[cdj-keep-alive]]
 .CDJ keep-alive packets.
@@ -276,12 +326,125 @@ include::example$startup_shared.edn[]
 (draw-related-boxes [1 0 0 0 1 0])
 ----
 
-As seems to always be the case when comparing mixer and CDJ packets,
-the difference between this and <<#mixer-keep-alive,the mixer
-version>> is that byte{nbsp}``25`` (following the device number `D`)
-has the value `01` rather than `02`, and the same is true of the
-second-to-last byte in each of the packets. (Byte{nbsp}``34`` is `01`
-here and and `02` in <<#mixer-keep-alive,the mixer version>>.)
+As seems to usually be the case when comparing mixer and CDJ packets
+sent to port 50000, the difference between this and
+<<#mixer-keep-alive,the mixer version>> is that byte{nbsp}``25``
+(following the device number `D`) has the value `01` rather than `02`,
+and the same is true of the second-to-last byte in each of the
+packets. (Byte{nbsp}``34`` is `01` here and and `02` in
+<<#mixer-keep-alive,the mixer version>>.)
+
+
+
+
+=== Startup in a Channel-Specific Port
+
+When connected to an Ethernet port that belongs to a specific mixer
+channel, the mixer will inform the player what channel it is supposed
+to use. Even if the player is configured to try to use a specific
+channel number, the mixer overrides this and the player accepts the
+device number assigned by the mixer.
+
+After broadcasting the three <<cdj-initial-announcement,initial
+announcement packets>>, the CDJ broadcasts the first of its
+<<cdj-assign-stage-1,first stage device number claim packets>> as
+usual. But this process is immediately pre-empted by the mixer sending
+a `2f`-byte packet directly to port 50000 on that player, telling the
+player that the mixer is going to assign it a device number:
+
+.Mixer Device Number Assignment Intention Packet.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 1)
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-box "IP address" {:span 4})
+(draw-box "MAC address" {:span 6})
+(draw-box 1)
+----
+
+> (As always, the device name and IP and MAC addresses in this packet
+> are those of the device that sends it, in this case the mixer.)
+
+Immediately upon receipt of this packet, the CDJ responds by sending a
+`32`-byte packet directly to port 50000 on the mixer acknowledging
+that it is ready to be assigned a device number. This packet is a
+slight variation on the normal <<cdj-assign-stage-2,second stage
+device number claim packet>>: in addition to being sent directly
+to the mixer rather than being broadcast, it has a value of `01`
+instead of `00` at byte{nbsp}``0b`` immediately after the packet type.
+It also reports a value of `00` for _D_ at byte{nbsp}``2e``:
+
+.CDJ Device Number Request Packet.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 2 (hex-text 1 2 :bold))
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-box "IP address" {:span 4})
+(draw-box "MAC address" {:span 6})
+(draw-boxes [(hex-text 0 2 :bold) (text "N" :math)])
+
+(draw-boxes [1 (text "a" :math)])
+----
+
+This packet does contain an _a_ value indicating whether or not the
+player is trying to auto-assign a device number, but that has no
+effect. Regardless of the value of _a_, the mixer immediately responds
+to this packet by telling the CDJ what channel number (_D_) it is
+plugged into by sending a `27`-byte packet directly to port 50000 on
+the player:
+
+.CDJ Device Number Assignment Packet.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 3 (hex-text 1 2 :bold))
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-boxes (map #(text % :math) ["D" "N"]))
+(draw-box 0)
+----
+
+Notice that once again the byte immediately after the packet type,
+byte{nbsp}``0b``, has the value `01` rather than the `00` that we
+normaly see.
+
+At this point the player accepts the device number assigned by _D_ in
+the above packet, and broadcasts a single
+<<cdj-assign-final,final-stage claim packet>> to inform the other
+players of this assignment, with _N_ set to `01`.
+
+Perhaps in response to this broadcast, the mixer sends one last
+`26`-byte packet directly to port 50000 on the CDJ:
+
+.CDJ Device Number Assignment Finished Packet.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 5)
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-box  (text "D" :math))
+(draw-box 1)
+----
+
+In this packet, the _D_ value is the mixer's own device number, `21`.
+
+At this point, rather than sending the remainder of the series of
+final stage claim packets, the CDJ immediately transitions to
+broadcasting <<cdj-keep-alive,keep-alive packets>>.
+
 
 
 include::partial$Footer.adoc[]
