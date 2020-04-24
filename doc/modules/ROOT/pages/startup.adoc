@@ -352,7 +352,7 @@ usual. But this process is immediately pre-empted by the mixer sending
 a `2f`-byte packet directly to port 50000 on that player, telling the
 player that the mixer is going to assign it a device number:
 
-.Mixer Device Number Assignment Intention Packet.
+.Mixer device number assignment intention packet.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -378,7 +378,7 @@ to the mixer rather than being broadcast, it has a value of `01`
 instead of `00` at byte{nbsp}``0b`` immediately after the packet type.
 It also reports a value of `00` for _D_ at byte{nbsp}``2e``:
 
-.CDJ Device Number Request Packet.
+.CDJ device number request packet.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -401,7 +401,7 @@ to this packet by telling the CDJ what channel number (_D_) it is
 plugged into by sending a `27`-byte packet directly to port 50000 on
 the player:
 
-.CDJ Device Number Assignment Packet.
+.CDJ device number assignment packet.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -426,7 +426,7 @@ players of this assignment, with _N_ set to `01`.
 Perhaps in response to this broadcast, the mixer sends one last
 `26`-byte packet directly to port 50000 on the CDJ:
 
-.CDJ Device Number Assignment Finished Packet.
+.CDJ device number assignment finished packet.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -445,6 +445,28 @@ At this point, rather than sending the remainder of the series of
 final stage claim packets, the CDJ immediately transitions to
 broadcasting <<cdj-keep-alive,keep-alive packets>>.
 
+== Channel Conflicts
 
+When a player tries to lay claim to a device number that is already in
+use by another player, the existing player defends its channel by
+sending a `29`-byte packet like this one to port 50000 on the new
+player:
+
+[[channel-conflict-packet]]
+.Channel conflict packet.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 8)
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-box (text "D" :math))
+(draw-box "IP address" {:span 4})
+----
+
+When a player receives such a packet it gives up on trying to claim
+channel _D_.
 
 include::partial$Footer.adoc[]
