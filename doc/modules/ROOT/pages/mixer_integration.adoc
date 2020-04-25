@@ -43,14 +43,18 @@ include::example$status_shared.edn[]
 Since this packet uses subtype 00, the length sent in _len~r~_ has the
 value `0004`, reflecting the four bytes which follow it.
 
+NOTE: The XDJ-XZ does not support fader start, and its built-in decks
+do not respond to the command even if they are sent from another
+program.
+
 [[channels-on-air]]
 == Channels on Air
 
 Thanks to https://github.com/jan2000[@jan2000] we know how the mixer
-reports which channels are currently on-air, and we can simulate
-this feature ourselves when there is no DJM on the network. (If there
-is a DJM present, it will quickly reassert its own on-air state for
-all the channels.)
+reports which channels are currently on-air, and we can simulate this
+feature ourselves when there is no DJM (or XDJ-XZ) on the network. (If
+there is a DJM or XDJ-XZ present, it will quickly reassert its own
+on-air state for all the channels.)
 
 The mixer broadcasts a packet like the one shown below to port 50001,
 with appropriate flag values for _F~1~_ through _F~4~_ telling each

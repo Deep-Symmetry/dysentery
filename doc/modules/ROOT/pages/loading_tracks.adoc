@@ -56,5 +56,19 @@ Assuming the track can be loaded, the player will respond with a
 packet whose type indicator (at byte{nbsp}``0a``) has the value `1a`
 to acknowledge the command, and will load the specified track.
 
+[NOTE]
+====
+Unfortunately, although the XDJ-XZ is able to load tracks from a
+rekordbox collection when rekordbox tells it to, it does not seem to
+be able to be remotely instructed to load tracks from its own USBs, or
+from other players. The packets that rekordbox sends to achieve this
+are slightly different from the one shown above, in that
+byte{nbsp}``20`` has the value `01` rather than `02`, and
+byte{nbsp}``4b`` has the value `32` rather than `00`. But even sending
+packets constructed exactly like that will not cause the XDJ-XZ to
+load a track, unless they are coming from rekordbox, and specifying a
+track from its own collection.
+====
+
 
 include::partial$Footer.adoc[]
