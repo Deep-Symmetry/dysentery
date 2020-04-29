@@ -3,10 +3,10 @@
   "description": "Used to build the documentation site, not the project itself.",
   "dependencies": {},
   "devDependencies": {
-    "@antora/cli": "^2.3.0",
+    "@antora/cli": "^2.3.1",
+    "antora-site-generator-lunr": "^0.4.0",
     "@deepsymmetry/asciidoctor-bytefield": "^1.1.1",
-    "@djencks/asciidoctor-mathjax": "0.0.6",
-    "antora-site-generator-lunr": "^0.4.0"
+    "@djencks/asciidoctor-mathjax": "0.0.6"
   },
   "scripts": {
     "local-docs": "DOCSEARCH_ENABLED=true DOCSEARCH_ENGINE=lunr npx antora --fetch --generator antora-site-generator-lunr doc/local.yml"

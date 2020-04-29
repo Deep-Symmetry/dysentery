@@ -1,7 +1,5 @@
 = Detailed Device Status
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 :stem: latexmath
 
 Although some useful information can be obtained simply by watching
@@ -564,5 +562,3 @@ is always “playing” but not synced, tempo master, nor on the air. The
 _BPM_ value seems to track that of the master player, and the same
 potential pitch values (fixed at `100000`, or +0%) are present, as is
 _M~h~_. _B~b~_ always seems to be zero.
-
-include::partial$Footer.adoc[]

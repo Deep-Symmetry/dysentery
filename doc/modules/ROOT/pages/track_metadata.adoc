@@ -1,7 +1,5 @@
 = Track Metadata
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 
 Thanks to https://github.com/EvanPurkhiser[@EvanPurkhiser], we finally
 started making progress in retrieving metadata from CDJs, and then
@@ -1833,5 +1831,3 @@ for the `dysentery.dbserver` namespace. Most of the response messages
 containing track metadata were omitted for brevity; you will get more
 meaningful results trying it with your own tracks, and then you can
 see all the details.
-
-include::partial$Footer.adoc[]

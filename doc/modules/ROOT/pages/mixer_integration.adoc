@@ -1,7 +1,5 @@
 = Mixer Integration
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 
 This section describes a couple of packet types that support the tight
 interaction between DJM mixers and CDJs, specifically the “Fader
@@ -79,5 +77,3 @@ include::example$status_shared.edn[]
 
 Since this packet uses subtype 00, the length sent in _len~r~_ has the
 value `0009`, reflecting the nine bytes which follow it.
-
-include::partial$Footer.adoc[]

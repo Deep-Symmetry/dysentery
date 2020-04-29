@@ -1,7 +1,5 @@
 = Mixer and CDJ Startup
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 
 == Background
 
@@ -468,5 +466,3 @@ include::example$startup_shared.edn[]
 
 When a player receives such a packet it gives up on trying to claim
 channel _D_.
-
-include::partial$Footer.adoc[]

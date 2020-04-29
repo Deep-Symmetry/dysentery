@@ -1,7 +1,5 @@
 = Menu Requests
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 
 We have already seen many examples of the menu mechanism in action,
 most clearly with <<track_metadata#track-metadata,metadata requests>>,
@@ -131,5 +129,3 @@ text-search feature of CDJs with touch-strips is implemented. By
 passing an uppercase string argument (in UTF-16 with a trailing `0000`
 character), preceded by its byte length, you can obtain a list of all
 matching database entries (tracks, albums, artists, etc.)
-
-include::partial$Footer.adoc[]

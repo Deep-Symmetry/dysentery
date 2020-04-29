@@ -1,7 +1,5 @@
 = Media Slot Queries
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 
 In order to correctly ask for the root menu for a media slot, you need
 to know what kind of media (rekordbox or unanalyzed) is present in the
@@ -136,6 +134,3 @@ Finally, there are two eight-byte numbers at the end of the packet.
 The value at bytes{nbsp}``b0`` through `b7` is the total capacity of
 the media (in bytes), and the value at bytes{nbsp}``b8`` through `bf`
 is the number of unused bytes left on it.
-
-
-include::partial$Footer.adoc[]

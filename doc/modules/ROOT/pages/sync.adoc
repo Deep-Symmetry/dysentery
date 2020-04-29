@@ -1,7 +1,5 @@
 = Sync and Tempo Master
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 :stem: latexmath
 
 The DJM 2000 nexus has a mode for its touchscreen which allows you to
@@ -134,6 +132,3 @@ the synced, playing device, telling it to become the new master. As
 soon as the device named by _M~h~_ sees that status packet, it should
 take over the role as described in the second-to-last paragraph of the
 previous section, even though it did not start the process.
-
-
-include::partial$Footer.adoc[]

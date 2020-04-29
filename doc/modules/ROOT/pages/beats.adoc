@@ -1,7 +1,5 @@
 = Tracking BPM and Beats
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 :stem: latexmath
 
 [[beat-packets]]
@@ -147,6 +145,3 @@ The counter _B~b~_ at byte{nbsp}``5c`` counts out the beat within each
 bar, cycling 1 → 2 → 3 → 4 repeatedly, and can be used to identify the
 down beat if it is coming from the master player (and if the DJ has
 properly established the track's beat grid).
-
-
-include::partial$Footer.adoc[]

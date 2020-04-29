@@ -1,7 +1,5 @@
 = What’s Missing?
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 
 We know this analysis isn’t complete. Here are some loose ends to explore.
 
@@ -84,5 +82,3 @@ If you have access to Pioneer equipment and are willing to help us
 validate this analysis, and perhaps even figure out more details, you
 can find the tool that is being used to perform this research at:
 https://github.com/deep-symmetry/dysentery
-
-include::partial$Footer.adoc[]

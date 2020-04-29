@@ -3,5 +3,11 @@ title: DJ Link Packet Analysis
 version: 'master'
 prerelease: false
 start_page: ROOT:startup.adoc
+asciidoc:
+  attributes:
+    icons: font
+    experimental: ''
+    page-copyright: 2016–2020
+    page-pagination: ''
 nav:
 - modules/ROOT/nav.adoc

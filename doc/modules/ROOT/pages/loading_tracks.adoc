@@ -1,7 +1,5 @@
 = Loading Tracks
 James Elliott <james@deepsymmetry.org>
-:icons: font
-:experimental:
 :stem: latexmath
 
 When running rekordbox, you can tell a player to load a track from the
@@ -69,6 +67,3 @@ packets constructed exactly like that will not cause the XDJ-XZ to
 load a track, unless they are coming from rekordbox, and specifying a
 track from its own collection.
 ====
-
-
-include::partial$Footer.adoc[]

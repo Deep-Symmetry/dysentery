@@ -76,10 +76,11 @@ hundreds of hours of research, development, and writing that have
 already been invested. Or perhaps to facilitate future efforts, tools,
 toys, and time to explore.
 
-<a href="https://liberapay.com/deep-symmetry/donate"><img align="center" alt="Donate using Liberapay"
+<a href="https://liberapay.com/deep-symmetry/donate"><img style="vertical-align:middle" alt="Donate using Liberapay"
     src="https://liberapay.com/assets/widgets/donate.svg"></a> using Liberapay, or
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=M7EXPEX7CZN8Q"><img align="center"
-    alt="Donate" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif"></a> using PayPal
+<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=M7EXPEX7CZN8Q"><img
+    style="vertical-align:middle" alt="Donate"
+    src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif"></a> using PayPal
 
 > If enough people jump on board, we may even be able to get a newer
 > CDJ to experiment with, although that's an unlikely stretch goal.
@@ -318,7 +319,7 @@ have a hard time resisting forced puns. Let's hope none of us see:
 
 ## License
 
-<img align="right" alt="Deep Symmetry" src="doc/assets/DS-logo-bw-200-padded-left.png">
+<img style="float:right" alt="Deep Symmetry" src="doc/assets/DS-logo-bw-200-padded-left.png">
 
 Copyright © 2016&ndash;2018 [Deep Symmetry, LLC](http://deepsymmetry.org)
 
