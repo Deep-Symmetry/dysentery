@@ -35,12 +35,12 @@ To find the metadata associated with a particular track, given its
 rekordbox ID number, as well as the player and slot from which it was
 loaded (all of which can be determined from a CDJ status packet
 received by a virtual CDJ as described in
-<<vcdj#creating-vcdj,Creating a Virtual CDJ>>), open a TCP connection
-to the device from which the track was loaded, using the port that it
-gave you in response to the DB Server query packet, then send the
-following four messages. (You can also get metadata for non-rekordbox
-tracks, even for CD Audio tracks being played in the CD slot, using
-the variant described in <<non-rekordbox-metadata>>.)
+<<vcdj.adoc#creating-vcdj,Creating a Virtual CDJ>>), open a TCP
+connection to the device from which the track was loaded, using the
+port that it gave you in response to the DB Server query packet, then
+send the following four messages. (You can also get metadata for
+non-rekordbox tracks, even for CD Audio tracks being played in the CD
+slot, using the variant described in <<non-rekordbox-metadata>>.)
 
 Once you have determined the database port, send it a setup packet
 with the following content, and the server will send the same five
@@ -289,7 +289,7 @@ displayed. For this kind of metadata request it always has the value
 
 _S~r~_ is the slot in which the track being asked about can be found,
 and has the same values used in CDJ status packets, as described in
-the <<vcdj#slot-identifiers,CDJ status packet description>>.
+the <<vcdj.adoc#slot-identifiers,CDJ status packet description>>.
 Similarly, _T~r~_ identifies the type of track we want information
 about; for rekordbox tracks this always has the value `01`.
 
@@ -298,7 +298,7 @@ tracks, so it is given the acronym _DMST_ in future discussion.
 
 The second message argument, _rekordbox_, identifies the local
 rekordbox database ID of the track being asked about, as found in the
-<<vcdj#cdj-status-packet,CDJ status packet>>.
+<<vcdj.adoc#cdj-status-packet,CDJ status packet>>.
 
 As suggested in the above description, track metadata requests are
 built on the mechanism that is used to request and draw scrollable
@@ -698,7 +698,7 @@ same value you used in your initial query context setup packet,
 identifying the device that is asking the question. _S~r~_ and _T~r~_
 are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
-<<vcdj#cdj-status-packet,CDJ status packets>>. Finally, _artwork_
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. Finally, _artwork_
 identifies the specific artwork image you are requesting, as it was
 specified in the track medatata response. As with other graphical
 requests, the value after _D_, which identifies the location of the
@@ -776,7 +776,7 @@ same value you used in your initial query context setup packet,
 identifying the device that is asking the question. _S~r~_ and _T~r~_
 are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
-<<vcdj#cdj-status-packet,CDJ status packets>>. Finally, _rekordbox_
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. Finally, _rekordbox_
 identifies the specific beat grid you are requesting, as found in a
 CDJ status packet or playlist response. As with graphical requests,
 the value after 𝐷, which identifies the location of the menu for which
@@ -821,7 +821,7 @@ structure:
 Each entry begins with a two-byte little-endian{empty}footnote:[Yes,
 unlike almost all numbers in the protocol, beat grid and cue point
 times are little-endian.] integer holding the beat-within-bar number
-(labeled _B~b~_ in the <<vcdj#cdj-status-packet,CDJ status packet
+(labeled _B~b~_ in the <<vcdj.adoc#cdj-status-packet,CDJ status packet
 diagram>>) of the beat, which is always 1, 2, 3, or 4. This is
 followed by a two-byte little-endian _tempo_ value, which records the
 track tempo at the point where this beat occurs, in beats per minute
@@ -876,7 +876,7 @@ same value you used in your initial query context setup packet,
 identifying the device that is asking the question. _S~r~_ and _T~r~_
 are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
-<<vcdj#cdj-status-packet,CDJ status packets>>. Finally, _rekordbox_
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. Finally, _rekordbox_
 identifies the specific waveform preview you are requesting, as found
 in a CDJ status packet or playlist response. As with other graphical
 requests, the value after 𝐷, which identifies the location of the menu
@@ -979,7 +979,7 @@ same value you used in your initial query context setup packet,
 identifying the device that is asking the question. _S~r~_ and _T~r~_
 are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
-<<vcdj#cdj-status-packet,CDJ status packets>>. Finally, _rekordbox_
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. Finally, _rekordbox_
 identifies the specific waveform preview you are requesting, as found
 in a CDJ status packet or playlist response. Since this is a graphical
 request, I would expect the value after _D_, which identifies the
@@ -1073,7 +1073,7 @@ same value you used in your initial query context setup packet,
 identifying the device that is asking the question. _S~r~_ and _T~r~_
 are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
-<<vcdj#cdj-status-packet,CDJ status packets>>. For some reason the
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. For some reason the
 value after _D_, which identifies the location of the menu for which
 data is being loaded, is 1 in this case, rather than the 8 we would
 expect to see for a graphical data request. _rekordbox_ identifies the
@@ -1179,7 +1179,7 @@ same value you used in your initial query context setup packet,
 identifying the device that is asking the question. _S~r~_ and _T~r~_
 are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
-<<vcdj#cdj-status-packet,CDJ status packets>>. For some reason the
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. For some reason the
 value after _D_, which identifies the location of the menu for which
 data is being loaded, is 1 in this case, rather than the 8 we would
 expect to see for a graphical data request. _rekordbox_ identifies the
@@ -1260,7 +1260,7 @@ the same value you used in your initial query context setup packet,
 identifying the device that is asking the question. _S~r~_ and _T~r~_
 are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
-<<vcdj#cdj-status-packet,CDJ status packets>>. The value after _D_,
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. The value after _D_,
 which identifies the location of the menu for which data is being
 loaded, is 8 which is what we expect for a graphical or data request.
 _rekordbox_ is the datbase ID of the specific track whose cue points
@@ -1369,7 +1369,7 @@ the same value you used in your initial query context setup packet,
 identifying the device that is asking the question. _S~r~_ and _T~r~_
 are the slot in which the track being asked about can be found and its
 track type; each has the same values used in
-<<vcdj#cdj-status-packet,CDJ status packets>>. The value after _D_,
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. The value after _D_,
 which identifies the location of the menu for which data is being
 loaded, is 8 which is what we expect for a graphical or data request.
 _rekordbox_ is the datbase ID of the specific track whose extended cue
@@ -1502,7 +1502,7 @@ for the next, and so on. _D_ should have the same value you used in
 your initial query context setup packet, identifying the device that
 is asking the question. _S~r~_ is the slot in which the track being
 asked about can be found, and _T~r~_ is the type of the track; these
-two bytes have the same values used in <<vcdj#cdj-status-packet,CDJ
+two bytes have the same values used in <<vcdj.adoc#cdj-status-packet,CDJ
 status packets>>. The _sort_ parameter determines the order in which
 the tracks are sorted, and that also affects the item type returned,
 along with the secondary information (beyond the title) that it
@@ -1514,7 +1514,7 @@ the media device to show artists as the second column.
 
 Track list requests (just like metadata requests) are built on the
 mechanism that is used to request and draw scrollable menus on the
-CDJs, explored in more breadth in <<menus#menu-requests,Menu
+CDJs, explored in more breadth in <<menus.adoc#,Menu
 Requests>>. The player responds with a success indicator, saying it is
 ready to send these “menu items” and reporting how many of them are
 available, much like shown in the
@@ -1654,12 +1654,13 @@ for the next, and so on. _D_ should have the same value you used in
 your initial query context setup packet, identifying the device that
 is asking the question. _S~r~_ is the slot in which the track being
 asked about can be found, and _T~r~_ is the type of the track; these
-two bytes have the same values used in <<vcdj#cdj-status-packet,CDJ
-status packets>>. You specify the ID of the playlist or folder you
-want to list in the _id_ argument, and set _folder?_ 1 if you are
-asking for a folder, and 0 if you are asking for a playlist. As noted
-above, to get the top-level list of playlists, ask for folder 0, by
-passing an _id_ of 0 and passing _folder?_ as 1.
+two bytes have the same values used in
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. You specify the ID
+of the playlist or folder you want to list in the _id_ argument, and
+set _folder?_ 1 if you are asking for a folder, and 0 if you are
+asking for a playlist. As noted above, to get the top-level list of
+playlists, ask for folder 0, by passing an _id_ of 0 and passing
+_folder?_ as 1.
 
 Much as when listing all tracks, the response may tell you there are
 more entries in the playlist than you can retreive in a single
