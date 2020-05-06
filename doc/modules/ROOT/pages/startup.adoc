@@ -350,6 +350,7 @@ usual. But this process is immediately pre-empted by the mixer sending
 a `2f`-byte packet directly to port 50000 on that player, telling the
 player that the mixer is going to assign it a device number:
 
+[[assignment-intention-packet]]
 .Mixer device number assignment intention packet.
 [bytefield]
 ----
@@ -424,6 +425,7 @@ players of this assignment, with _N_ set to `01`.
 Perhaps in response to this broadcast, the mixer sends one last
 `26`-byte packet directly to port 50000 on the CDJ:
 
+[[assignment-finished-packet]]
 .CDJ device number assignment finished packet.
 [bytefield]
 ----
@@ -466,3 +468,29 @@ include::example$startup_shared.edn[]
 
 When a player receives such a packet it gives up on trying to claim
 channel _D_.
+
+== XDJ-XZ Limitations
+
+When an XDJ-XZ is acting as the mixer, this protocol mostly works as
+described above, as long as you connect to one of its ports assigned
+to Channel 3 or Channel 4. However, it does not send the
+<<assignment-finished-packet,“assignment finished” packet>> which
+short-circuits the final stage claim packet series.
+
+More fundamentally, there seems to have been no effort made to
+properly support devices which plug into the network anywhere else,
+and thus reach the XDJ-XZ via the laptop/network port. When connected
+to that port, regardless of what device number the player is trying to
+claim, the XDJ-XZ will send it an
+<<assignment-intention-packet,“assignment intention” packet>> telling
+it to go ahead and use that number, even if the number was zero. Even
+worse, it does that even if the number was 1 or 2, which the XDJ-XZ is
+already using for its two decks. Further, it will not even send
+<<channel-conflict-packet,channel conflict packets>> to attempt to
+defend its own device numbers, so implementations that don't watch
+carefully for devices using particular numbers before claiming them
+can end up in a bad state when plugged into the laptop port.
+
+Even actual Pioneer hardware has issues picking device numbers when
+plugged into the laptop port, though, so this is clearly not a
+situation that was envisioned or supported.
