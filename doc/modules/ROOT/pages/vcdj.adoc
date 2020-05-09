@@ -557,7 +557,7 @@ identical to those <<#mixer-status-packet,sent by a mixer>>, sending
 (bytes{nbsp}``21`` and `24`) seems to be `11`, although it will
 probably use conflict resolution to pick an unused number if multiple
 copies are running on the network. Similarly, the first instance of
-rekordbox mobile picks a _D_ value of `41`, and presumably increments
+rekordbox mobile picks a _D_ value of `29`, and presumably increments
 from there.
 
 The _F_ value we have seen remains consistent as a status flag,
