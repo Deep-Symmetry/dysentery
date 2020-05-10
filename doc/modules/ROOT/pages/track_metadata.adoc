@@ -1419,7 +1419,9 @@ captures!]
 (draw-related-boxes (repeat 5 nil))
 (draw-box (text "cue" :math) {:span 4})
 (draw-box (text "loop" :math) {:span 4})
-(draw-related-boxes (repeat 0x34 nil))
+(draw-related-boxes (repeat 0xe nil))
+(draw-box (text "c" :math [:sub "id"]))
+(draw-related-boxes (repeat 0x25 nil))
 (draw-box (text "len" :math [:sub "c"]) {:span 2})
 (draw-gap (text "comment" :math) {:min-label-columns 5})
 (draw-related-boxes (repeat 4 nil))
@@ -1444,18 +1446,25 @@ a memory point and `02` if it is a loop. If both _H_ and _F~l~_ are
 that was deleted by the DJ).
 
 The actual location of the cue and loop points are in the values _cue_
-and _loop_. These are both 4-byte integers, and as noted above, they
-are sent in a little-endian byte order. For non-looping cue points,
-only _cue_ has a meaning, and it identifies the position of the cue
-point in the track, in stem:[\frac{1}{150}] second units. For loops,
-_cue_ identifies the start of the loop, and _loop_ identifies the end
-of the loop, again in stem:[\frac{1}{150}] second units.
+at bytes{nbsp}``0c``-`0f` and _loop_ at bytes{nbsp}``10``-`13`. These
+are both 4-byte integers, and as noted above, they are sent in a
+little-endian byte order. For non-looping cue points, only _cue_ has a
+meaning, and it identifies the position of the cue point in the track,
+in stem:[\frac{1}{150}] second units. For loops, _cue_ identifies the
+start of the loop, and _loop_ identifies the end of the loop, again in
+stem:[\frac{1}{150}] second units.
+
+_c~id~_ at byte{nbsp}``22`` is used only for ordinary memory points
+and loops. If it has a non-zero value, it identifies a row in the
+<<rekordbox-export-analysis::exports.adoc#color-rows,color table>>
+that specifies the color the user assigned to the memory point or
+loop. Hot cues have their own color information later in the entry.
 
 WARNING: Some extended cue entries are incomplete, and their _length_
 indicates they end before the comment, or include the comment but end
-before the color information. Code that processes them needs to be
-prepared to handle this, and treat such partial cues as having no
-comment and/or color.
+before the hot cue color information. Code that processes them needs
+to be prepared to handle this, and treat such partial cues as having
+no comment and/or hot cue color.
 
 _len~c~_ at byte{nbsp}``48`` is a two-byte, little-endian integer that
 contains the length of the comment. If it is zero, there is no
@@ -1466,7 +1475,7 @@ minimum value four, representing a comment that is one character long.
 
 Four bytes past the end of _comment_ (in other words, starting
 _len~c~_ + `4e` past the start of the entry) there are four one-byte
-values containing color information. 𝑐 appears to be a code
+values containing hot cue color information. 𝑐 appears to be a code
 identifying the color with which rekordbox displays the cue, by
 looking it up in a table. There have been sixteen codes identified,
 and their corresponding RGB colors can be found by looking at the
@@ -1475,8 +1484,9 @@ https://github.com/Deep-Symmetry/beat-link/blob/master/src/main/java/org/deepsym
 class]. The next three bytes, _r_, _g_, and _b_, make up an RGB color
 specification which is similar, but not identical, to the color that
 rekordbox displays. We believe these are the values used to illuminate
-the RGB LEDs in a player that has loaded the cue. When no color is
-associated with the cue, all four of these bytes have the value `00`.
+the RGB LEDs in a player that has loaded the hot cue. When no color is
+associated with the hot cue, all four of these bytes have the value
+`00`.
 
 We do not know what, if anything, is sent in the remaining bytes of
 the the entry, so they are shown as blank in the byte field diagram
