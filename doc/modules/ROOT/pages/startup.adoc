@@ -1,38 +1,6 @@
 = Mixer and CDJ Startup
 James Elliott <james@deepsymmetry.org>
 
-== Background
-
-The protocol used by Pioneer professional DJ equipment to communicate
-and coordinate performances can be monitored to provide useful
-information for synchronizing other software, such as light shows and
-sequencers. By creating a “virtual CDJ” that sends appropriate packets
-to the network, other devices can be induced to send packets
-containing even more useful information about their state. This
-document details what has been learned so far about the protocol, and
-how to accomplish these tasks.
-
-This information was discovered by studying packet captures and with
-the help of https://github.com/Deep-Symmetry/dysentery[dysentery], a
-bespoke protocol analysis tool written in Clojure. This document was
-created in parallel with the development of dysentery to help spread
-the knowledge to other developers using other languages.
-
-Once enough had been understood to start interacting in useful ways
-with the devices, the
-https://github.com/brunchboy/beat-link#beat-link[Beat Link] library
-was written to provide a convenient interface for other programs
-running in the Java virtual machine. Eventually enough was learned
-about the format of the media databases on USB drives and SD cards
-inserted in the players to implement
-https://github.com/Deep-Symmetry/crate-digger#crate-digger[Crate
-Digger], another Java library which parses them, and whose analysis is
-part of this documentation site as well.
-
-Other implementations include
-https://github.com/EvanPurkhiser/prolink-go[prolink-go] and
-https://github.com/flesniak/python-prodj-link[python-prodj-link].
-
 [[mixer-startup]]
 == Mixer Startup
 
@@ -230,7 +198,7 @@ channel, the process continues much as was seen for the Mixer startup.
 The next series of three messages, broadcast to port 50000 at 300
 millisecond intervals, are again nearly identical to those from the
 mixer. The only difference between the following figure and
-<<#mixer-assign-stage-1,the mixer version>> is byte{nbsp}``25``
+<<mixer-assign-stage-1,the mixer version>> is byte{nbsp}``25``
 (immediately after the packet counter _N_), which again is `01` for
 the CDJ, and was `02` for the mixer.
 
@@ -400,6 +368,7 @@ to this packet by telling the CDJ what channel number (_D_) it is
 plugged into by sending a `27`-byte packet directly to port 50000 on
 the player:
 
+[[assignment-packet]]
 .CDJ device number assignment packet.
 [bytefield]
 ----

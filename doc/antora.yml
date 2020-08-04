@@ -2,7 +2,7 @@ name: djl-analysis
 title: DJ Link Packet Analysis
 version: 'master'
 prerelease: false
-start_page: ROOT:startup.adoc
+start_page: ROOT:packets.adoc
 asciidoc:
   attributes:
     icons: font

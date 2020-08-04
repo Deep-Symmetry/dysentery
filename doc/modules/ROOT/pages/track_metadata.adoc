@@ -7,6 +7,7 @@ some shared code from https://bitbucket.org/awwright/libpdjl[Austin
 Wright] boosted our understanding considerably, and led to this
 section.
 
+[[connecting]]
 == Connecting to the Database
 
 The first step is to determine the port on which the player is

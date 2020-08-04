@@ -8,6 +8,7 @@ master, and of course individual players can take over being master as
 well. This section describes the packets used to implement these
 features.
 
+[[sync-control]]
 == Sync Control
 
 To tell a player to turn Sync mode on or off, send a packet like the
