@@ -56,7 +56,7 @@ Packets sent to port 50000 seem primarily related to announcing the
 devices present on the network, and negotiating the channel (device)
 number assigned to each.
 
-[cols=">1m,<15"]
+[cols=">1m,<14"]
 |===
 |Kind |Purpose
 
@@ -87,7 +87,7 @@ Packets sent to port 50001 seem primarily related to beat
 synchronization (the first element of the protocol that we figured
 out), and mixer features like Fader Start and Channels On Air.
 
-[cols=">1m,<15"]
+[cols=">1m,<14"]
 |===
 |Kind |Purpose
 
@@ -110,7 +110,7 @@ slot. They also support remote-control features such as instructing
 players to load tracks.
 
 
-[cols=">1m,<15"]
+[cols=">1m,<14"]
 |===
 |Kind |Purpose
 
