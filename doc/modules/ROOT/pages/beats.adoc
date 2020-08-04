@@ -44,7 +44,8 @@ include::example$status_shared.edn[]
 
 (draw-boxes [(hex-text 0 2 :bold) (text "D" :math)])
 (draw-box (text "len" :math [:sub "r"]) {:span 2})
-(draw-boxes (map #(text % :math) ["nextBeat" "2ndBeat" "nextBar" "4thBeat" "2ndBar" "8thBeat"]) {:span 4})
+(wrap-link "#status-beat-offsets"
+  (draw-boxes (map #(text % :math) ["nextBeat" "2ndBeat" "nextBar" "4thBeat" "2ndBar" "8thBeat"]) {:span 4}))
 (draw-related-boxes (repeat 0x18 0xff))
 (draw-box (text "Pitch" :math) {:span 4})
 (draw-related-boxes [0 0])
@@ -83,18 +84,18 @@ pitch adjustment of 0%. If a pitch adjustment is in effect, you will
 need to perform the calculation to scale the beat timing values
 yourself.
 
-_nextBeat_ at bytes{nbsp}``24``-`27` is the number of milliseconds in
-which the very next beat will arrive. _2ndBeat_
-(bytes{nbsp}``28``-`2b`) is the number of milliseconds until the beat
-after that. _nextBar_ (bytes{nbsp}``2c``-`2f`) reports the number of
-milliseconds until the next measure of music begins, which may be from
-1 to 4 beats away. _4thBeat_ (bytes{nbsp}``30``-`33`) reports how many
-milliseconds will elapse until the fourth upcoming beat; _2ndBar_
-(bytes{nbsp}``34``-`37`) the interval until the second measure after
-the current one begins (which will occur in 5 to 8 beats, depending
-how far into the current measure we have reached); and _8thBeat_
-(bytes{nbsp}``38``-`3b`) tells how many millieconds we have to wait
-until the eighth upcoming beat will arrive.
+[[status-beat-offsets]]_nextBeat_ at bytes{nbsp}``24``-`27` is the
+number of milliseconds in which the very next beat will arrive.
+_2ndBeat_ (bytes{nbsp}``28``-`2b`) is the number of milliseconds until
+the beat after that. _nextBar_ (bytes{nbsp}``2c``-`2f`) reports the
+number of milliseconds until the next measure of music begins, which
+may be from 1 to 4 beats away. _4thBeat_ (bytes{nbsp}``30``-`33`)
+reports how many milliseconds will elapse until the fourth upcoming
+beat; _2ndBar_ (bytes{nbsp}``34``-`37`) the interval until the second
+measure after the current one begins (which will occur in 5 to 8
+beats, depending how far into the current measure we have reached);
+and _8thBeat_ (bytes{nbsp}``38``-`3b`) tells how many millieconds we
+have to wait until the eighth upcoming beat will arrive.
 
 The player’s current pitch adjustment{empty}footnote:[The mixer always
 reports a pitch of +0%.] can be found in bytes{nbsp}``54``–`57`,
