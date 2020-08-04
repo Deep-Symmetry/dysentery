@@ -1,6 +1,11 @@
-= Loading Tracks
+= Loading Tracks and Settings
 James Elliott <james@deepsymmetry.org>
 :stem: latexmath
+
+Rekordbox provides a few mechanisms by which linked players can be
+remotely managed. This section explores the packets used.
+
+== Loading Tracks
 
 When running rekordbox, you can tell a player to load a track from the
 collection by dragging the track onto the player icon. This is
@@ -67,3 +72,47 @@ packets constructed exactly like that will not cause the XDJ-XZ to
 load a track, unless they are coming from rekordbox, and specifying a
 track from its own collection.
 ====
+
+== Loading Settings
+
+When rekordbox is linked to a player you can also tell it to apply the
+My Settings configuration to that player immediately by navigating to
+menu:Preferences[CDJ & Devices > My Settings] and scrolling down to
+find the section "`Remote Settings using Pro DJ Link`". When you send
+the settings, a 116-byte packet like the one shown below is sent to
+port 50002 on the target player.
+
+[[load-settings-packet]]
+.Load Settings command packet.
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-column-headers)
+(draw-related-boxes [0x51 0x73 0x70 0x74 0x31 0x57 0x6d 0x4a 0x4f 0x4c (hex-text 0x34 2 :bold)]
+                    :bg-green)
+(draw-box nil [{:span 5} :box-above])
+(draw-box (text "Device Name (padded with " :plain [:hex "00"] ")") [{:span 15} :box-below])
+(draw-boxes [(hex-text 2 2 :bold) (text "D" :math) (text "D" :math [:sub "s"])])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-related-boxes [0x12 0x34 0x56 0x78 0x00 0x00 0x00 0x03 0x81 0x83 0x81 0x88 0x81 0x01 0x82 0x81
+                     0x81 0x01 0x01 0x01 0x81 0x81 0x81 0x81 0x80 0x81 0x80 0x00 0x00 0x81 0x00 0x00
+                     0x81 0x81 0x81 0x81 0x82 0x80 0x00 0x00 0x81 0x80 0x83 0x83 0x00 0x00 0x00 0x00
+                     0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+                     0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00])
+----
+
+This is unusual for a port 50002 packet in that byte{nbsp}``1f``
+immediately following the name has the value `02` rather than the `01`
+we usually see, and there is no subtype byte following it. Instead, we
+follow that with _D_ (the device number we are posing as), and _D~s~_
+(the device we are sending this packet to, in order to apply the
+settings). _len~r~_ has the value `0050`, reflecting the number of
+bytes which follow it.
+
+For now, the only way to determine what those actual bytes should be
+is to use Wireshark or an equivalent tool to capture this packet when
+rekordbox sends it, with the settings values you desire, and replace
+the remainder of the packet with the values you found in the capture.
+We are working on analyzing the bytes and will update this document
+when we know how to encode specific My Settings choices.
