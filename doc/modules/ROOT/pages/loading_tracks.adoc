@@ -87,6 +87,7 @@ port 50002 on the target player.
 [bytefield]
 ----
 include::example$status_shared.edn[]
+(defattrs :small (eval-attribute-spec [:math {:font-size 10}]))
 
 (draw-column-headers)
 (draw-related-boxes [0x51 0x73 0x70 0x74 0x31 0x57 0x6d 0x4a 0x4f 0x4c (hex-text 0x34 2 :bold)]
@@ -95,7 +96,17 @@ include::example$status_shared.edn[]
 (draw-box (text "Device Name (padded with " :plain [:hex "00"] ")") [{:span 15} :box-below])
 (draw-boxes [(hex-text 2 2 :bold) (text "D" :math) (text "D" :math [:sub "s"])])
 (draw-box (text "len" :math [:sub "r"]) {:span 2})
-(draw-related-boxes [0x12 0x34 0x56 0x78 0x00 0x00 0x00 0x03 0x81 0x83 0x81 0x88 0x81 0x01 0x82 0x81
+(draw-related-boxes [0x12 0x34 0x56 0x78 0x00 0x00 0x00 0x03])
+(draw-box (text "OAD" :small))
+(draw-box (text "B" :math [:sub "l"]))
+(draw-box (text "Q" :math))
+(draw-box (text "ACL" :small))
+
+(draw-box (text "L" :math))
+(draw-box 0x01)
+(draw-box (text "B" :math [:sub "jr"]))
+
+(draw-related-boxes [0x81
                      0x81 0x01 0x01 0x01 0x81 0x81 0x81 0x81 0x80 0x81 0x80 0x00 0x00 0x81 0x00 0x00
                      0x81 0x81 0x81 0x81 0x82 0x80 0x00 0x00 0x81 0x80 0x83 0x83 0x00 0x00 0x00 0x00
                      0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
@@ -110,9 +121,66 @@ follow that with _D_ (the device number we are posing as), and _D~s~_
 settings). _len~r~_ has the value `0050`, reflecting the number of
 bytes which follow it.
 
-For now, the only way to determine what those actual bytes should be
-is to use Wireshark or an equivalent tool to capture this packet when
-rekordbox sends it, with the settings values you desire, and replace
-the remainder of the packet with the values you found in the capture.
-We are working on analyzing the bytes and will update this document
-when we know how to encode specific My Settings choices.
+The value _OAD_ at byte{nbsp}``2c`` controls the player's On Air
+Display feature. The value `80` turns it off, and `81` turns it on.
+
+The value _B~l~_ at byte{nbsp}``2d`` controls the brightness of the
+player's LCD screen. Legal values range from `81` (the least bright)
+to `85` (maximum brightness).
+
+The value _Q_ at byte{nbsp}``2e`` controls the player's Quantize mode.
+The value `80` turns it off, and `81` turns it on.
+
+The value _ACL_ at byte{nbsp}``2f`` controls the player's Auto Cue
+Level, with the following meanings:
+
+.Auto Cue Level values.
+[cols=">1m,<11"]
+|===
+|Value |Meaning
+
+|80 |-36 dB
+|81 |-42 dB
+|82 |-48 dB
+|83 |-54 dB
+|84 |-60 dB
+|85 |-66 dB
+|86 |-72 dB
+|87 |-78 dB
+|88 |Memory
+|===
+
+The value _L_ at byte{nbsp}``30`` sets the Language used in the player
+interface, with the following meanings:
+
+.Language values.
+[cols=">1m,<11"]
+|===
+|Value |Meaning
+
+|81 |English
+|82 |French
+|83 |German
+|84 |Italian
+|85 |Dutch
+|86 |Spanish
+|87 |Russian
+|88 |Korean
+|89 |Simplified Chinese
+|8a |Traditional Chinese
+|8b |Japanese
+|8c |Portuguese
+|8d |Swedish
+|8e |Czech
+|8f |Magyar
+|90 |Danish
+|91 |Greek
+|92 |Turkish
+|===
+
+The value _B~jr~_ at byte{nbsp}``32`` controls the brightness of the
+player's jog ring. The value `80` turns off jog ring illumination,
+`81` illuminates it dimly, and `82` illuminates it brightly.
+
+(More values have been identified, and will be described here
+shortly.)
