@@ -87,7 +87,7 @@ port 50002 on the target player.
 [bytefield]
 ----
 include::example$status_shared.edn[]
-(defattrs :small (eval-attribute-spec [:math {:font-size 10}]))
+(defattrs :small (eval-attribute-spec [:math {:font-size 14}]))
 
 (draw-column-headers)
 (draw-related-boxes [0x51 0x73 0x70 0x74 0x31 0x57 0x6d 0x4a 0x4f 0x4c (hex-text 0x34 2 :bold)]
@@ -105,12 +105,35 @@ include::example$status_shared.edn[]
 (draw-box (text "L" :math))
 (draw-box 0x01)
 (draw-box (text "B" :math [:sub "jr"]))
+(draw-box (text "I" :math [:sub "jr"]))
+(draw-box (text "SF" :small))
+(draw-related-boxes (repeat 3 1))
+(draw-box (text "B" :math [:sub "ds"]))
+(draw-box (text "L" :math [:sub "el"]))
+(draw-box (text "Sync" :small))
+(draw-box (text "APM" :small))
+(draw-box (text "Q" :math [:sub "bv"]))
+(draw-box (text "A" :math [:sub "hc"]))
+(draw-box (text "C" :math [:sub "hc"]))
+(draw-related-boxes (repeat 2 0))
 
-(draw-related-boxes [0x81
-                     0x81 0x01 0x01 0x01 0x81 0x81 0x81 0x81 0x80 0x81 0x80 0x00 0x00 0x81 0x00 0x00
-                     0x81 0x81 0x81 0x81 0x82 0x80 0x00 0x00 0x81 0x80 0x83 0x83 0x00 0x00 0x00 0x00
+(draw-box (text "L" :math [:sub "n"]))
+(draw-related-boxes (repeat 2 0))
+(draw-box (text "Time" :small))
+(draw-box (text "Jog" :small))
+(draw-box (text "AC" :small))
+(draw-box (text "MT" :small))
+(draw-box (text "R" :math [:sub "t"]))
+(draw-box (text "PM" :small))
+(draw-related-boxes (repeat 2 0))
+(draw-box (text "VSA" :small))
+(draw-box (text "JD" :small))
+(draw-box (text "B" :math [:sub "pb"]))
+(draw-box (text "B" :math [:sub "jl"]))
+
+(draw-related-boxes [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
                      0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-                     0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00])
+                     0x00 0x00 0x00 0x00])
 ----
 
 This is unusual for a port 50002 packet in that byte{nbsp}``1f``
@@ -182,5 +205,87 @@ The value _B~jr~_ at byte{nbsp}``32`` controls the brightness of the
 player's jog ring. The value `80` turns off jog ring illumination,
 `81` illuminates it dimly, and `82` illuminates it brightly.
 
-(More values have been identified, and will be described here
-shortly.)
+The value _I~jr~_ at byte{nbsp}``33`` controls the Jog Ring Indicator
+feature of the player (I beleve this causes it to flash when a track
+is nearing the end). The value `80` turns the indicator off, and `81`
+turns it on.
+
+
+The value _SF_ at byte{nbsp}``34`` controls the player's Slip Flashing
+feature. The value `80` turns it off, and `81` turns it on.
+
+The value _B~ds~_ at byte{nbsp}``38`` controls the the brightness of
+the player's disc slot illumination. The value `80` turns it off, and
+`81` illuminates it dimly, and `82` illuminates it brightly.
+
+The value _L~el~_ at byte{nbsp}``39`` controls the player's Eject/Load
+Lock feature. The value `80` unlocks it, and `81` locks it.
+
+The value _Sync_ at byte{nbsp}``3a`` controls the player's Sync
+feature. The value `80` turns it off, and `81` turns it on.
+
+The value _APM_ at byte{nbsp}``3b`` controls the player's Auto Play
+Mode. The value `80` activates auto play (continue), and `81` chooses
+Single Play.
+
+The value _Q~bv~_ at byte{nbsp}``3c`` controls beat value used when
+Quantize is in effect. The value `80` quantizes at the full beat
+level, `81` quantizes at half beats, `82` at quarter beats, and `83`
+at eighth beats.
+
+The value _A~hc~_ at byte{nbsp}``3d`` controls the player's Hot Cue Auto
+Load feature. The value `80` turns it off, `81` turns it on, and `82`
+allows the rekordbox track-level setting to control whether the hot
+cues should be loaded when loading the track.
+
+The value _C~hc~_ at byte{nbsp}``3e`` controls the player's Hot Cue
+Color feature. The value `80` turns it off, and `81` turns it on.
+
+The value _L~n~_ at byte{nbsp}``41`` controls the player's Needle
+Lock feature. The value `80` unlocks it, and `81` locks it.
+
+The value _Time_ at byte{nbsp}``44`` controls the Time Mode displayed on
+the player. The value `80` displays Elapsed time, while `81` displays
+Remaining time.
+
+The value _Jog_ at byte{nbsp}``45`` controls the player Jog Mode. The
+value `80` selects CDJ mode, while `81` selects Vinyl mode.
+
+The value _AC_ at byte{nbsp}``46`` controls the player's Auto Cue
+feature. The value `80` turns it off, and `81` turns it on.
+
+The value _MT_ at byte{nbsp}``47`` controls the player's Master Tempo
+feature. The value `80` turns it off, and `81` turns it on.
+
+The value _R~t~_ at byte{nbsp}``48`` controls the player's Tempo
+Range. The value `80` selects ±6, 81 selects ±10, 82 selects ±16, and
+83 selects Wide.
+
+The value _PM_ at byte{nbsp}``49`` controls the player's Phase Meter
+type. The value `80` selects type 1, and `81` selects type 2.
+
+The value _VSA_ at byte{nbsp}``4c`` controls the player's Vinyl Speed
+Adjust feature. The value `80` selects Touch & Release, `81` selects
+Touch, and `82` selects Release.
+
+The value _JD_ at byte{nbsp}``4d`` controls the player's Jog Display
+mode. The value `80` selects Auto, `81` selects Info, `82` selects
+Simple, and `83` selects Artwork.
+
+The value _B~pb~_ at byte{nbsp}``4e`` controls the brightness of the
+player's performance pads/buttons. Legal values range from `81` (the
+least bright) to `84` (maximum brightness).
+
+The value _B~jl~_ at byte{nbsp}``4f`` controls the brightness of the
+player's jog wheel LCD screen. Legal values range from `81` (the least
+bright) to `85` (maximum brightness).
+
+NOTE: The My Settings preferences page in rekordbox also has a Mixer
+section, with a variety of options in it. However, changing these had
+no effect on the packet that rekordbox sent, and did not seem to have
+eny effect on the mixer section of my XDJ-XZ, either. My best guess is
+that these settings might simply not be controllable remotely from
+rekordbox yet. If anyone can find evidence otherwise, please open an
+https://github.com/Deep-Symmetry/dysentery/issues[issue], or get in
+touch on https://gitter.im/brunchboy/beat-link-trigger[Beat Link
+Trigger's Gitter channel] to share what you have discovered.
