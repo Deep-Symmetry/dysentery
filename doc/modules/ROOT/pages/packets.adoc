@@ -120,5 +120,6 @@ players to load tracks.
 |19 |<<loading_tracks.adoc#,Load Track Command>>
 |1a |<<loading_tracks.adoc#,Load Track Acknowledgment>>
 |29 |<<vcdj.adoc#mixer-status-packets,Mixer Status>>
+|34 |<<loading_tracks.adoc#loading-settings,Load Settings Command>>
 
 |===

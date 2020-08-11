@@ -73,6 +73,7 @@ load a track, unless they are coming from rekordbox, and specifying a
 track from its own collection.
 ====
 
+[[loading-settings]]
 == Loading Settings
 
 When rekordbox is linked to a player you can also tell it to apply the
