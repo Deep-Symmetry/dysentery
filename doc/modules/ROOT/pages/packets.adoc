@@ -109,6 +109,11 @@ information about the media that has been mounted in a particular
 slot. They also support remote-control features such as instructing
 players to load tracks.
 
+=== Port 50004 Packets
+
+Packets sent to port 50004 provide link cue audio data between supported
+players and mixers.
+
 
 [cols=">1m,<14"]
 |===
