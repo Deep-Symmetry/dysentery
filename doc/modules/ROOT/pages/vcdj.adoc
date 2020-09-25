@@ -206,14 +206,14 @@ These use yet another packet structure variant following the device
 name. As always the byte after the name has the value `01`, but the
 subtype value which follows that (at byte{nbsp}``20``) has the value
 `03` here, rather than `00` as we saw in the mixer status packets.
+Values of `03`, `04` and `06` have been seen which may indicate this
+byte represents the protocol or packet version.
 
 Packets of subtype `03` seem structurally equivalent to subtype `00`
 however: the subtype indicator is followed by the Device Number _D_ at
 byte{nbsp}``21`` and a length-remaining value _len~r~_ at
 bytes{nbsp}``22``–`23`. If anyone can think of a reason why these
-packets don’t simply reuse subtype `00`, please share it! Packets of
-subtype `03`, `04` and `06` have been seen which may indicate
-the protocol or packet version.
+packets don’t simply reuse subtype `00`, please share it!
 
 The Device Number in _D_ (bytes{nbsp}``21`` and `24`) is the Player
 Number as displayed on the CDJ itself. In the case of this capture,
