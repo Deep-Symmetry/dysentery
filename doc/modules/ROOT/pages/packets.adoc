@@ -100,6 +100,7 @@ out), and mixer features like Fader Start and Channels On Air.
 
 |===
 
+
 === Port 50002 Packets
 
 Packets sent to port 50002 provide more detailed device status (they
@@ -122,6 +123,7 @@ players to load tracks.
 |34 |<<loading_tracks.adoc#loading-settings,Load Settings Command>>
 
 |===
+
 
 === Port 50004 Packets
 
