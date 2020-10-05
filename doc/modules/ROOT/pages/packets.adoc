@@ -100,6 +100,7 @@ out), and mixer features like Fader Start and Channels On Air.
 
 |===
 
+
 === Port 50002 Packets
 
 Packets sent to port 50002 provide more detailed device status (they
@@ -108,7 +109,6 @@ tempo, and how much has been played), as well as finding out
 information about the media that has been mounted in a particular
 slot. They also support remote-control features such as instructing
 players to load tracks.
-
 
 [cols=">1m,<14"]
 |===
@@ -123,3 +123,10 @@ players to load tracks.
 |34 |<<loading_tracks.adoc#loading-settings,Load Settings Command>>
 
 |===
+
+
+=== Port 50004 Packets
+
+Packets sent to port 50004 provide link cue audio data between supported
+players and mixers.
+

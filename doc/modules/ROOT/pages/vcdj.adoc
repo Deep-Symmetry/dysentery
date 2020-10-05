@@ -138,7 +138,8 @@ shown below (for nexus players). Older players send `d0`-byte packets
 with slightly less information (notably the current beat number is not
 available, so it is impossible to interpolate playback position to
 calculate a virtual timecode value). Newer firmware and Nexus 2
-players send packets that are `11c` or `124` bytes long.
+players send packets that are `11c` or `124` bytes long. CDJ-3000
+devices send packets that are `200` bytes long.
 
 [[cdj-status-packet]]
 .CDJ status packet.
@@ -205,6 +206,9 @@ These use yet another packet structure variant following the device
 name. As always the byte after the name has the value `01`, but the
 subtype value which follows that (at byte{nbsp}``20``) has the value
 `03` here, rather than `00` as we saw in the mixer status packets.
+Values of `03`, `04` and `06` have been seen which may indicate this
+byte represents the protocol or packet version.
+
 Packets of subtype `03` seem structurally equivalent to subtype `00`
 however: the subtype indicator is followed by the Device Number _D_ at
 byte{nbsp}``21`` and a length-remaining value _len~r~_ at
@@ -543,10 +547,13 @@ next cue point (if any) in the track.
 Bytes `c8`-`cb` seem to contain a 4-byte packet counter labeled
 _Packet_, which is incremented for each packet sent by the player. (I
 am just guessing it is four bytes long, I have not yet watched long
-enough for the count to need more than the last three bytes).
+enough for the count to need more than the last three bytes). Some
+players do not seem to increment the counter, e.g. CDJ-3000 is fixed
+at `00 00 00 00`. Counters are instead seen incrementing in packets
+sent over UDP port 50004.
 
 Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus
-players, `1f` for the XDJ-XZ, and `05` for older players.
+players, `1f` for the XDJ-XZ and CDJ-3000, and `05` for older players.
 
 [[rekordbox-status-packets]]
 == Rekordbox Status packets
