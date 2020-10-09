@@ -646,8 +646,8 @@ flat.
 |===
 
 Bytes `164` to `16b` (labeled _KeyShift_) is a 64-bit signed value
-indicating the Key Shift value of a CDJ-3000. The value changes in
-increments of `64` for each semitone moved.
+indicating the Key Shift value of a CDJ-3000 in cents. The value changes
+in increments of `64` (or 100 cents) for each semitone moved.
 
 [[key-shift-values]]
 ._KeyShift_ values.
