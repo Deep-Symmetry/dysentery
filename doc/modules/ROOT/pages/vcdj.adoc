@@ -209,6 +209,8 @@ include::example$status_shared.edn[]
 (draw-padding 0x11d nil)
 (draw-related-boxes (concat [(text "Buf" :math [:sub "f"]) (text "Buf" :math [:sub "b"]) (text "Buf" :math [:sub "s"])]))
 
+(draw-padding 0x158 nil)
+(draw-box (text "M" :math [:sub "t"]))
 (draw-padding 0x15c nil)
 (draw-box (text "Key") {:span 3})
 (draw-box 1)
@@ -598,20 +600,26 @@ the player is set to.
 |02 |Left
 |===
 
-Bytes `11d` and `11e` (labeled _Buf~f~_ and  _Buf~b~_ respectively) seem
+Bytes `11d`-`11e` (_Buf~f~_ and  _Buf~b~_ respectively) seem
 to indicate the in-memory buffer status of the player. The buffer is shown
 on the player under the waveform with a thin red bar. As this bar expands,
 the values in `11d` and `11e` increase. `11d` indicates the buffer length
 in the forward direction from the playhead, `11e` indicates the buffer
 length in the backwards direction from the playhead.
 
-Byte `11f` (labeled _Buf~s~_) changes to value `01` when the entire track
-is buffered in memory.
+Byte `11f` (_Buf~s~_ for “Buffer Status”) changes to value `01` when the
+entire track is buffered in memory.
 
-Bytes `15c` to `15e` (labeled _Key_) indicate the key of the loaded track.
-Byte `15c` represents the note, byte `15d` is `00` for minor and `01` for
-major, and byte `15e` is `00` for natural, `01` for sharp, and `ff` for
-flat.
+Byte `158` (labeled _M~t~_) indicates whether Master Tempo is engaged
+on the deck.
+
+Bytes `15c`-`15e` (labeled _Key_) indicate the key of the current track,
+taking into account Master Tempo and the Tempo Slider position but before
+Key Shift is applied. Byte `15c` represents the note, byte `15d` is `00`
+for minor and `01` for major. Byte `15e` represents the accidental of the
+note, `00` for natural, `01` for sharp, and `ff` for flat. However if the
+Master Tempo is off and the Tempo Slider is moved outside the original key
+of the track, byte `15e` will change to `64`.
 
 [[key-values]]
 ._Key_ values.
@@ -645,7 +653,7 @@ flat.
 |0b 01 00 |B
 |===
 
-Bytes `164` to `16b` (labeled _KeyShift_) is a 64-bit signed value
+Bytes `164`-`16b` (labeled _KeyShift_) is a 64-bit signed value
 indicating the Key Shift value of a CDJ-3000 in cents. The value changes
 in increments of `64` (or 100 cents) for each semitone moved.
 
