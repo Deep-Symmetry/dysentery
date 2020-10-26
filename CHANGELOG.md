@@ -29,6 +29,8 @@ This change log follows the conventions of
 - Explanation of how the mixer assigns device numbers to players
   plugged into channel-specific ports, and all variations of the
   startup process.
+- Initial information about new CDJ-3000 fields and packets, thanks to
+  [David Ng](https://github.com/nudge).
 
 ## [0.2.1] - 2018-07-21
 
