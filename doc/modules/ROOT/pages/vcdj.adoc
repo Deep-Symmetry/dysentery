@@ -133,13 +133,13 @@ described in <<sync#tempo-master-handoff,Tempo Master Handoff>>.
 [[cdj-status-packets]]
 == CDJ Status Packets
 
-Packets from a CDJ will have a length of `d4` bytes and the content
-shown below (for nexus players). Older players send `d0`-byte packets
-with slightly less information (notably the current beat number is not
-available, so it is impossible to interpolate playback position to
-calculate a virtual timecode value). Newer firmware and Nexus 2
-players send packets that are `11c` or `124` bytes long. CDJ-3000
-devices send packets that are `200` bytes long.
+Packets from a CDJ have the content shown below. Nexus players have a
+length of `d4` bytes. Older players send `d0`-byte packets with slightly
+less information (notably the current beat number is not available, so it
+is impossible to interpolate playback position to calculate a virtual
+timecode value). Newer firmware and Nexus 2 players send packets that are
+`11c` or `124` bytes long. CDJ-3000 devices send packets that are `200`
+bytes long.
 
 [[cdj-status-packet]]
 .CDJ status packet.
@@ -199,7 +199,25 @@ include::example$status_shared.edn[]
 (draw-box (text "Pitch" :math [:sub "4"]) {:span 4})
 (draw-box (text "Packet" :math) {:span 4})
 (draw-box (text "nx" :math))
-(draw-related-boxes (repeat 7 0))
+(draw-related-boxes (repeat 3 0))
+(draw-related-boxes [0x12 0x34 0x56 0x78])
+(draw-padding 0xf0 nil)
+
+(draw-related-boxes [0x12 0x34 0x56 0x78])
+(draw-padding 0xfa nil)
+(draw-related-boxes (concat [(text "W" :math [:sub "c"]) 1 1 (text "W" :math [:sub "p"])]))
+(draw-padding 0x11d nil)
+(draw-related-boxes (concat [(text "Buf" :math [:sub "f"]) (text "Buf" :math [:sub "b"]) (text "Buf" :math [:sub "s"])]))
+
+(draw-padding 0x158 nil)
+(draw-box (text "M" :math [:sub "t"]))
+(draw-padding 0x15c nil)
+(draw-box (text "Key") {:span 3})
+(draw-box 1)
+(draw-padding 0x164 nil)
+(draw-box (text "KeyShift") {:span 8})
+
+(draw-padding 0x200 nil)
 ----
 
 These use yet another packet structure variant following the device
@@ -554,6 +572,108 @@ sent over UDP port 50004.
 
 Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus
 players, `1f` for the XDJ-XZ and CDJ-3000, and `05` for older players.
+
+Byte `fa` (labeled _W~c~_) indicates the Waveform Color setting the
+player is set to.
+
+[[known-waveform-color-values]]
+.Known _W~c~_ values.
+[cols=">1m,<14"]
+|===
+|Value |Meaning
+
+|01 |Blue
+|03 |RGB
+|04 |3-Band
+|===
+
+Byte `fd` (labeled _W~p~_) indicates the Waveform Current Position setting
+the player is set to.
+
+[[known-waveform-current-position-values]]
+.Known _W~p~_ values.
+[cols=">1m,<14"]
+|===
+|Value |Meaning
+
+|01 |Center
+|02 |Left
+|===
+
+Bytes `11d`-`11e` (_Buf~f~_ and  _Buf~b~_ respectively) seem
+to indicate the in-memory buffer status of the player. The buffer is shown
+on the player under the waveform with a thin red bar. As this bar expands,
+the values in `11d` and `11e` increase. `11d` indicates the buffer length
+in the forward direction from the playhead, `11e` indicates the buffer
+length in the backwards direction from the playhead.
+
+Byte `11f` (_Buf~s~_ for “Buffer Status”) changes to value `01` when the
+entire track is buffered in memory.
+
+Byte `158` (labeled _M~t~_) indicates whether Master Tempo is engaged
+on the deck.
+
+Bytes `15c`-`15e` (labeled _Key_) indicate the key of the current track,
+taking into account Master Tempo and the Tempo Slider position but before
+Key Shift is applied. Byte `15c` represents the note, byte `15d` is `00`
+for minor and `01` for major. Byte `15e` represents the accidental of the
+note, `00` for natural, `01` for sharp, and `ff` for flat. However if the
+Master Tempo is off and the Tempo Slider is moved outside the original key
+of the track, byte `15e` will change to `64`.
+
+[[key-values]]
+._Key_ values.
+[cols=">2m,<13"]
+|===
+|Value |Key
+
+|00 00 00 |Am
+|01 00 ff |Bbm
+|02 00 00 |Bm
+|03 00 00 |Cm
+|04 00 01 |C#m
+|05 00 00 |Dm
+|06 00 ff |Ebm
+|07 00 00 |Em
+|08 00 00 |Fm
+|09 00 01 |F#m
+|0a 00 00 |Gm
+|0b 00 ff |Abm
+|00 01 00 |C
+|01 01 ff |Db
+|02 01 00 |D
+|03 01 ff |Eb
+|04 01 00 |E
+|05 01 00 |F
+|06 01 01 |F#
+|07 01 00 |G
+|08 01 ff |Ab
+|09 01 00 |A
+|0a 01 ff |Bb
+|0b 01 00 |B
+|===
+
+Bytes `164`-`16b` (labeled _KeyShift_) is a 64-bit signed value
+indicating the Key Shift value of a CDJ-3000 in cents. The value changes
+in increments of `64` (or 100 cents) for each semitone moved.
+
+[[key-shift-values]]
+._KeyShift_ values.
+[cols=">4m,<11"]
+|===
+|Value |Semitone
+
+|00 00 00 00 04 b0 | +12
+|... |
+|00 00 00 00 00 c8 | +2
+|00 00 00 00 00 64 | +1
+|00 00 00 00 00 00 | 0
+|ff ff ff ff ff 9c | -1
+|ff ff ff ff ff 38 | -2
+|... |
+|ff ff ff ff fb 50 | -12
+|===
+
 
 [[rekordbox-status-packets]]
 == Rekordbox Status packets
