@@ -212,10 +212,10 @@ include::example$status_shared.edn[]
 (draw-padding 0x158 nil)
 (draw-box (text "M" :math [:sub "t"]))
 (draw-padding 0x15c nil)
-(draw-box (text "Key") {:span 3})
+(draw-box (text "Key" :math) {:span 3})
 (draw-box 1)
 (draw-padding 0x164 nil)
-(draw-box (text "KeyShift") {:span 8})
+(draw-box (text "KeyShift" :math) {:span 8})
 
 (draw-padding 0x200 nil)
 ----
@@ -322,7 +322,7 @@ mode. The values seen so far, and their apparent meanings, are:
 
 [[known-p1-values]]
 .Known _P~1~_ values.
-[cols=">1m,<14"]
+[cols=">1m,<12"]
 |===
 |Value |Meaning
 
@@ -501,7 +501,7 @@ found so far are:
 
 [[known-p3-values]]
 .Known _P~3~_ values.
-[cols=">1m,<14"]
+[cols=">1m,<12"]
 |===
 |Value |Meaning
 
@@ -578,7 +578,7 @@ player is set to.
 
 [[known-waveform-color-values]]
 .Known _W~c~_ values.
-[cols=">1m,<14"]
+[cols=">1m,<6"]
 |===
 |Value |Meaning
 
@@ -592,7 +592,7 @@ the player is set to.
 
 [[known-waveform-current-position-values]]
 .Known _W~p~_ values.
-[cols=">1m,<14"]
+[cols=">1m,<6"]
 |===
 |Value |Meaning
 
@@ -623,7 +623,7 @@ of the track, byte `15e` will change to `64`.
 
 [[key-values]]
 ._Key_ values.
-[cols=">2m,<13"]
+[cols=">2m,<6"]
 |===
 |Value |Key
 
@@ -659,19 +659,19 @@ in increments of `64` (or 100 cents) for each semitone moved.
 
 [[key-shift-values]]
 ._KeyShift_ values.
-[cols=">4m,<11"]
+[cols=">4m,<6"]
 |===
-|Value |Semitone
+|Value |Semitones Shifted
 
-|00 00 00 00 04 b0 | +12
-|... |
-|00 00 00 00 00 c8 | +2
-|00 00 00 00 00 64 | +1
-|00 00 00 00 00 00 | 0
-|ff ff ff ff ff 9c | -1
-|ff ff ff ff ff 38 | -2
-|... |
-|ff ff ff ff fb 50 | -12
+|00 00 00 00 00 00 04 b0 | +12
+| | ...
+|00 00 00 00 00 00 00 c8 | +2
+|00 00 00 00 00 00 00 64 | +1
+|00 00 00 00 00 00 00 00 | 0
+|ff ff ff ff ff ff ff 9c | -1
+|ff ff ff ff ff ff ff 38 | -2
+| | ...
+|ff ff ff ff ff ff fb 50 | -12
 |===
 
 
