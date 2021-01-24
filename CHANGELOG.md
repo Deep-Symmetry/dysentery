@@ -25,12 +25,14 @@ This change log follows the conventions of
   responses.
 - Some preliminary discoveries about the XDJ-XZ.
 - Analysis of the BPM Sync bit in the state flag, thanks to
-  [https://github.com/nudge](@nudge).
+  [David Ng](https://github.com/nudge).
 - Explanation of how the mixer assigns device numbers to players
   plugged into channel-specific ports, and all variations of the
   startup process.
 - Initial information about new CDJ-3000 fields and packets, thanks to
   [David Ng](https://github.com/nudge).
+- Analysis of six-channel on-air packet sent by DJM-V10, thanks to
+  [@AhnHEL](https://github.com/AhnHEL).
 
 ## [0.2.1] - 2018-07-21
 

@@ -77,3 +77,32 @@ include::example$status_shared.edn[]
 
 Since this packet uses subtype 00, the length sent in _len~r~_ has the
 value `0009`, reflecting the nine bytes which follow it.
+
+=== Six Channel Version
+
+The advent of the CDJ-3000 and DJM-V10 introduced the possibility of
+having devices on up to six channels. To support that, the mixer sends
+a larger variant of the packet, with two new flag values, _F~5~_ and
+_F~6~_ (thanks to https://github.com/AhnHEL[@AhnHEL] for the packet
+captures which revealed these details):
+
+[[on-air-packet-six-channels]]
+.On Air flags packet (six channels).
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x03)
+(draw-boxes [(hex-text 3 2 :bold) (text "D" :math)])
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(doseq [i (range 1 5)]
+  (draw-box (text "F" :math [:sub i])))
+(draw-related-boxes (repeat 5 0))
+(draw-box (text "F" :math [:sub 5]))
+(draw-box (text "F" :math [:sub 6]))
+(draw-related-boxes (repeat 6 0))
+----
+
+This packet uses a new subtype 03 for some reason (perhaps to identify
+it), and the length sent in _len~r~_ has the value `0011`, reflecting
+the seventeen bytes which follow it.
