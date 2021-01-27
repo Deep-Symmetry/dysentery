@@ -831,10 +831,10 @@
   ([player slot query]
    (search player slot query 0))
   ([player slot query unknown]
-   (let [id (swap! (:counter player) inc)
+   (let [id         (swap! (:counter player) inc)
          menu-field (number-field [(:number player) 1 slot 1])
-         setup (build-message id 0x1300 menu-field (number-field 0 4) (number-field (* 2 (inc (count query))) 4)
-                              (string-field (clojure.string/upper-case query)) (number-field unknown 4))]
+         setup      (build-message id 0x1300 menu-field (number-field 0 4) (number-field (* 2 (inc (count query))) 4)
+                                   (string-field (clojure.string/upper-case query)) (number-field unknown 4))]
      (print "Sending > ")
      (describe-message setup)
      (send-message player setup)
@@ -847,7 +847,42 @@
              (let [results (read-menu-responses player menu-field item-count)]
                ;; TODO build and return more compact structure.
                )
-             (timbre/error "No results available for this experiment."))))))))
+             (timbre/error "No results available for this search."))))))))
+
+(defn encode-tag
+  "Takes a four-character string (shorter ones will be padded with
+  `nul`) and returns the number field which can be used to send it as
+  an argument to ghe `get-tag` message."
+  [tag]
+  (let [bytes (reverse (map int (take 4 (concat tag (repeat 0)))))]
+    (number-field bytes)))
+
+(defn get-tag
+  "Sends a request for a tag from a track analysis file and displays the
+  result. For example, to obtain the nxs2 waveform preview you pass a
+  `tag` value of `PWV4`, and to obtain the nxs2 waveform detail you
+  request the tag `PWV5`. You could try to obtain data from a
+  different file by passing a file extension value, although so far
+  only the default of `EXT` is known to work."
+  ([player slot track tag]
+   (get-tag player slot track tag "EXT"))
+  ([player slot track tag ext]
+   (let [id         (swap! (:counter player) inc)
+         menu-field (number-field [(:number player) 1 slot 1])
+         setup      (build-message id 0x2c04 menu-field (number-field track 4) (encode-tag tag) (encode-tag ext))]
+    (print "Sending > ")
+    (describe-message setup)
+    (send-message player setup)
+    (when-let [response (read-message player)]
+      (print "Received > ")
+      (describe-message response)
+      (when (= 0x4000 (get-message-type response))
+        (let [item-count (get-in response [:arguments 1 :number])]
+          (if (pos? item-count)
+            (let [results (read-menu-responses player menu-field item-count)]
+              ;; TODO save somewhere for later use?
+              )
+            (timbre/error "No results available for this experiment."))))))))
 
 (defn experiment
   "Sends a sequence of messages like those requesting metadata, but
@@ -856,9 +891,9 @@
   (experiment player slot 1 0x1000 (number-field 0 4)
               (number-field 0x00ffffff 4))"
   [player slot track-type kind & args]
-  (let [id (swap! (:counter player) inc)
+  (let [id         (swap! (:counter player) inc)
         menu-field (number-field [(:number player) 1 slot track-type])
-        setup (apply build-message (concat [id kind menu-field] args))]
+        setup      (apply build-message (concat [id kind menu-field] args))]
     (print "Sending > ")
     (describe-message setup)
     (send-message player setup)
