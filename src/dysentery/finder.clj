@@ -15,9 +15,10 @@
 
 (defonce ^{:private true
            :doc "Holds the persistent server socket, map of seen
-  devices (keyed on the address from which they transmit), and the
-  future that processes packets."}
-  state (atom {:socket nil
+  devices (keyed on a tuple of the address from which they transmit
+  and the device number, since devices like the XDJ-X& implement
+  multiple devices on the same IP address), and the future that
+  processes packets."} state (atom {:socket nil
                :devices-seen {}
                :watcher nil}))
 
@@ -69,13 +70,14 @@
   candidate device."
   [packet data]
   ;; Record the newly-seen device
-  (swap! state update-in [:devices-seen (.getAddress packet)]
-         (fn [device]
-           {:packet-count (inc (:packet-count device 0))
-            :last-seen (System/currentTimeMillis)
-            :device {:name (.trim (String. data 12 20))
-                     :player (aget data 36)
-                     :address (.getAddress packet)}}))
+  (let [device-number (aget data 36)]
+    (swap! state update-in [:devices-seen [(.getAddress packet) device-number]]
+           (fn [device]
+             {:packet-count (inc (:packet-count device 0))
+              :last-seen (System/currentTimeMillis)
+              :device {:name (.trim (String. data 12 20))
+                       :player device-number
+                       :address (.getAddress packet)}})))
   ;; Get MAC address at bytes 38-43?
   ;; TODO: Compare address with bytes 44-47
   (remove-stale-devices))
@@ -121,8 +123,8 @@
   ([ignore-addresses]
    (start-if-needed)
    (remove-stale-devices)
-   (let [{:keys [devices-seen socket]} @state
-         all-devices                   (for [[k v] devices-seen] (:device v))]
+   (let [{:keys [devices-seen]} @state
+         all-devices            (for [[_k v] devices-seen] (:device v))]
      (set (filter #(not (ignore-addresses (:address %))) all-devices)))))
 
 (defn device-given-number
