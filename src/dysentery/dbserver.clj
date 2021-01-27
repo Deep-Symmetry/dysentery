@@ -926,6 +926,23 @@
   a response while communicating with a connected dbserver."
   2000)
 
+(defn find-database-port
+  "Sends the initial query to port 12523 on a player to find the port on
+  which the database server is running."
+  [target-player-number]
+  (when-let [device (finder/device-given-number target-player-number)]
+    (let [sock (java.net.Socket.)
+          _    (.connect sock (java.net.InetSocketAddress. (:address device) 12523) connect-timeout)
+          is   (.getInputStream sock)
+          os   (.getOutputStream sock)]
+      (.setSoTimeout sock read-timeout)
+      (send-bytes os (mapv int "\0\0\0\u000fRemoteDBServer\0"))
+      (let [result (util/build-int (mapv util/unsign (recv-bytes is 2)) 0 2)]
+        (.close is)
+        (.close os)
+        (.close sock)
+        result))))
+
 (defn connect-to-player
   "Opens a database server connection to the specified player number,
   posing as the specified player number, which must be unused on the
@@ -933,38 +950,34 @@
   in this namespace to interact with the database server on that
   player.
 
-  For simplicity, we go directly to port 1051 on the specified player,
-  even though Beat Link already implements the correct mechanism of
-  querying for the appropriate port. This is just quick and dirty
-  hackery code to further our knowledge.
-
   Returns `nil` if the target player could not be found."
   [target-player-number pose-as-player-number]
   (when-let [device (finder/device-given-number target-player-number)]
-    (let [sock     (java.net.Socket.)
-          _        (.connect sock (java.net.InetSocketAddress. (:address device) 1051) connect-timeout)
-          is       (.getInputStream sock)
-          os       (.getOutputStream sock)
-          player   {:socket        sock
-                    :input-stream  is
-                    :output-stream os
-                    :number        pose-as-player-number
-                    :target        target-player-number
-                    :counter       (atom 0)}
-          greeting (number-field 1 4)]  ; The greeting packet is a 4-byte number field representing the number 1.
-      (.setSoTimeout sock read-timeout)
-      (send-bytes os (:bytes greeting))
-      (if (not= (read-field is) greeting)
-        (do (disconnect player)
-            (timbre/error "Did not receive expected greeting response from player, closed."))
-        (do
-          (send-message player (build-setup-message pose-as-player-number))
-          (let [response (read-message player)]
-            (describe-message response)
-            (if (= (get-message-type response) 0x4000)
-              (do  ; Successful response
-                (when (not= target-player-number (get-in response [:arguments 1 :number]))
-                  (timbre/warn "Expected to receive target player number in response argument 1"))
-                player)
-              (do (disconnect player)
-                  (timbre/error "Did not receive message type 0x4000 in response to setup message, closed.")))))))))
+    (when-let [db-port (find-database-port target-player-number)]
+      (let [sock     (java.net.Socket.)
+            _        (.connect sock (java.net.InetSocketAddress. (:address device) db-port) connect-timeout)
+            is       (.getInputStream sock)
+            os       (.getOutputStream sock)
+            player   {:socket        sock
+                      :input-stream  is
+                      :output-stream os
+                      :number        pose-as-player-number
+                      :target        target-player-number
+                      :counter       (atom 0)}
+            greeting (number-field 1 4)]  ; The greeting packet is a 4-byte number field representing the number 1.
+        (.setSoTimeout sock read-timeout)
+        (send-bytes os (:bytes greeting))
+        (if (not= (read-field is) greeting)
+          (do (disconnect player)
+              (timbre/error "Did not receive expected greeting response from player, closed."))
+          (do
+            (send-message player (build-setup-message pose-as-player-number))
+            (let [response (read-message player)]
+              (describe-message response)
+              (if (= (get-message-type response) 0x4000)
+                (do  ; Successful response
+                  (when (not= target-player-number (get-in response [:arguments 1 :number]))
+                    (timbre/warn "Expected to receive target player number in response argument 1"))
+                  player)
+                (do (disconnect player)
+                    (timbre/error "Did not receive message type 0x4000 in response to setup message, closed."))))))))))
