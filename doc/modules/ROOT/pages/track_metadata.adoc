@@ -1501,7 +1501,7 @@ Starting with rekordbox version 6, when DJs export tracks on which
 they have performed phrase analyisis, that information is exported
 into the `.EXT` file as a `PSSI` tag. (Pioneer Song Structure
 Information?) This data can be obtained using an
-<<requesting-new-tag,analysis tag request>>, specifyign `PSSI`
+<<requesting-new-tags,analysis tag request>>, specifyign `PSSI`
 (1230197584) for the tag type and, as usual, `EXT` for the file
 extension:
 
