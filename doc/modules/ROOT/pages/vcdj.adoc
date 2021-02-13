@@ -592,16 +592,29 @@ this value remains `0`.
 ----
 
 [[cdj-status-field-ue]]
-Byte `b8`, labeled _Ue_, indicates if USB media has been ejected.
-If media is inserted, this value returns to `0`.
+Byte `b8`, labeled _U~e~_, has the value `1` if USB media has been
+ejected. If media is inserted, this value returns to `0`.
 
 [[cdj-status-field-se]]
-Byte `b9`, labeled _Se_, indicates if SD media has been ejected.
-If media is inserted, this value returns to `0`.
+Byte `b9`, labeled _S~e~_, has the value `1` if SD media has been
+ejected. If media is inserted, this value returns to `0`.
+
+NOTE: These really do seem to reflect ejection, because they start out
+with the value `0` when powered on, and only become `1` once media has
+been mounted and later ejected.
 
 [[cdj-status-field-el]]
-Byte `ba`, labeled _el_, indicates if an emergency loop is currently
-active. Once a new track is loaded, this value returns to `0`.
+Byte `ba`, labeled _el_, has the value `1` if an emergency loop is
+currently active. Once a new track is loaded, this value returns to
+`0`.
+
+NOTE: Even on CDJ-3000 players with the latest firmware, which uses
+full-track caching to eliminate the kinds of emergency loops which
+used to previously occur, this value still becomes `1` when the player
+loses contact with the source of the track media. In that state a
+yellow exlamation symbol appears on the screen, and some features like
+the track skip buttons are disabled. On these players it might be more
+aptly described as emergency mode than an actual emergency loop.
 
 Bytes `c8`-`cb` seem to contain a 4-byte packet counter labeled
 _Packet_, which is incremented for each packet sent by the player. (I
