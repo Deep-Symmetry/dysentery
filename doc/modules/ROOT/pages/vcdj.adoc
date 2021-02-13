@@ -193,7 +193,13 @@ include::example$status_shared.edn[]
 (draw-box (text "Beat" :math) {:span 4})
 (draw-box (text "Cue" :math) {:span 2})
 (draw-box (text "B" :math [:sub "b"]))
-(draw-related-boxes (concat (repeat 15 0) [0x10] (repeat 9 0)))
+(draw-related-boxes (repeat 15 0))
+(draw-box 1)
+(draw-box (text "M" :math [:sub "p"]))
+(draw-box (text "U" :math [:sub "e"]))
+(draw-box (text "S" :math [:sub "e"]))
+(draw-box (text "el" :math))
+(draw-related-boxes (repeat 5 0))
 
 (draw-box (text "Pitch" :math [:sub "3"]) {:span 4})
 (draw-box (text "Pitch" :math [:sub "4"]) {:span 4})
@@ -561,6 +567,37 @@ value is `0001` and the CDJ displays “`00.1 bars`”. On the beat on
 which the cue point was saved the value is `0000` and the CDJ displays
 “`00.0 Bars`”. On the next beat, the value becomes determined by the
 next cue point (if any) in the track.
+
+Byte `b7`, labeled _Mp_, seems to indicate local media presence status
+for players with multiple media slots. For players with only one slot,
+this value remains `0`.
+
+[[media-presence-flag-bits]]
+.Media presence flag bits.
+[bytefield]
+----
+(def boxes-per-row 8)
+(def box-width 70)
+(def left-margin 1)
+(draw-column-headers {:labels (str/split "7,6,5,4,3,2,1,0" #",")})
+(draw-box (hex-text 0 1))
+(draw-box (hex-text 0 1))
+(draw-box (hex-text 0 1))
+(draw-box (hex-text 0 1))
+(draw-box (hex-text 0 1))
+(draw-box (hex-text 0 1))
+(draw-box "USB")
+(draw-box "SD")
+----
+
+Byte `b8`, labeled _Ue_, indicates if USB media has been ejected.
+If media is inserted, this value returns to `0`.
+
+Byte `b9`, labeled _Se_, indicates if SD media has been ejected.
+If media is inserted, this value returns to `0`.
+
+Byte `ba`, labeled _el_, indicates if an emergency loop is currently
+active. Once a new track is loaded, this value returns to `0`.
 
 Bytes `c8`-`cb` seem to contain a 4-byte packet counter labeled
 _Packet_, which is incremented for each packet sent by the player. (I
