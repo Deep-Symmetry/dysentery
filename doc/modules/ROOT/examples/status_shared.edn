@@ -13,7 +13,7 @@
   "Generates the byte labels and first two rows of a standard DJ Link
   status, beat, or control packet with the specified `kind` byte."
   ([kind]
-   (draw-packet-header kind 0))
+   (draw-packet-header kind 1))
   ([kind subtype]
    (draw-column-headers)
    (draw-related-boxes [0x51 0x73 0x70 0x74 0x31 0x57 0x6d 0x4a 0x4f 0x4c (hex-text kind 2 :bold)]
