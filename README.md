@@ -317,6 +317,17 @@ well as telling other devices to turn sync on or off, or become tempo
 master. Also figured out how to respond correctly when the nexus mixer
 told the virtual CDJ to do those things.
 
+#### nxs2 and beyond
+
+Throughout the succeeding years we continued to expand our knowledge
+and ability to use more elements of the protocols and data files,
+including new nxs2 features like colored and named cues, phrase
+analysis (thanks to [Michael Ganss](https://github.com/mganss)), and
+towards the end of 2020 we figured out how to support new CDJ-3000
+features, including supporting six channels and exciting new packets
+with very valuable information contributed by [David
+Ng](https://github.com/nudge).
+
 ### Why Dysentery?
 
 The name of this project is a reference to one of the infamous hazards faced in

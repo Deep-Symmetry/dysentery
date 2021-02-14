@@ -1,6 +1,6 @@
 * xref:packets.adoc[Packet Types]
 * xref:startup.adoc[Mixer and CDJ Startup]
-* xref:beats.adoc[Tracking BPM and Beats]
+* xref:beats.adoc[BPM, Beats, and Position]
 * xref:vcdj.adoc[Detailed Device Status]
 * xref:sync.adoc[Sync and Tempo Master]
 * xref:track_metadata.adoc[Track Metadata]

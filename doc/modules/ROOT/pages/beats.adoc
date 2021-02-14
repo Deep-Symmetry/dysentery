@@ -1,4 +1,4 @@
-= Tracking BPM and Beats
+= Tracking BPM, Beats, and Position
 James Elliott <james@deepsymmetry.org>
 :stem: latexmath
 
@@ -147,14 +147,31 @@ bar, cycling 1 → 2 → 3 → 4 repeatedly, and can be used to identify the
 down beat if it is coming from the master player (and if the DJ has
 properly established the track's beat grid).
 
-[[absolute-position-packet]]
+[[absolute-position-packets]]
 == Absolute Position Packets
 
-Known devices which send Absolute Position packets include the CDJ-3000.
+Prior to the CDJ-3000 the only way that it was possible to figure out
+the playback position of a player (for the purposes of synchronizing
+timecode, video, lighting cues, and such things) was to watch for beat
+packets and combine them with a downloaded
+<<rekordbox-export-analysis:ROOT:anlz.adoc#beat-grid,beat grid>> to
+translate beat numbers into times within the track. And in between
+receiving the (fairly rare) beat packets, we had to interpolate our
+best guess as to the current track position, with the help of pitch
+updates we might receive in status packets. This mostly worked, well
+enough to run shows with, but would break down if the DJ was doing
+anything creative with scratching, reverse play, or loops on anything
+other than precise beat boundaries.
 
-Absolute Position packets are only transmitted while a track is loaded on
-a player. This packet is sent to all connected devices on port 50001 every
-30 milliseconds.
+The CDJ-3000 makes tracking position far more practical and reliable,
+thanks to this new packet type discovered by
+https://github.com/nudge[David Ng]. Absolute Position packets are only
+transmitted while a track is loaded on a player, but unlike Beat
+packets, they are sent even while not playing. This packet is sent to
+all connected devices on port 50001 every 30 milliseconds, which is
+often enough to keep good tabs on what the player is up to, even when
+playing backwards, scratching, looping, or needle jumping in between
+beats.
 
 .Absolute Position packet.
 [bytefield]
@@ -183,10 +200,15 @@ down to the nearest second.
 _Playhead_ reports the absolute position of the playhead in milliseconds.
 
 _Pitch_ is a 32-bit signed integer representing the value of the pitch
-slider as shown on the player screen multiplied by `64`. For example,
-if the pitch slider is at 3.26%, this value is `0146` (326 in decimal).
+slider as shown on the player screen multiplied by `64` (decimal 100).
+For example, if the pitch slider is at 3.26%, this value is `0146`
+(326 in decimal). This is a much more sensible and friendly format for
+pitch information than we have seen in other packets, and is analogous
+to the way tempo is handled.
 
-_BPM_ reports the BPM value as shown on the player screen multiplied by
-`0a`. For example 120.2BPM is represented as `4b2` (1202 in decimal).
-Tracks with unknown BPM have the value `ffffffff`.
-
+_BPM_ reports the BPM value as shown on the player screen (in other
+words, the current effective tempo, which is the track tempo adjusted
+by the playback pitch) multiplied by `0a` (decimal 10). For example a
+temppo of 120.2 BPM is represented as `4b2` (1202 in decimal). Tracks
+with unknown BPM have the value `ffffffff`. This is the same as tempo
+values we have seen in other packets.
