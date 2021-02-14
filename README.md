@@ -105,6 +105,15 @@ builds a friendly graphical interface on top of beat-link, making it
 easy to synchronize light shows, videos, and Ableton Live to tracks
 played on CDJs.
 
+> As mentioned above, other people are implementing projects with the
+> help of this research (and in many cases, contributing to the research
+> itself). Nice examples include:
+>
+> * [Cardinia Mini](https://nudge.id.au/cardinia-mini/index.html)
+> * [Prolink Tools](https://prolink.tools/manual)
+> * [prolink-go](https://github.com/EvanPurkhiser/prolink-go)
+> * [python-prodj-link](https://github.com/flesniak/python-prodj-link)
+
 You can run dysentery and look at what it finds on your network by
 just downloading and executing the jar, though, and we hope you will,
 to help us gather more information!
