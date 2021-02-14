@@ -12,10 +12,12 @@
 (defn draw-packet-header
   "Generates the byte labels and first two rows of a standard DJ Link
   status, beat, or control packet with the specified `kind` byte."
-  [kind]
-  (draw-column-headers)
-  (draw-related-boxes [0x51 0x73 0x70 0x74 0x31 0x57 0x6d 0x4a 0x4f 0x4c (hex-text kind 2 :bold)]
-                      :bg-green)
-  (draw-box nil [{:span 5} :box-above])
-  (draw-box (text "Device Name (padded with " :plain [:hex "00"] ")") [{:span 15} :box-below])
-  (draw-box 1))
+  ([kind]
+   (draw-packet-header kind 1))
+  ([kind subtype]
+   (draw-column-headers)
+   (draw-related-boxes [0x51 0x73 0x70 0x74 0x31 0x57 0x6d 0x4a 0x4f 0x4c (hex-text kind 2 :bold)]
+                       :bg-green)
+   (draw-box nil [{:span 5} :box-above])
+   (draw-box (text "Device Name (padded with " :plain [:hex "00"] ")") [{:span 15} :box-below])
+   (draw-box subtype)))
