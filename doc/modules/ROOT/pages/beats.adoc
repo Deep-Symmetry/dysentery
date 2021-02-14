@@ -182,11 +182,11 @@ down to the nearest second.
 
 _Playhead_ reports the absolute position of the playhead in milliseconds.
 
-_Pitch_ is a 32-bit signed integer representing absolute value of pitch
-slider multiplied by `64`. For example, if the pitch slider is at 3.26%,
-this value is `0146` (326 in decimal).
+_Pitch_ is a 32-bit signed integer representing the value of the pitch
+slider as shown on the player screen multiplied by `64`. For example,
+if the pitch slider is at 3.26%, this value is `0146` (326 in decimal).
 
-_BPM_ reports the absolute BPM value multiplied by `0a`. For example
-120.2BPM is represented as `4b2` (1202 in decimal). Tracks with unknown
-BPM have the value `ffffffff`.
+_BPM_ reports the BPM value as shown on the player screen multiplied by
+`0a`. For example 120.2BPM is represented as `4b2` (1202 in decimal).
+Tracks with unknown BPM have the value `ffffffff`.
 
