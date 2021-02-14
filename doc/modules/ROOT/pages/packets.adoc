@@ -93,7 +93,7 @@ out), and mixer features like Fader Start and Channels On Air.
 
 |02 |<<mixer_integration.adoc#fader-start,Fader Start>>
 |03 |<<mixer_integration.adoc#channels-on-air,Channels On Air>>
-|0b |<<beats.adoc#absolute-position-packet,Absolute Position>>
+|0b |<<beats.adoc#absolute-position-packets,Absolute Position>>
 |26 |<<sync.adoc#tempo-master-handoff,Master Handoff Request>>
 |27 |<<sync.adoc#master-takeover-response-packet,Master Handoff Response>>
 |28 |<<beats.adoc#beat-packets,Beat>>
