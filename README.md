@@ -110,7 +110,7 @@ played on CDJs.
 > itself). Nice examples include:
 >
 > * [Cardinia Mini](https://nudge.id.au/cardinia-mini/index.html)
-> * [Prolink Tools](https://prolink.tools/manual)
+> * [Prolink Tools](https://prolink.tools)
 > * [prolink-go](https://github.com/EvanPurkhiser/prolink-go)
 > * [python-prodj-link](https://github.com/flesniak/python-prodj-link)
 
