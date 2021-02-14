@@ -150,9 +150,9 @@ properly established the track's beat grid).
 [[absolute-position-packet]]
 == Absolute Position Packets
 
-Known devices which send Absolute Position Packets include the CDJ-3000.
+Known devices which send Absolute Position packets include the CDJ-3000.
 
-Absolute Position Packets are only transmitted while a track is loaded on
+Absolute Position packets are only transmitted while a track is loaded on
 a player. This packet is sent to all connected devices on port 50001 every
 30 milliseconds.
 
@@ -184,9 +184,9 @@ _Playhead_ reports the absolute position of the playhead in milliseconds.
 
 _Pitch_ is a 32-bit signed integer representing absolute value of pitch
 slider multiplied by `64`. For example, if the pitch slider is at 3.26%,
-this value is `0146`.
+this value is `0146` (326 in decimal).
 
 _BPM_ reports the absolute BPM value multiplied by `0a`. For example
-120.2BPM is represented as `4b2`. Tracks with unknown BPM have the value
-`ffffffff`.
+120.2BPM is represented as `4b2` (1202 in decimal). Tracks with unknown
+BPM have the value `ffffffff`.
 
