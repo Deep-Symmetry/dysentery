@@ -290,19 +290,20 @@ noticed that it also gets non-zero values when a track is loaded from
 a playlist (`05`) or another player menu (different values, depending
 on the type of menu; if anyone would like to take the time to record
 all the different values and their meanings, a report on the
-https://gitter.im/brunchboy/beat-link-trigger[Gitter channel] or--if
-you are willing to fork the project and update this document, a pull
-request--would be extremely welcome). Relatedly, when a track is
-loaded from a disc, playlist, or menu, the field _d~n~_ at
-bytes{nbsp}``46``–`47` changes from `0000` to the number of tracks on
-the disc or in the playlist or menu (a data disc will generally have
-one track).
+https://deep-symmetry.zulipchat.com/join/vek5i5d5f23j6ahbyomv3waf/[dysentery
+Zulip stream] or--if you are willing to fork the project and update
+this document, a pull request--would be extremely welcome). Relatedly,
+when a track is loaded from a disc, playlist, or menu, the field
+_d~n~_ at bytes{nbsp}``46``–`47` changes from `0000` to the number of
+tracks on the disc or in the playlist or menu (a data disc will
+generally have one track).
 
 Some of the fields shown as having value `00` in this region will
 sometimes have other values in them; their meanings are simply not yet
 known. If you notice any patterns or figure anything out _please_ let
-us know on https://gitter.im/brunchboy/beat-link-trigger[Gitter] or
-open a pull request!
+us know on
+https://deep-symmetry.zulipchat.com/join/vek5i5d5f23j6ahbyomv3waf/[Zulip]
+or open a pull request!
 
 Byte{nbsp}``6a``, labeled _U~a~_ (for “USB activity”), alternates
 between the values `04` and `06` when there is USB activity—it may

@@ -46,9 +46,11 @@ gaps in our knowledge, and things could change at any time with new
 releases of hardware or even firmware updates from Pioneer.
 
 That said, if you find anything wrong, or discover anything new,
-*please*
-[open an Issue](https://github.com/brunchboy/dysentery/issues) or
-submit a pull request so we can all improve our understanding
+*please* [open an
+Issue](https://github.com/brunchboy/dysentery/issues), contact us on
+the [dysentery Zulip
+stream](https://deep-symmetry.zulipchat.com/join/vek5i5d5f23j6ahbyomv3waf/)
+or submit a pull request so we can all improve our understanding
 together.
 
 ## Analysis
