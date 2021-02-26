@@ -571,8 +571,7 @@ which the cue point was saved the value is `0000` and the CDJ displays
 next cue point (if any) in the track.
 
 Byte `b7`, labeled _Mp_, seems to indicate local media presence status
-for players with multiple media slots. For players with only one slot,
-this value remains `0`.
+on the CDJ-3000. For other players, this value remains `0`.
 
 [[media-presence-flag-bits]]
 .Media presence flag bits.
@@ -594,15 +593,13 @@ this value remains `0`.
 
 [[cdj-status-field-ue]]
 Byte `b8`, labeled _U~e~_, has the value `1` if USB media has been
-ejected. If media is inserted, this value returns to `0`.
+unsafely ejected. If media is inserted, or is safely ejected, this
+value is `0`.
 
 [[cdj-status-field-se]]
 Byte `b9`, labeled _S~e~_, has the value `1` if SD media has been
-ejected. If media is inserted, this value returns to `0`.
-
-NOTE: These really do seem to reflect ejection, because they start out
-with the value `0` when powered on, and only become `1` once media has
-been mounted and later ejected.
+unsafely ejected. If media is inserted, or is safely ejected, this
+value is `0`.
 
 [[cdj-status-field-el]]
 Byte `ba`, labeled _el_, has the value `1` if an emergency loop is
