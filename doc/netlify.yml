@@ -5,10 +5,10 @@ site:
 content:
   sources:
   - url: https://github.com/Deep-Symmetry/dysentery.git
-    branches: [master]
+    branches: [main]
     start_path: doc
   - url: https://github.com/Deep-Symmetry/crate-digger.git
-    branches: [master]
+    branches: [main]
     start_path: doc
 asciidoc:
   extensions:
