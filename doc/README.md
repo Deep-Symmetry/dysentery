@@ -34,6 +34,14 @@ out in the same parent folder as `dysentery`, and then edit
 
     - url: ./../../crate-digger
 
+If you don't want to risk accidentally committing your changes to
+`doc/local.yml` you can make a copy of the file (for example as
+`doc/lolo.yml` for local-local), and then run that version by
+executing the following command from the top-level directory of this
+repository:
+
+    npx antora --fetch doc/lolo.yml
+
 ## History
 
 For historical interest, the [LaTeX document](Analysis.tex) used to be
