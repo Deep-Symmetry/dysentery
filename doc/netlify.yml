@@ -10,11 +10,15 @@ content:
   - url: https://github.com/Deep-Symmetry/crate-digger.git
     branches: [main]
     start_path: doc
+antora:
+  extensions:
+  - '@antora/lunr-extension'
 asciidoc:
   extensions:
   - "@djencks/asciidoctor-mathjax"
   - "@deepsymmetry/asciidoctor-bytefield"
 ui:
   bundle:
-    url: https://deepsymmetry.org/media/antora/ui-bundle.zip
+    url: https://deepsymmetry.org/media/antora/ui-bundle-3.zip
     snapshot: true
+  supplemental_files: ./../node_modules/@antora/lunr-extension/supplemental_ui
