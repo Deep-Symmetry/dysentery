@@ -1,6 +1,6 @@
 name: djl-analysis
 title: DJ Link Packet Analysis
-version: 'master'
+version: ~
 display_version: 'main'
 prerelease: false
 start_page: ROOT:packets.adoc
@@ -8,7 +8,7 @@ asciidoc:
   attributes:
     icons: font
     experimental: ''
-    page-copyright: 2016–2021
+    page-copyright: 2016–2022
     page-pagination: ''
 nav:
 - modules/ROOT/nav.adoc
