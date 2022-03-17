@@ -2,6 +2,7 @@
 Exploring ways to participate in a Pioneer Pro DJ Link network.
 
 [![License](https://img.shields.io/github/license/Deep-Symmetry/dysentery?color=blue)](#license)
+[![project chat](https://img.shields.io/badge/chat-on%20zulip-brightgreen)](https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger)
 
 ## Quick Start
 
@@ -48,7 +49,8 @@ releases of hardware or even firmware updates from Pioneer.
 That said, if you find anything wrong, or discover anything new,
 *please* [open an
 Issue](https://github.com/brunchboy/dysentery/issues), contact us on
-the [Zulip stream](https://deep-symmetry.zulipchat.com)
+the [Zulip
+stream](https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger)
 or submit a pull request so we can all improve our understanding
 together.
 

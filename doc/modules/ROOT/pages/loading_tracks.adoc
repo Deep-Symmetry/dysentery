@@ -288,5 +288,6 @@ eny effect on the mixer section of my XDJ-XZ, either. My best guess is
 that these settings might simply not be controllable remotely from
 rekordbox yet. If anyone can find evidence otherwise, please open an
 https://github.com/Deep-Symmetry/dysentery/issues[issue], or get in
-touch on the https://deep-symmetry.zulipchat.com[Zulip stream] to share
-what you have discovered.
+touch on the
+https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger[Zulip
+stream] to share what you have discovered.
