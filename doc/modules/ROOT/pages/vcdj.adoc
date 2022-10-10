@@ -627,7 +627,7 @@ Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus
 players, `1f` for the XDJ-XZ and CDJ-3000, and `05` for older players.
 
 Byte `cd`, labeled _t_, is used to indicate when a player supports
-<<touch_audio#touch-audio,Touch Audio>>, by setting bit 5.
+<<touch_audio#,Touch Audio>>, by setting bit 5.
 
 Byte `fa` (labeled _W~c~_) indicates the Waveform Color setting the
 player is set to.
