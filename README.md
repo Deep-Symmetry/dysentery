@@ -20,8 +20,8 @@ section for more details, explanation, and a screen shot.
 > [beat-link](https://github.com/brunchboy/beat-link#beat-link) was
 > developed for, and
 > [@EvanPurkhiser](https://github.com/EvanPurkhiser) is now also
-> developing [prolink-go](https://github.com/EvanPurkhiser/prolink-go)
-> if you'd like a Go language version.
+> developing [prolink-connect](https://github.com/EvanPurkhiser/prolink-connect)
+> if you'd like a TypeScript version.
 >
 > :star2: And if you want to synchronize shows without having to
 > write your own software, check out
