@@ -3,11 +3,11 @@
   "description": "Used to build the documentation site, not the project itself.",
   "dependencies": {},
   "devDependencies": {
-    "@antora/cli": "3.0.1",
-    "@antora/site-generator": "3.0.1",
+    "@antora/cli": "3.1.2",
+    "@antora/site-generator": "3.1.2",
     "@antora/lunr-extension": "^1.0.0-alpha.8",
-    "@deepsymmetry/asciidoctor-bytefield": "^1.5.0",
-    "@djencks/asciidoctor-mathjax": "0.0.7"
+    "@deepsymmetry/asciidoctor-bytefield": "^1.8.0",
+    "@djencks/asciidoctor-mathjax": "0.0.8"
   },
   "engines": {
     "node": ">=16.13.1"
