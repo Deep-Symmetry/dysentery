@@ -2,6 +2,9 @@ site:
   title: DJ Link Ecosystem Analysis
   url: https://djl-analysis.deepsymmetry.org
   start_page: djl-analysis::packets.adoc
+  robots: allow
+  keys:
+    google_analytics: G-Y0BFFH42RD
 urls:
   redirect_facility: httpd
 content:
