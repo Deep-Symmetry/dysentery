@@ -2,10 +2,9 @@
 
 The main resource here is the [Packet
 Analysis](https://djl-analysis.deepsymmetry.org/). It is built by
-[Antora](https://antora.org) using a [build script](build.sh) on
-[Netlify](https://netlify.com), which runs the appropriate
-[playbook](netlify.yml) on the [component descriptor](antora.yml) and
-[source](modules/ROOT).
+[Antora](https://antora.org) using GitHub Actions, which runs the
+appropriate [playbook](github-actions.yml) on the [component
+descriptor](antora.yml) and [source](modules/ROOT).
 
 ## Building Locally
 

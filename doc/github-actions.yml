@@ -2,6 +2,8 @@ site:
   title: DJ Link Ecosystem Analysis
   url: https://djl-analysis.deepsymmetry.org
   start_page: djl-analysis::packets.adoc
+urls:
+  redirect_facility: httpd
 content:
   sources:
   - url: https://github.com/Deep-Symmetry/dysentery.git
@@ -19,5 +21,5 @@ asciidoc:
   - "@deepsymmetry/asciidoctor-bytefield"
 ui:
   bundle:
-    url: https://deepsymmetry.org/media/antora/ui-bundle-3.zip
+    url: https://deepsymmetry.org/media/antora/ui-bundle-3-self.zip
     snapshot: true
