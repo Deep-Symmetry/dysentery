@@ -742,8 +742,19 @@ this showing the image:
 
 image::Album-art-example.png[alt=Album Art,width=213,height=152]
 
-To load artwork for a non-rekordbox track, add an additional argument
-with the value 2 at the end.
+[TIP]
+====
+The request and artwork shown here are at the original resolution used
+by older players, 80x80 pixels. You can also request a
+higher-resolution version, at 240x240 pixels, by adding an additional
+number argument with the value 1 at the end of the track artwork
+request message.
+
+Similarly, to load artwork for a non-rekordbox track, you can add an
+additional number argument with the value 2 at the end of the track
+artwork request message (instead of the 1 you would send to request
+high-resolution rekordbox art).
+====
 
 == Beat Grids
 
