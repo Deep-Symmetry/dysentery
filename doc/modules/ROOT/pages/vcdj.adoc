@@ -41,7 +41,7 @@ We are probably not finished learning all the information which can be
 gleaned from these packets, but here is what we know so
 far.footnote:[Examples of packets discussed in this section can be
 found in
-https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/to-virtual.pcapng[this
+https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/to-virtual.pcapng?raw=true[this
 WireShark capture].]
 
 

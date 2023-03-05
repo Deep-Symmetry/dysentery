@@ -8,7 +8,7 @@ When the mixer starts up, after it obtains an IP address (or gives up
 on doing that and self-assigns an address), it sends out what look
 like a series of packets{empty}footnote:[The packet capture used for
 the first version of this analysis can be found at
-https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/powerup.pcapng]
+https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/powerup.pcapng?raw=true]
 simply announcing its existence to UDP port 50000 on the broadcast
 address of the local network.
 

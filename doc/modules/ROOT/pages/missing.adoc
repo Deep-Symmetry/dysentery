@@ -15,7 +15,7 @@ particular rekordbox ID values.
 
 Using an Ethernet switch with port mirroring was, as we hoped, very
 helpful. As can be seen in the
-https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/LinkInfo.pcapng[packet
+https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/LinkInfo.pcapng?raw=true[packet
 capture], which shows a CDJ with IP address `169.254.192.112` booting,
 the new CDJ opens two TCP connections to the other CDJ at
 `169.254.119.181`.
@@ -32,7 +32,7 @@ that was already loaded, then new information as the linked CDJ loaded
 three other tracks.
 
 There is
-https://github.com/deep-symmetry/dysentery/raw/master/doc/assets/LinkInfo2.pcapng[another
+https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/LinkInfo2.pcapng?raw=true[another
 capture], with more Link Info streams to be studied (all of the odd
 numbered `tcp.stream` values in Wireshark are the relevant ones).
 
@@ -57,9 +57,9 @@ Before we discovered how to ask players for metadata about particular
 tracks, we did some research into the underlying rexordbox database.
 The database format is called
 https://www.quora.com/What-database-system-did-Greg-Kemnitz-develop[DeviceSQL]
-and there used to be a http://java.sys-con.com/node/328557[free quick
-start suite] for working with it but that site no longer exists
-because the original (California) company
+and there used to be a free quick start suite at
+\http://java.sys-con.com/node/328557 for working with it, but that
+site no longer exists because the original (California) company
 https://www.crunchbase.com/organization/encirq-corporation[Encirq] was
 http://www.ubiquitous.co.jp/en/news/press/pdf/p1730_01.pdf[acquired]
 by the Japanese Ubiquitous Corporation in 2008. It seems to still be
