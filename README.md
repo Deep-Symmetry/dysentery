@@ -21,7 +21,7 @@ section for more details, explanation, and a screen shot.
 > developed for, and
 > [@EvanPurkhiser](https://github.com/EvanPurkhiser) is now also
 > developing [prolink-connect](https://github.com/EvanPurkhiser/prolink-connect)
-> if you'd like a TypeScript version.
+> if you&rsquo;d like a TypeScript version.
 >
 > :star2: And if you want to synchronize shows without having to
 > write your own software, check out
@@ -33,7 +33,7 @@ This is in no way a sanctioned implementation of the protocols. It
 should be obvious, but:
 
 > :warning: Use at your own risk! For example, there are reports that
-> the XDJ-RX crashes when dysentery starts, so don't use it with one
+> the XDJ-RX crashes when dysentery starts, so don&rsquo;t use it with one
 > on your network. As Pioneer themselves
 > [explain](https://forums.pioneerdj.com/hc/en-us/community/posts/203113059-xdj-rx-as-single-deck-on-pro-dj-link-),
 > the XDJ-RX does not actually implement the protocol:
@@ -73,7 +73,7 @@ Pioneer gear to try out.
 Dysentery and its research products are, and will remain, completely
 free and open-source. If they have helped you, taught you something,
 or inspired you, please let us know and share some of your discoveries
-and code. If you'd like to financially support this ongoing research,
+and code. If you&rsquo;d like to financially support this ongoing research,
 you are welcome (but by no means obligated) to donate to offset the
 hundreds of hours of research, development, and writing that have
 already been invested. Or perhaps to facilitate future efforts, tools,
@@ -86,9 +86,21 @@ toys, and time to explore.
     src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif"></a> using PayPal
 
 > If enough people jump on board, we may even be able to get a newer
-> CDJ to experiment with, although that's an unlikely stretch goal.
+> CDJ to experiment with, although that&rsquo;s an unlikely stretch goal.
 > :grinning:
 
+## Getting Help
+
+<a href="http://zulip.com"><img align="right" alt="Zulip logo"
+ src="doc/assets/zulip-icon-circle.svg" width="128" height="128"></a>
+
+Deep Symmetry&rsquo;s projects are generously sponsored with hosting
+by <a href="https://zulip.com">Zulip</a>, an open-source modern team
+chat app designed to keep both live and asynchronous conversations
+organized. Thanks to them, you can <a
+href="https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger">chat
+with our community</a>, ask questions, get inspiration, and share your
+own ideas.
 
 ## Status
 
@@ -99,7 +111,7 @@ Once I figure things out well enough here, I implement them in
 [beat-link](https://github.com/brunchboy/beat-link#beat-link), which
 is intended to be useful in other projects: it is a standard Java
 library available as a package from Maven Central. If you want to hack
-on the dysentery source, you'll need to learn a little bit about
+on the dysentery source, you&rsquo;ll need to learn a little bit about
 Clojure. Finally,
 [beat-link-trigger](https://github.com/brunchboy/beat-link-trigger#beat-link-trigger)
 builds a friendly graphical interface on top of beat-link, making it
@@ -222,7 +234,7 @@ nil
 ```
 
 To log details about beat packets from a particular player (this was
-built to help get the details of Beat Link's `BeatSender`
+built to help get the details of Beat Link&rsquo;s `BeatSender`
 implementation correct), bring up the device windows using
 `(view/find-devices)` from the REPL as shown above, then evaluate an
 expression like:
@@ -299,11 +311,11 @@ metadata.
 #### Robust metadata understanding
 
 In May 2017 [Austin Wright](https://bitbucket.org/awwright/) contacted
-me on the Afterglow
+me on the (retired) Afterglow
 [Gitter channel](https://gitter.im/brunchboy/afterglow) and told me
 about some really cool work he was doing. He was even gracious enough
 to publish a bunch of
-[source code](https://bitbucket.org/awwright/libpdjl) that I've been
+[source code](https://bitbucket.org/awwright/libpdjl) that I&rsquo;ve been
 able to use to get a much deeper understanding of how metadata queries
 work, and to gain access to things like beat grid information (and
 eventually track waveform images). This is the current area of active
@@ -336,16 +348,16 @@ The name of this project is a reference to one of the infamous hazards faced in
 a game which helped many students in the eighties and nineties understand what life
 was like for pioneers exploring the American West. Since we are exploring the
 protocol used by Pioneer gear, it seemed at least slightly appropriate. And, ok, I
-have a hard time resisting forced puns. Let's hope none of us see:
+have a hard time resisting forced puns. Let&rsquo;s hope none of us see:
 
-[![You have died of dysentery](http://www.strangeloopgames.com/wp-content/uploads/2014/01/Dysentary.png)](http://www.strangeloopgames.com/you-have-died-of-dysentery-how-games-will-revolutionize-education/)
+![You have died of dysentery](doc/assets/died-of-dysentery.jpg)
 
 ## License
 
 <a href="http://deepsymmetry.org"><img align="right" alt="Deep Symmetry"
  src="doc/assets/DS-logo-github.png" width="250" height="150"></a>
 
-Copyright © 2016–2022 [Deep Symmetry, LLC](http://deepsymmetry.org)
+Copyright © 2016–2023 [Deep Symmetry, LLC](http://deepsymmetry.org)
 
 Distributed under the
 [Eclipse Public License 1.0](http://opensource.org/licenses/eclipse-1.0.php),
