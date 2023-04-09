@@ -78,11 +78,17 @@ To facilitate synchronization of variable-tempo tracks, the number of
 milliseconds after which a variety of upcoming beats will occur are
 reported.
 
-NOTE: The timing values for all these upcoming beats are always
+[NOTE]
+====
+The timing values for all these upcoming beats and bars are always
 reported as if the track was being played at normal speed, with a
 pitch adjustment of 0%. If a pitch adjustment is in effect, you will
 need to perform the calculation to scale the beat timing values
 yourself.
+
+If the track ends before an upcoming beat or bar, then a timing value
+of `0xffffffff` is reported for that entry.
+====
 
 [[status-beat-offsets]]_nextBeat_ at bytes{nbsp}``24``-`27` is the
 number of milliseconds in which the very next beat will arrive.
