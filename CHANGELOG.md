@@ -33,6 +33,7 @@ This change log follows the conventions of
   [David Ng](https://github.com/nudge).
 - Analysis of six-channel on-air packet sent by DJM-V10, thanks to
   [@AhnHEL](https://github.com/AhnHEL).
+- Analysis of dynamic loop information reported by CDJ-3000s.
 
 ## [0.2.1] - 2018-07-21
 

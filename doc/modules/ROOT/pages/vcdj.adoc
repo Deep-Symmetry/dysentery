@@ -225,6 +225,13 @@ include::example$status_shared.edn[]
 (draw-padding 0x164 nil)
 (draw-box (text "KeyShift" :math) {:span 8})
 
+(draw-padding 0x1b6 nil)
+(draw-box (text "Loop" :math [:sub "s"]) {:span 4})
+(draw-padding 0x1be nil)
+(draw-box (text "Loop" :math [:sub "e"]) {:span 2})
+(draw-box (text "Loop" :math [:sub "e"]) {:span 2})
+(draw-padding 0x1c8 nil)
+(draw-box (text "Loop" :math [:sub "b"]) {:span 2})
 (draw-padding 0x200 nil)
 ----
 
@@ -730,6 +737,25 @@ in increments of `64` (or 100 cents) for each semitone moved.
 |ff ff ff ff ff ff fb 50 | -12
 |===
 
+Bytes `1b6`-`1b9` (labeled _Loop~s~_ for “Loop Start”) will be
+non-zero when a CDJ-3000 is actively playing a loop (whether that loop
+was stored in the track metadata or dynamically set up by the DJ). It
+indicates the starting position of the loop within the track in
+milliseconds, using a new format. To calculate the start time,
+multiply this value by 65,536, then divide by 1,000.
+
+Bytes `1b3`-`1c1` (labeled _Loop~e~_ for “Loop End”) will be also
+non-zero when a CDJ-3000 is actively playing a loop (whether that loop
+was stored in the track metadata or dynamically set up by the DJ). It
+indicates the ending position of the loop within the track in
+milliseconds, using the same format as _Loop~s~_: multiply this value
+by 65,536, then divide by 1,000.
+
+Bytes `1c8`-`1c9` (labeled _Loop~b~_ for “Loop Beats”) will be also be
+non-zero when a CDJ-3000 is actively playing a loop (whether that loop
+was stored in the track metadata or dynamically set up by the DJ). It
+holds the number of whole beats in the loop, so is not meaningful for
+sub-beat loops.
 
 [[rekordbox-status-packets]]
 == Rekordbox Status packets
