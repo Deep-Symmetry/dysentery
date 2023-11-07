@@ -285,12 +285,13 @@
 
 (defn- send-keep-alive
   "Send a packet which keeps us marked as present and active on the DJ
-  Link network."
+  Link network. As of 2023-11-07, done in a way that is compatible
+  with CDJ-3000 players that are using player number 5 or 6."
   []
   (let [{:keys [player-number mac-address ip-address]} @state]
     (try
       (send-packet 6 (concat [0x01 0x02 0x00 0x36 player-number 0x01] mac-address ip-address
-                             [0x01 0x00 0x00 0x00 0x01 0x00]))
+                             [0x02 0x00 0x00 0x00 0x01 0x64]))
       (catch Exception e
         (timbre/error e "Unable to send keep-alive packet to DJ-Link announcement port, shutting down.")
         (shut-down)))))
