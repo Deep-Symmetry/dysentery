@@ -191,6 +191,13 @@ include::example$startup_shared.edn[]
 (draw-box 1)
 ----
 
+NOTE: Things changed somewhat with the introduction of the CDJ-3000,
+which can use device numbers 5 and 6. To avoid errors displaying on
+the CDJ-3000 if it is configured to use one of those higher player
+numbers, use the variants of these packets described
+<<startup-3000,below>>. Other than the slightly different packet
+templates, the startup process remains the same.
+
 === Startup in a Generic Port
 
 When not connected to a port that is specifically assigned a mixer
@@ -413,6 +420,108 @@ In this packet, the _D_ value is the mixer's own device number, `21`.
 At this point, rather than sending the remainder of the series of
 final stage claim packets, the CDJ immediately transitions to
 broadcasting <<cdj-keep-alive,keep-alive packets>>.
+
+[[startup-3000]]
+=== Startup with CDJ-3000s
+
+As mentioned above, we need to use slightly different packet templates
+if we want to be able to start up or coexist on a network where a
+CDJ-3000 is using device number 5 or 6. The overall process described
+above is followed, with the following slight variations on the packet
+formats, starting with the initial announcement packets:
+
+[[cdj-3000-initial-announcement]]
+.CDJ-3000 compatible initial announcement packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 0x0a)
+
+(draw-boxes [1 (hex-text 4 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-boxes [1 64])
+----
+
+> Note that this is one byte longer than the
+  <<cdj-initial-announcement,original version>>, as well as having a
+  different value at byte{nbsp}``21``. The remaining packets are the
+  same size as they used to be, but have slightly different numbers in
+  them.
+
+.CDJ-3000 comaptible first-stage CDJ device number claim packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 0)
+
+(draw-boxes [1 (hex-text 3 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-boxes [(text "N" :math) 1])
+(draw-box "MAC address" {:span 6})
+----
+
+> This differs only at byte{nbsp}``21`` from the
+  <<cdj-assign-stage-1,original>>.
+
+.CDJ-3000 compatible second-stage CDJ device number claim packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 2)
+
+(draw-boxes [1 (hex-text 3 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-box "IP address" {:span 4})
+(draw-box "MAC address" {:span 6})
+(draw-boxes (map #(text % :math) ["D" "N"]))
+(draw-boxes [1 (text "a" :math)])
+----
+
+> Again this differs only at byte{nbsp}``21`` from the
+  <<cdj-assign-stage-2,original>>.
+
+
+.CDJ-3000 compatible final-stage CDJ device number claim packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 4)
+
+(draw-boxes [1 (hex-text 3 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-boxes (map #(text % :math) ["D" "N"]))
+----
+
+> Like the other number claim packets, this differs only at
+  byte{nbsp}``21`` from the <<cdj-assign-final,original>>.
+
+Finally, after startup, the keep-alive packets need to be different,
+or they will cause problems as well:
+
+.CDJ-3000 compatible keep-alive packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 6)
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-boxes [(text "D" :math) 1])
+(draw-box "MAC address" {:span 6})
+(draw-box "IP address" {:span 4})
+
+(draw-related-boxes [2 0 0 0 1 0x64])
+----
+
+> This differs from the <<cdj-keep-alive,original>> at
+  bytes{nbsp}``30`` and ``35``. The last byte seems to be the most
+  important. Having the wrong value there can even cause CDJ-3000s set
+  to player 5 or 6 to repeatedly kick themselves off the network.
 
 == Channel Conflicts
 

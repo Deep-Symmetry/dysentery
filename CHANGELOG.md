@@ -34,6 +34,7 @@ This change log follows the conventions of
 - Analysis of six-channel on-air packet sent by DJM-V10, thanks to
   [@AhnHEL](https://github.com/AhnHEL).
 - Analysis of dynamic loop information reported by CDJ-3000s.
+- Analysis of how to coexist with CDJ-3000s set to player 5 or 6.
 
 ## [0.2.1] - 2018-07-21
 
