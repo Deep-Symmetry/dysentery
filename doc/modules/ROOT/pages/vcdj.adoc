@@ -273,6 +273,14 @@ rekordbox track is loaded, `02` when an unanalyzed track is loaded
 (from a media slot without a rekordbox database, including from a data
 disc), and `05` when an audio CD track is loaded.
 
+NOTE: The XDJ-XZ presents an unusual situation because it embodies two
+separate players and a mixer all sharing the same IP address. Because
+of limitiations in the protocol, that means it can only offer one pair
+of slots to the network, so its two USB slots are represented as
+though they belong to player 1. The slot labeled USB 1 is treated on
+the network as the SD slot, and the slot labeled USB 2 as the USB
+slot.
+
 The field _rekordbox_ at bytes{nbsp}``2c``–`2f` contains the rekordbox
 database ID of the loaded track when a rekordbox track is being
 played. When a non-rekordboxtrack is loaded from a media slot, it is
