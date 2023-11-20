@@ -649,6 +649,11 @@ far are:
 As noted above, track metadata responses use many of these types.
 Others are used in different kinds of menus and queries.
 
+NOTE: It seems that CDJ-3000s send additional information in the two
+high bytes of the menu item field. We have not yet figured out what
+this conveys, but to find the correct item type for menu requests from
+CDJ-3000s, it seems to be necessary to mask the field with `0xffff`.
+
 [[non-rekordbox-metadata]]
 == Non-Rekordbox Track Metadata
 
