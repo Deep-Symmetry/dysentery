@@ -36,7 +36,7 @@ https://github.com/flesniak/python-prodj-link[python-prodj-link].
 TIP: Even though the Opus Quad is unable to participate in a DJ Link
 network, Kyle Awayan has made
 https://github.com/kyleawayan/opus-quad-pro-dj-link-analysis[useful
-progress] in ananalyzing the packets it exchanges with rekordbox,
+progress] in analyzing the packets it exchanges with rekordbox,
 presumably to support lighting mode.
 
 [[packet-types]]
