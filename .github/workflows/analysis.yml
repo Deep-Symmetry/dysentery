@@ -12,7 +12,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2
@@ -21,7 +21,7 @@ jobs:
         known_hosts: 'deepsymmetry.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMKq8T1IXQHNYLgO715YbxTXoVxEsJcha9h1lxyOXpa'
 
     - name: Cache htmltest results
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: tmp/.htmltest
         key: ${{ runner.os }}-htmltest
