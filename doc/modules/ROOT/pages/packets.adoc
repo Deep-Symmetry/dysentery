@@ -33,11 +33,10 @@ Other implementations include
 https://github.com/EvanPurkhiser/prolink-go[prolink-go] and
 https://github.com/flesniak/python-prodj-link[python-prodj-link].
 
-TIP: Even though the Opus Quad is unable to participate in a DJ Link
-network, Kyle Awayan has made
-https://github.com/kyleawayan/opus-quad-pro-dj-link-analysis[useful
-progress] in analyzing the packets it exchanges with rekordbox,
-presumably to support lighting mode.
+TIP: Even though the Opus Quad is unable to participate in a DJ Link network, Kyle Awayan has made
+https://github.com/kyleawayan/opus-quad-pro-dj-link-analysis[useful progress] in analyzing the packets it exchanges with rekordbox, presumably to support lighting mode.
+https://github.com/cprepos[@cprepos] was able to build on that to enable the Beat Link library to pose as rekordbox rather than as a CDJ and make clever use of lighting-related metadata queries to unlock most of the features of the Beat Link library when working with Opus Quad hardware.
+
 
 [[packet-types]]
 == Known UDP Packet Types
