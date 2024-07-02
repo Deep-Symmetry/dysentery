@@ -945,7 +945,9 @@
   optional keyword arguments `:player-number` and `:device-name`. If
   you want to experiment with metadata requests, you must override the
   player number to fall between 1 and 4 (and not have any actual
-  player with that number on the network)."
+  player with that number on the network). If you are trying to use an XDJ-RX,
+  or any other non-pro LINK devices, set the player number to zero, other wise
+  you will crash the device.."
   [& {:keys [device-name player-number] :or {device-name "Virtual CDJ" player-number 5}}]
   (when-let [devices (seq (find-devices))]
     (describe-devices devices)
