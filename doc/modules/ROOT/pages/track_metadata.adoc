@@ -627,6 +627,7 @@ far are:
 |0093 | Bit Rate menu
 |0094 | Filename menu
 |0095 | History menu
+|0098 | Hot cue bank menu
 |00a0 | All
 | |
 |0204 | Track Title and Album
