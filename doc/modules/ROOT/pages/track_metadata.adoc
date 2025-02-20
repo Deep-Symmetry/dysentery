@@ -620,6 +620,7 @@ far are:
 |0089 | Label menu
 |008a | Original Artist menu
 |008b | Key menu
+|008c | Date Added menu
 |008e | Color menu
 |0090 | Folder menu
 |0091 | Search “menu”
