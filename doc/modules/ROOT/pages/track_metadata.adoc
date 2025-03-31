@@ -871,7 +871,8 @@ preview, which is used by older players such as the pre-Nexus CDJ 900,
 returned as the final 100 bytes of the preview response.
 
 NOTE: We also know how to request Nxs2-style higher resolution and
-color waveforms, see <<requesting-nxs2-waveforms>> for details.
+color waveforms, see <<requesting-nxs2-waveforms>> for details, and
+CDJ-3000 <<requesting-three-band-waveforms,3-band waveforms>>.
 
 === Waveform Previews
 
@@ -1252,6 +1253,145 @@ red, green, and blue intensity, arranged as shown below:
 (draw-box (text "height" :math) {:span 5})
 (draw-related-boxes [0 0])
 ----
+
+[[requesting-three-band-waveforms]]
+== Requesting CDJ-3000 3-Band Waveforms
+
+With the help of some
+https://github.com/Deep-Symmetry/dysentery/issues/33[additional
+analysis] we know now how to request and interpret the 3-band style
+waveforms introduced with the CDJ-3000.
+
+Both the 3-band waveform preview and detail are requested using
+variations on the <<requesting-new-tags,same request type>>, which
+asks for specific content from the `ANLZ0000.2EX` file created by
+rekordbox. The https://github.com/Deep-Symmetry/crate-digger[Crate
+Digger project] which has its own
+<<rekordbox-export-analysis::anlz.adoc#,analysis document>>, is
+focused on obtaining and interpreting these files.
+
+To request the 3-band waveform preview of a track, send a message
+with _type_ `2c04` containing the _rekordbox_ ID of the track, the tag
+type identifier `PWV6` and the file extension identifier `2EX` encoded as
+four-byte numbers, holding the ASCII in big-endian (backwards) order:
+
+.3-band waveform preview request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x2c04 6 6 6 6)
+(draw-dmst-field 1)
+(draw-number-field (text "rekordbox" :math))
+(draw-related-boxes [0x11 0x36 0x56 0x57 0x50])
+(draw-related-boxes [0x11 0x00 0x58 0x45 0x32])
+----
+
+As usual, _TxID_ should be incremented each time you send a query, and
+will be used to identify the response messages. _D_ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. _S~r~_ and _T~r~_
+are the slot in which the track being asked about can be found and its
+track type; each has the same values used in
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. For some reason the
+value after _D_, which identifies the location of the menu for which
+data is being loaded, is 1 in this case, rather than the 8 we would
+expect to see for a graphical data request. _rekordbox_ identifies the
+specific track whose analysis you are requesting, as found in a CDJ
+status packet or playlist response, and the final two numeric
+arguments specify that you are interested in the `PWV6` tag (which
+holds the 3-band waveform preview) from the track’s `2EX` extended
+analysis file.
+
+The response will be a message with _type_ `4f02`, containing five
+arguments. The first argument echoes back our request type, which was
+`2c04`. The second always seems to be 0. The third contains the length
+of the requested tag (holding the 3-band waveform preview) in bytes.
+If this value is 0, the fourth argument will be omitted from the
+response. When present, the fourth argument is a blob containing the
+actual bytes of the 3-band waveform preview, as shown below. The
+fifth argument has an unknown purpose and so far seems to always have
+the value 0.
+
+.3-band waveform preview response message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4f02 6 6 6 3 6)
+(draw-number-field 0x2c04)
+(draw-number-field 0)
+(draw-number-field (text "length" :math))
+(draw-binary-field "3-band waveform preview bytes" {:length-label (text "length" :math)})
+(draw-bottom)
+(draw-number-field 0)
+----
+
+The 3-band preview data begins at byte `34` and is 3,600 (decimal) bytes long, representing 1,200 columns of waveform preview information.
+
+The three-band waveform preview entries each consist of three one-byte height values representing the mid-range, high, and low frequencies, in that order.
+There is some scaling involved, and they seem to be drawn stacked on top of each other, with the lows in dark blue, the mid-range in amber, and the highs in white.
+
+Requesting the detailed 3-band waveform is a simple variant of the request used to obtain the preview.
+The same request type is used, and the only difference is that the tag type requested to obtain the scrollable detail view is `PWV7`.
+The full request is shown here:
+
+.3-band waveform detail request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x2c04 6 6 6 6)
+(draw-dmst-field 1)
+(draw-number-field (text "rekordbox" :math))
+(draw-related-boxes [0x11 0x37 0x56 0x57 0x50])
+(draw-related-boxes [0x11 0x00 0x58 0x45 0x32])
+----
+
+As usual, _TxID_ should be incremented each time you send a query, and
+will be used to identify the response messages. _D_ should have the
+same value you used in your initial query context setup packet,
+identifying the device that is asking the question. _S~r~_ and _T~r~_
+are the slot in which the track being asked about can be found and its
+track type; each has the same values used in
+<<vcdj.adoc#cdj-status-packet,CDJ status packets>>. For some reason the
+value after _D_, which identifies the location of the menu for which
+data is being loaded, is 1 in this case, rather than the 8 we would
+expect to see for a graphical data request. _rekordbox_ identifies the
+specific track whose analysis you are requesting, as found in a CDJ
+status packet or playlist response, and the final two numeric
+arguments specify that you are interested in the `PWV7` tag (which
+holds the 3-band waveform detail) from the track’s `2EX` extended
+analysis file.
+
+The response will be a message with _type_ `4f02`, containing five
+arguments. The first argument echoes back our request type, which was
+`2c04`. The second always seems to be 0. The third contains the length
+of the requested tag (holding the 3-band waveform detail) in bytes.
+If this value is 0, the fourth argument will be omitted from the
+response. When present, the fourth argument is a blob containing the
+actual bytes of the 3-band waveform segments, as shown below. The
+fifth argument has an unknown purpose and so far seems to always have
+the value 0.
+
+.3-band waveform detail response message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x4f02 6 6 6 3 6)
+(draw-number-field 0x2c04)
+(draw-number-field 0)
+(draw-number-field (text "length" :math))
+(draw-binary-field "3-band waveform detail bytes" {:length-label (text "length" :math)})
+(draw-bottom)
+(draw-number-field 0)
+----
+
+The 3-band waveform detail data begins at byte `34` and has a variable length, but the same structure as the preview data.
+Each detail entry is three bytes long, holding a series of one-byte height values representing the mid-range, high, and low frequencies, in that order.
+There is a different kind of scaling involved in drawing these, and it seems to be non-linear.
+We have not yet found an approach that matches what we see in rekordbox.
+The colors for low, mid-range, and high frequencies are the same as in the preview, but they are drawn on the same axis rather than being stacked.
+The area where low and mid-range frequencies overlap is drawn in brown, and their pure colors are seen where there is no overlap.
+The white high frequency is drawn last so it obscures any low or mid-range information underneath it.
+Recordbox actually seems to do some light blending, but it is so dim that we have not bothered to reproduce it so far.
 
 [[requesting-cues]]
 == Requesting Cue Points and Loops
