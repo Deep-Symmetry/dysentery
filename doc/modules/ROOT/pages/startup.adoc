@@ -162,7 +162,8 @@ include::example$startup_shared.edn[]
 
 _n_ indicates the number of devices recognized on the network (including itself).
 For example, this value starts as 1, and if another device is switched on, this
-number increments to 2.
+value increments to 2. If the device is then switched off, this value decrements
+back to 1 (after about 10 seconds).
 
 [[cdj-startup]]
 == CDJ Startup
