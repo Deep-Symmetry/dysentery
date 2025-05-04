@@ -156,9 +156,13 @@ include::example$startup_shared.edn[]
 (draw-boxes [(text "D" :math) 2])
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
-
-(draw-related-boxes [1 0 0 0 2 0])
+(draw-boxes [(text "n" :math)])
+(draw-related-boxes [0 0 0 2 0])
 ----
+
+_n_ indicates the number of devices recognized on the network (including itself).
+For example, this value starts as 1, and if another device is switched on, this
+number increments to 2.
 
 [[cdj-startup]]
 == CDJ Startup
@@ -295,8 +299,9 @@ include::example$startup_shared.edn[]
 (draw-boxes [(text "D" :math) 1])
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
+(draw-boxes [(text "n" :math)])
 
-(draw-related-boxes [1 0 0 0 1 0])
+(draw-related-boxes [0 0 0 1 0])
 ----
 
 As seems to usually be the case when comparing mixer and CDJ packets
@@ -514,13 +519,13 @@ include::example$startup_shared.edn[]
 (draw-boxes [(text "D" :math) 1])
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
+(draw-boxes [(text "n" :math)])
 
-(draw-related-boxes [2 0 0 0 1 0x64])
+(draw-related-boxes [0 0 0 1 0x64])
 ----
 
 > This differs from the <<cdj-keep-alive,original>> at
-  bytes{nbsp}``30`` and ``35``. The last byte seems to be the most
-  important. Having the wrong value there can even cause CDJ-3000s set
+  byte{nbsp}``35``. Having the wrong value there can even cause CDJ-3000s set
   to player 5 or 6 to repeatedly kick themselves off the network.
 
 == Channel Conflicts
