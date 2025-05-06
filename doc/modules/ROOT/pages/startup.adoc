@@ -156,14 +156,13 @@ include::example$startup_shared.edn[]
 (draw-boxes [(text "D" :math) 2])
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
-(draw-boxes [(text "n" :math)])
+(draw-boxes [(text "p" :math)])
 (draw-related-boxes [0 0 0 2 0])
 ----
 
-_n_ indicates the number of devices recognized on the network (including itself).
-For example, this value starts as 1, and if another device is switched on, this
-value increments to 2. If the device is then switched off, this value decrements
-back to 1 (after about 10 seconds).
+_p_ indicates the number of peer devices recognized on the network (including itself).
+For example, this value starts as 1, and if another device is switched on, this value increments to 2.
+If the device is then switched off, this value decrements back to 1 (after about ten seconds).
 
 [[cdj-startup]]
 == CDJ Startup
@@ -305,16 +304,14 @@ include::example$startup_shared.edn[]
 (draw-related-boxes [0 0 0 1 0])
 ----
 
-As seems to usually be the case when comparing mixer and CDJ packets
-sent to port 50000, the difference between this and
-<<#mixer-keep-alive,the mixer version>> is that byte{nbsp}``25``
-(following the device number `D`) has the value `01` rather than `02`,
-and the same is true of the second-to-last byte in each of the
-packets. (Byte{nbsp}``34`` is `01` here and and `02` in
-<<#mixer-keep-alive,the mixer version>>.)
+As seems to usually be the case when comparing mixer and CDJ packets sent to port 50000, the difference between this and <<#mixer-keep-alive,the mixer version>> is that byte{nbsp}``25``
+(following the device number `D`) has the value `01` rather than `02`, and the same is true of the second-to-last byte in each of the packets.
+(Byte{nbsp}``34`` is `01` here and and `02` in <<#mixer-keep-alive,the mixer version>>.)
 
 
-
+As described earlier, _p_ indicates the number of peer devices recognized on the network (including itself).
+For example, this value starts as 1, and if another device is switched on, this value increments to 2.
+If the device is then switched off, this value decrements back to 1 (after about ten seconds).
 
 === Startup in a Channel-Specific Port
 
@@ -553,7 +550,8 @@ include::example$startup_shared.edn[]
 When a player receives such a packet it gives up on trying to claim
 channel _D_.
 
-== XDJ-XZ Limitations
+[[xdj-xz-limitations]]
+== XDJ-XZ (and similar device) Limitations
 
 When an XDJ-XZ is acting as the mixer, this protocol mostly works as
 described above, as long as you connect to one of its ports assigned
@@ -578,3 +576,5 @@ can end up in a bad state when plugged into the laptop port.
 Even actual Pioneer hardware has issues picking device numbers when
 plugged into the laptop port, though, so this is clearly not a
 situation that was envisioned or supported.
+
+NOTE: We expect to find similar limitations in newer all-in-one devices, like the Opus Quad and XDJ-AZ, although the details have not yet been explored.
