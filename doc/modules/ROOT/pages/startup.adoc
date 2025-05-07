@@ -517,7 +517,7 @@ include::example$startup_shared.edn[]
 (draw-boxes [(text "D" :math) 1])
 (draw-box "MAC address" {:span 6})
 (draw-box "IP address" {:span 4})
-(draw-boxes [(text "n" :math)])
+(draw-boxes [(text "p" :math)])
 
 (draw-related-boxes [0 0 0 1 0x64])
 ----
