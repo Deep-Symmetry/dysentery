@@ -1,12 +1,12 @@
-(defproject dysentery "0.2.2-SNAPSHOT"
+(defproject dysentery "0.2.2"
   :description "Exploring ways to participate in a Pioneer Pro DJ Link network"
   :url "http://github.com/Deep-Symmetry/dysentery"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.11.1"]
-                 [org.clojure/math.numeric-tower "0.0.5"]
-                 [com.taoensso/timbre "6.3.1"]
-                 [selmer "1.12.59"]]
+  :dependencies [[org.clojure/clojure "1.12.0"]
+                 [org.clojure/math.numeric-tower "0.1.0"]
+                 [com.taoensso/timbre "6.7.0"]
+                 [selmer "1.12.62"]]
   :main dysentery.core
   :uberjar-name "dysentery.jar"
 
