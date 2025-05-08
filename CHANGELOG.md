@@ -6,8 +6,13 @@ This change log follows the conventions of
 
 ## [Unreleased][unreleased]
 
+Nothing so far.
+
+## [0.2.2] - 2025-05-07
+
 ### Added
 
+- We can now cope with players, like the XDJ-XZ, which support Pro DJ Link, but send packets from multiple different device numbers on the same IP address.
 - Ability to tell devices to turn sync on or off.
 - Ability to appoint a device as tempo master.
 - Ability to tell devices they are on or off air when there is no DJM
@@ -35,6 +40,7 @@ This change log follows the conventions of
   [@AhnHEL](https://github.com/AhnHEL).
 - Analysis of dynamic loop information reported by CDJ-3000s.
 - Analysis of how to coexist with CDJ-3000s set to player 5 or 6.
+- Analysis of a new field in keep-alive packets which reports the count of peer devices seen on the network, again thanks to [David Ng](https://github.com/nudge).
 
 ## [0.2.1] - 2018-07-21
 
@@ -139,7 +145,8 @@ this breakthrough release!
 - Intial early release.
 
 
-[unreleased]: https://github.com/Deep-Symmetry/dysentery/compare/v0.2.1...HEAD
+[unreleased]: https://github.com/Deep-Symmetry/dysentery/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/Deep-Symmetry/dysentery/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Deep-Symmetry/dysentery/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Deep-Symmetry/dysentery/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/Deep-Symmetry/dysentery/compare/v0.1.4...v0.1.5
