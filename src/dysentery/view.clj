@@ -508,7 +508,7 @@
     [hex (Color/green)]
 
     (= index 204)  ; Seems to be 0x0f for nexus players, 0x1f for the XDJ-XZ, 0x05 for others?
-    [hex (recognized-if (or (and (#{0x0f 0x1f} value) (#{212 284} (count packet)))
+    [hex (recognized-if (or (and (#{0x0f 0x1f} value) (#{212 284 512} (count packet)))
                             (and (= value 0x05) (= 208 (count packet)))))]
 
     :else
