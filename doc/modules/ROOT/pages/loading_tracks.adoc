@@ -71,6 +71,9 @@ byte{nbsp}``4b`` has the value `32` rather than `00`. But even sending
 packets constructed exactly like that will not cause the XDJ-XZ to
 load a track, unless they are coming from rekordbox, and specifying a
 track from its own collection.
+
+The CDJ-3000 has slightly different limitations.
+It is happy to load tracks when told to, but if you try  to have it load an unanalyzed track (from the Folders menu), it will instead try to load a rekordbox track with the same ID; it ignores the track type byte.
 ====
 
 [[loading-settings]]
