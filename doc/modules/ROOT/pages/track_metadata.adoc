@@ -678,10 +678,8 @@ the values used to request the metadata for tracks loaded from solid
 state media; CD tracks are requested using the simple track number
 as the _rekordbox_ value.
 
-TIP: It seems that to reliably get data back when requesting metadata
-for non-rekordbox tracks, your virtual CDJ needs to be sending
-properly-formatted status packets, not just device announcement
-packets.
+TIP: It seems that to reliably get data back when requesting metadata for non-rekordbox tracks from older (nexus-era)  hardware, your virtual CDJ needs to be sending properly-formatted status packets, not just device announcement packets.
+This limitation does not affect CDJ-3000s (which can also even offer beat grids and waveforms for tracks they have analyzed locally, without rekordbox).
 
 [[album-art]]
 == Album Art
@@ -776,6 +774,8 @@ beat packet into an absolute position within the track, and, combined
 with the tempo information, to generate timecode signals allowing
 other software (such as video resources) to sync tightly with DJ
 playback.
+
+TIP: As noted above, you can request beat grids even for tracks that were not analyzed by rekordbox when talking to CDJ-3000s; just use the track ID the player is reporting in its status packet, and correctly reflect the “unanalyzed” track type in your _T~r~_ byte.
 
 To request the beat grid of a track, send a message with _type_ `2204`
 containing the _rekordbox_ ID of the track:
@@ -873,6 +873,9 @@ returned as the final 100 bytes of the preview response.
 NOTE: We also know how to request Nxs2-style higher resolution and
 color waveforms, see <<requesting-nxs2-waveforms>> for details, and
 CDJ-3000 <<requesting-three-band-waveforms,3-band waveforms>>.
+
+TIP: As noted above, you can request waveforms (of all types and styles) even for tracks that were not analyzed by rekordbox when talking to CDJ-3000s; just use the track ID the player is reporting in its status packet, and correctly reflect the “unanalyzed” track type in your _T~r~_ byte.
+
 
 === Waveform Previews
 
