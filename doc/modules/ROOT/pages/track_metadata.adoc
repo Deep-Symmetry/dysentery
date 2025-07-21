@@ -659,24 +659,13 @@ CDJ-3000s, it seems to be necessary to mask the field with `0xffff`.
 [[non-rekordbox-metadata]]
 == Non-Rekordbox Track Metadata
 
-As discussed in the introduction to this section, you can get metadata
-for non-rekordbox tracks as well (although they don’t have beat grids,
-waveforms, or album art available). All you need to do is use a slight
-variant of the <<track-metadata-request-message,metadata request
-message>>, using the value `2202` (instead of `2002`) for the message
-type, and a value of _T~r~_ that is appropriate for the kind of track
-you are asking about (`02` for non-rekordbox tracks loaded from media
-slots, and `05` for CD audio tracks playing in the CD slot, which has
-a _S~r~_ value of `01`). After the initial query setup message, the
-other message types are the same as in the above discussion, but you
-will continue using the _S~r~_ and _T~r~_ values appropriate for the
-slot and media type you are asking about.
+As discussed in the introduction to this section, you can get metadata for non-rekordbox tracks as well.
+All players may be able to offer album art embedded in the audio file, and CDJ-3000s make beat grids and waveforms available once they have completed their own analysis of the tracks.
+To get the basic metadata all you need to do is use a slight variant of the <<track-metadata-request-message,metadata request message>>, using the value `2202` (instead of `2002`) for the message type, and a value of _T~r~_ that is appropriate for the kind of track you are asking about (`02` for non-rekordbox tracks loaded from media
+slots, and `05` for CD audio tracks playing in the CD slot, which has a _S~r~_ value of `01`).
+After the initial query setup message, the other message types are the same as in the above discussion, but you will continue using the _S~r~_ and _T~r~_ values appropriate for the slot and media type you are asking about.
 
-Since these tracks don’t have rekordbox IDs, you will need to use the
-_rekordbox_ value reported in CDJ status packets in order to find out
-the values used to request the metadata for tracks loaded from solid
-state media; CD tracks are requested using the simple track number
-as the _rekordbox_ value.
+Since these tracks don’t have rekordbox IDs, you will need to use the _rekordbox_ value reported in CDJ status packets in order to find out the values used to request the metadata for tracks loaded from solid state media; CD tracks are requested using the simple track number as the _rekordbox_ value.
 
 TIP: It seems that to reliably get data back when requesting metadata for non-rekordbox tracks from older (nexus-era)  hardware, your virtual CDJ needs to be sending properly-formatted status packets, not just device announcement packets.
 This limitation does not affect CDJ-3000s (which can also even offer beat grids and waveforms for tracks they have analyzed locally, without rekordbox).
