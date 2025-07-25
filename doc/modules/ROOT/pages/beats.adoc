@@ -2,38 +2,23 @@
 James Elliott <james@deepsymmetry.org>
 :stem: latexmath
 
-[[beat-packets]]
+[#beat-packets]
 == Beat Packets
 
-For some time before this analysis was written,
-https://github.com/Deep-Symmetry/afterglow#afterglow[Afterglow] was
-able to synchronize its light shows with music being played on Pioneer
-equipment by observing packets broadcast by the mixer to port 50001.
+For some time before this analysis was written, https://github.com/Deep-Symmetry/afterglow#afterglow[Afterglow] was able to synchronize its light shows with music being played on Pioneer equipment by observing packets broadcast by the mixer to port 50001.
 
-Using just that approach, however, it was not possible to tell which
-player was the master, so there was no way to determine the down beat
-(the start of each measure). Now that it is possible to to determine
-which CDJ is the master player using the <<vcdj#cdj-status-packets,CDJ
-status packets>>, these beat packets have become far more useful, and
-Afterglow now uses
-https://github.com/Deep-Symmetry/beat-link#beat-link[Beat Link], the
-library that resulted from this analysis, to track the down beat based
-on the beat number reported by the master player.
+Using just that approach, however, it was not possible to tell which player was the master, so there was no way to determine the downbeat (the start of each measure).
+Now that it’s possible to determine which CDJ is the master player using the xref:vcdj.adoc#cdj-status-packets[CDJ status packets], these beat packets have become far more useful, and Afterglow now uses https://github.com/Deep-Symmetry/beat-link#beat-link[Beat Link], the library that resulted from this analysis, to track the downbeat based on the beat number reported by the master player.
 
-To track beats, open a socket and bind it to port 50001. The devices
-seem to broadcast two different kinds of packets to this port, a
-shorter packet containing `2d` bytes of data, and a longer packet
-containing `60` bytes. The shorter packets contain information about
-which <<mixer_integration#channels-on-air,channels are on-air>>, and
-<<mixer_integration#fader-start,fader start/stop commands>> to the
-players.
+To track beats, open a socket and bind it to port 50001.
+The devices seem to broadcast two different kinds of packets to this port, a shorter packet containing `2d` bytes of data, and a longer packet containing `60` bytes.
+The shorter packets contain information about which xref:mixer_integration.adoc#channels-on-air[channels are on-air], and xref:mixer_integration.adoc#fader-start[fader start/stop commands] for the players.
 
-The `60`-byte packets are sent on each beat, so even the arrival of
-the packet is interesting information, it means that the player is
-starting a new beat. (CDJs send these packets only when they are
-playing and only for rekordbox-analyzed tracks. The mixer sends them
-all the time, acting as a backup metronome when no other device is
-counting beats.) These packets have the following structure:
+The `60`-byte packets are sent on each beat, so even the arrival of the packet is interesting information, it means that the player is starting a new beat.
+(CDJs send these packets only when they are playing and only for rekordbox-analyzed tracks.footnote:[Although the CDJ-3000 can perform this analysis itself the first time it plays such a track.]
+The mixer sends them all the time, acting as a backup metronome when no other device is
+counting beats.)
+These packets have the following structure:
 
 .Beat packet.
 [bytefield]
@@ -55,64 +40,35 @@ include::example$status_shared.edn[]
 (draw-box (text "D" :math))
 ----
 
-This introduces our first packet structure variant around the device
-name. The packet header ends immediately after the packet type
-indicator in byte{nbsp}``0a``, so the device name begins one byte
-earlier at byte{nbsp}``0b`` (this byte had the value `00` in the
-<<startup#mixer-startup,startup packets>>). As always, the byte after
-the name has the value `01`, but the subtype value which follows that
-(at byte{nbsp}``20``) has the value `00` here, rather than `02` as we
-saw in the <<startup#mixer-startup,startup packets>>. In packets of
-subtype `00` the subtype indicator is followed by the Device Number
-`D` at byte{nbsp}``21``; this is the Player Number as displayed on the
-CDJ itself, or `21` for the mixer, or another value for a computer
-running rekordbox. And that is followed by a different kind of length
-indicator: _len~r~_ at bytes{nbsp}``22``-`23` reports the length of
-the rest of the packet, in other words, the number of bytes which come
-after _len~r~_. In this packet _len~r~_ has the value `003c`. For some
-reason, there is a redundant copy of _D_ at the end of the packet, in
-byte{nbsp}``5f``. That seems common in packets with subtype `00`, and
-is one of many inefficiencies in the protocol.
+This introduces our first packet structure variant around the device name.
+The packet header ends immediately after the packet type indicator in byte{nbsp}``0a``, so the device name begins one byte earlier at byte{nbsp}``0b`` (this byte had the value `00` in the xref:startup.adoc#mixer-startup[startup packets]).
+As always, the byte after the name has the value `01`, but the subtype value which follows that (at byte{nbsp}``20``) has the value `00` here, rather than `02` as we saw in the xref:startup.adoc#mixer-startup[startup packets].
+In packets of subtype `00` the subtype indicator is followed by the Device Number `D` at byte{nbsp}``21``; this is the Player Number as displayed on the CDJ itself, or `21` for the mixer, or another value for a computer running rekordbox.
+And that is followed by a different kind of length indicator: _len~r~_ at bytes{nbsp}``22``-`23` reports the length of the rest of the packet, in other words, the number of bytes which come after _len~r~_.
+In this packet _len~r~_ has the value `003c`.
+For some reason, there is a redundant copy of _D_ at the end of the packet, in byte{nbsp}``5f``.
+That seems common in packets with subtype `00`, and is one of many inefficiencies in the protocol.
 
-To facilitate synchronization of variable-tempo tracks, the number of
-milliseconds after which a variety of upcoming beats will occur are
-reported.
+To facilitate synchronization of variable-tempo tracks, the number of milliseconds after which a variety of upcoming beats will occur are reported.
 
 [NOTE]
 ====
-The timing values for all these upcoming beats and bars are always
-reported as if the track was being played at normal speed, with a
-pitch adjustment of 0%. If a pitch adjustment is in effect, you will
-need to perform the calculation to scale the beat timing values
-yourself.
+The timing values for all these upcoming beats and bars are always reported as if the track was being played at normal speed, that is, with a pitch adjustment of 0%.
+If a nonzero pitch adjustment is currently in effect, you will need to perform the calculation to scale the beat timing values based on that adjustment yourself.
 
-If the track ends before an upcoming beat or bar, then a timing value
-of `0xffffffff` is reported for that entry.
+If the track actually ends before an upcoming beat or bar would occur, then a timing value of `0xffffffff` is reported for the corresponding entry.
 ====
 
-[[status-beat-offsets]]_nextBeat_ at bytes{nbsp}``24``-`27` is the
-number of milliseconds in which the very next beat will arrive.
-_2ndBeat_ (bytes{nbsp}``28``-`2b`) is the number of milliseconds until
-the beat after that. _nextBar_ (bytes{nbsp}``2c``-`2f`) reports the
-number of milliseconds until the next measure of music begins, which
-may be from 1 to 4 beats away. _4thBeat_ (bytes{nbsp}``30``-`33`)
-reports how many milliseconds will elapse until the fourth upcoming
-beat; _2ndBar_ (bytes{nbsp}``34``-`37`) the interval until the second
-measure after the current one begins (which will occur in 5 to 8
-beats, depending how far into the current measure we have reached);
-and _8thBeat_ (bytes{nbsp}``38``-`3b`) tells how many millieconds we
-have to wait until the eighth upcoming beat will arrive.
+[#status-beat-offsets]_nextBeat_ at bytes{nbsp}``24``-`27` is the number of milliseconds in which the very next beat will arrive.
+_2ndBeat_ (bytes{nbsp}``28``-`2b`) is the number of milliseconds until the beat after that.
+_nextBar_ (bytes{nbsp}``2c``-`2f`) reports the number of milliseconds until the next measure of music begins, which may be from 1 to 4 beats away.
+_4thBeat_ (bytes{nbsp}``30``-`33`) reports how many milliseconds will elapse until the fourth upcoming beat; _2ndBar_ (bytes{nbsp}``34``-`37`) the interval until the second measure after the current one begins (which will occur in 5 to 8 beats, depending upon how far into the current measure we have reached); and _8thBeat_ (bytes{nbsp}``38``-`3b`) tells how many milliseconds we have to wait until the eighth upcoming beat will arrive.
 
-The player’s current pitch adjustment{empty}footnote:[The mixer always
-reports a pitch of +0%.] can be found in bytes{nbsp}``54``–`57`,
-labeled _Pitch_. It represents a four-byte pitch adjustment
-percentage, where `0x00100000` represents no adjustment (0%),
-`0x00000000` represents slowing all the way to a complete stop (−100%,
-reachable only in Wide tempo mode), and `0x00200000` represents
-playing at double speed (+100%).
+The player’s current pitch adjustment{empty}footnote:[The mixer always reports a pitch of +0%.] can be found in bytes{nbsp}``54``–`57`, labeled _Pitch_.
+It represents a four-byte pitch adjustment percentage, where `0x00100000` represents no adjustment (0%), `0x00000000` represents slowing all the way to a complete stop (−100%,
+reachable only in Wide tempo mode), and `0x00200000` represents playing at double speed (+100%).
 
-The pitch adjustment percentage represented by _Pitch_ is calculated by
-multipyling the following (hexadecimal) equation by decimal 100:
+The pitch adjustment percentage represented by _Pitch_ is calculated by multiplying the following (hexadecimal) equation by decimal 100:
 
 [stem]
 ++++
@@ -120,26 +76,17 @@ multipyling the following (hexadecimal) equation by decimal 100:
   {\tt 100} + byte[{\tt 57}]) - {\tt 100000}}{\tt 100000}
 ++++
 
-The current BPM of the track playing on the device{empty}footnote:[The
-mixer passes along the BPM of the master player.] can be found at
-bytes{nbsp}``5a``-`5b` (labeled _BPM_). It is a two-byte integer
-representing one hundred times the current track BPM. So, the current
-track BPM value to two decimal places can be calculated as (in this
-case only the byte offsets are hexadecimal):
+The current BPM of the track playing on the device{empty}footnote:[The mixer passes along the BPM of the master player.] can be found at bytes{nbsp}``5a``-`5b` (labeled _BPM_).
+It is a two-byte integer representing one hundred times the current track BPM.
+So, the current track BPM value to two decimal places can be calculated as follows (in this equation only the byte offsets are hexadecimal):
 
 [stem]
 ++++
 \frac{byte[{\tt 5a}] \times 256 + byte[{\tt 5b}]}{100.0}
 ++++
 
-In order to obtain the actual playing BPM (the value shown in the BPM
-display), this value must be multiplied by the current pitch
-adjustment. Since calculating the effective BPM reported by a CDJ is a
-common operation, here a simplified hexadecimal equation that results
-in the effective BPM to two decimal places, by combinining the _BPM_
-and _Pitch_ values:footnote:[Since the mixer always reports a pitch
-adjustment of _+0%_, its _BPM_ value can be used directly without
-this additional step.]
+In order to obtain the actual playing BPM (the value shown in the BPM display), this value must be multiplied by the current pitch adjustment.
+Since calculating the effective BPM reported by a CDJ is a common operation, here a simplified hexadecimal equation that results in the effective BPM to two decimal places, by combining the _BPM_ and _Pitch_ values:footnote:[Since the mixer always reports a pitch adjustment of _+0%_, its _BPM_ value can be used directly without this additional step.]
 
 [stem]
 ++++
@@ -148,36 +95,18 @@ this additional step.]
 + byte[{\tt 57}])} {\tt 6400000}
 ++++
 
-The counter _B~b~_ at byte{nbsp}``5c`` counts out the beat within each
-bar, cycling 1 → 2 → 3 → 4 repeatedly, and can be used to identify the
-down beat if it is coming from the master player (and if the DJ has
-properly established the track's beat grid).
+The counter _B~b~_ at byte{nbsp}``5c`` counts out the beat within each bar, cycling 1 → 2 → 3 → 4 repeatedly, and can be used to identify the downbeat if it is coming from the master player (and if the DJ has properly established the track's beat grid).
 
 [[absolute-position-packets]]
 == Absolute Position Packets
 
-Prior to the CDJ-3000 the only way that it was possible to figure out
-the playback position of a player (for the purposes of synchronizing
-timecode, video, lighting cues, and such things) was to watch for beat
-packets and combine them with a downloaded
-<<rekordbox-export-analysis:ROOT:anlz.adoc#beat-grid,beat grid>> to
-translate beat numbers into times within the track. And in between
-receiving the (fairly rare) beat packets, we had to interpolate our
-best guess as to the current track position, with the help of pitch
-updates we might receive in status packets. This mostly worked, well
-enough to run shows with, but would break down if the DJ was doing
-anything creative with scratching, reverse play, or loops on anything
-other than precise beat boundaries.
+Prior to the CDJ-3000 the only way that it was possible to figure out the playback position of a player (for the purposes of synchronizing timecode, video, lighting cues, and such things) was to watch for beat packets and combine them with a downloaded xref:rekordbox-export-analysis:ROOT:anlz.adoc#beat-grid[beat grid] to translate beat numbers into times within the track.
+And in between receiving the (fairly rare) beat packets, we had to interpolate our best guess as to the current track position, with the help of pitch updates we might receive in status packets.
+This mostly worked, well enough to run shows with, but would break down if the DJ was doing anything creative with scratching, reverse play, or loops on anything other than precise beat boundaries.
 
-The CDJ-3000 makes tracking position far more practical and reliable,
-thanks to this new packet type discovered by
-https://github.com/nudge[David Ng]. Absolute Position packets are only
-transmitted while a track is loaded on a player, but unlike Beat
-packets, they are sent even while not playing. This packet is sent to
-all connected devices on port 50001 every 30 milliseconds, which is
-often enough to keep good tabs on what the player is up to, even when
-playing backwards, scratching, looping, or needle jumping in between
-beats.
+The CDJ-3000 makes tracking position far more practical and reliable, thanks to this new packet type discovered by https://github.com/nudge[David Ng].
+Absolute Position packets are only transmitted while a track is loaded on a player, but unlike Beat packets, they are sent even while not playing.
+This packet is sent to all connected devices on port 50001 every 30 milliseconds, which is often enough to keep good tabs on what the player is up to, even when playing backwards, scratching, looping, or needle jumping in between beats.
 
 .Absolute Position packet.
 [bytefield]
@@ -197,24 +126,17 @@ include::example$status_shared.edn[]
 
 _D_ indicates the number of the player sending the packet.
 
-_len~r~_ reports the length of the rest of the packet, in other words,
-the number of bytes which come after _len~r~_.
+_len~r~_ reports the length of the rest of the packet, in other words, the number of bytes which come after _len~r~_.
 
-_TrackLength_ reports the length of the loaded track in seconds, rounded
-down to the nearest second.
+_TrackLength_ reports the length of the loaded track in seconds, rounded down to the nearest second.
 
 _Playhead_ reports the absolute position of the playhead in milliseconds.
 
-_Pitch_ is a 32-bit signed integer representing the value of the pitch
-slider as shown on the player screen multiplied by `64` (decimal 100).
-For example, if the pitch slider is at 3.26%, this value is `0146`
-(326 in decimal). This is a much more sensible and friendly format for
-pitch information than we have seen in other packets, and is analogous
-to the way tempo is handled.
+_Pitch_ is a 32-bit signed integer representing the value of the pitch slider as shown on the player screen multiplied by `64` (decimal 100).
+For example, if the pitch slider is at 3.26%, this value is `0146` (326 in decimal).
+This is a much more sensible and friendly format for pitch information than we have seen in other packets, and is analogous to the way tempo is handled.
 
-_BPM_ reports the BPM value as shown on the player screen (in other
-words, the current effective tempo, which is the track tempo adjusted
-by the playback pitch) multiplied by `0a` (decimal 10). For example a
-temppo of 120.2 BPM is represented as `4b2` (1202 in decimal). Tracks
-with unknown BPM have the value `ffffffff`. This is the same as tempo
-values we have seen in other packets.
+_BPM_ reports the BPM value as shown on the player screen (in other words, the current effective tempo, which is the track tempo adjusted by the playback pitch) multiplied by `0a` (decimal 10).
+For example a tempo of 120.2 BPM is represented as `4b2` (1202 in decimal).
+Tracks with unknown BPM have the value `ffffffff`.
+This is the same as tempo values we have seen in other packets.

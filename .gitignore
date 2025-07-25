@@ -8,10 +8,12 @@
 /doc/Analysis.pdf
 /doc/Analysis.toc
 /doc/build
+/dysentery.iml
 pom.xml
 pom.xml.asc
 *.jar
 *.class
+/.idea
 /.lein-*
 /.nrepl-port
 .hgignore
