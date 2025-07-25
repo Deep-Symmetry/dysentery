@@ -97,7 +97,7 @@ Since calculating the effective BPM reported by a CDJ is a common operation, her
 
 The counter _B~b~_ at byte{nbsp}``5c`` counts out the beat within each bar, cycling 1 → 2 → 3 → 4 repeatedly, and can be used to identify the downbeat if it is coming from the master player (and if the DJ has properly established the track's beat grid).
 
-[[absolute-position-packets]]
+[#absolute-position-packets]
 == Absolute Position Packets
 
 Prior to the CDJ-3000 the only way that it was possible to figure out the playback position of a player (for the purposes of synchronizing timecode, video, lighting cues, and such things) was to watch for beat packets and combine them with a downloaded xref:rekordbox-export-analysis:ROOT:anlz.adoc#beat-grid[beat grid] to translate beat numbers into times within the track.
