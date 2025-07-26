@@ -1,31 +1,19 @@
 = Mixer Integration
 James Elliott <james@deepsymmetry.org>
 
-This section describes a couple of packet types that support the tight
-interaction between DJM mixers and CDJs, specifically the “Fader
-Start” feature that can start and stop playback in response to
-movements of channel faders and the cross-fader, and the “Channels on
-Air” feature that allows players to change the color with which their
-platter is illuminated depending on whether their output is currently
-audible in the mix.
+This section describes a couple of packet types that support the tight interaction between DJM mixers and CDJs, specifically the “Fader Start” feature that can start and stop playback in response to movements of channel faders and the cross-fader, and the “Channels on Air” feature that allows players to change the color with which their platter is illuminated depending on whether their output is currently audible in the mix.
 
-[[fader-start]]
+NOTE: Although the channels-on-air feature does work on the XDJ-XZ, it is so subtle there that at first I thought it was missing entirely: instead of changing the platter color, it instead displays small on-air indicators in the LCD screen.
+
+[#fader-start]
 == Fader Start
 
-Thanks to https://github.com/ErikMinekus[@ErikMinekus] we know that we
-can cause players to start or stop playing by sending a packet like
-the one shown below to port 50001 of the players, with appropriate
-command values for _C~1~_ through _C~4~_ telling that player what to
-do. A command value of `00` tells the corresponding player to start
-playing if it isn’t already, as long as it is positioned at the
-current cue point. The command `01` tells that player to stop playing
-and return to the cue point, and the value `02` tells the player to
-stay in its current state. (It also seems to work to broadcast the
-packet on port 50001, which makes sense, since it can be interpreted
-individually by each player, so a single packet can be used to affect
-the states of all four players if desired.)
+Thanks to https://github.com/ErikMinekus[@ErikMinekus] we know that we can cause players to start or stop playing by sending a packet like the one shown below to port 50001 of the players, with appropriate command values for _C~1~_ through _C~4~_ telling that player what to do.
+A command value of `00` tells the corresponding player to start playing if it isn’t already, as long as it is positioned at the current cue point.
+The command `01` tells that player to stop playing and return to the cue point, and the value `02` tells the player to stay in its current state.
+(It also seems to work to broadcast the packet on port 50001, which makes sense, since it can be interpreted individually by each player, so a single packet can be used to affect the states of all four players if desired.)
 
-[[fader-start-packet]]
+[#fader-start-packet]
 .Fader start packet.
 [bytefield]
 ----
@@ -38,30 +26,20 @@ include::example$status_shared.edn[]
   (draw-box (text "C" :math [:sub i])))
 ----
 
-Since this packet uses subtype 00, the length sent in _len~r~_ has the
-value `0004`, reflecting the four bytes which follow it.
+Since this packet uses subtype 00, the length sent in _len~r~_ has the value `0004`, reflecting the four bytes which follow it.
 
-NOTE: The XDJ-XZ does not support fader start, and its built-in decks
-do not respond to the command even if they are sent from another
-program.
+NOTE: The XDJ-XZ does not support fader start, and its built-in decks do not respond to the command even if they are sent from another program. Sadly, the newer CDJ-3000 does not support fader start either, it is starting to look like an abandoned feature.
 
-[[channels-on-air]]
+[#channels-on-air]
 == Channels on Air
 
-Thanks to https://github.com/jan2000[@jan2000] we know how the mixer
-reports which channels are currently on-air, and we can simulate this
-feature ourselves when there is no DJM (or XDJ-XZ) on the network. (If
-there is a DJM or XDJ-XZ present, it will quickly reassert its own
-on-air state for all the channels.)
+Thanks to https://github.com/jan2000[@jan2000] we know how the mixer reports which channels are currently on-air, and we can simulate this feature ourselves when there is no DJM (or XDJ-XZ) on the network.
+(If there is a DJM or XDJ-XZ present, it will quickly reassert its own on-air state for all the channels.)
 
-The mixer broadcasts a packet like the one shown below to port 50001,
-with appropriate flag values for _F~1~_ through _F~4~_ telling each
-player whether its channel is on-air. A flag value of `00` tells the
-corresponding player it is off the air (silenced, either due to the
-cross fader, channel fader, or input source switch for that channel),
-while `01` means the player’s channel is on the air.
+The mixer broadcasts a packet like the one shown below to port 50001, with appropriate flag values for _F~1~_ through _F~4~_ telling each player whether its channel is on-air.
+A flag value of `00` tells the corresponding player it is off the air (silenced, due to the cross fader, channel fader, trim, filters, or input source switch for that channel, or the master level for the entire mix), while `01` means the player’s channel is on the air.
 
-[[on-air-packet]]
+[#on-air-packet]
 .On Air flags packet.
 [bytefield]
 ----
@@ -75,18 +53,13 @@ include::example$status_shared.edn[]
 (draw-related-boxes (repeat 5 0))
 ----
 
-Since this packet uses subtype 00, the length sent in _len~r~_ has the
-value `0009`, reflecting the nine bytes which follow it.
+Since this packet uses subtype 00, the length sent in _len~r~_ has the value `0009`, reflecting the nine bytes which follow it.
 
 === Six Channel Version
 
-The advent of the CDJ-3000 and DJM-V10 introduced the possibility of
-having devices on up to six channels. To support that, the mixer sends
-a larger variant of the packet, with two new flag values, _F~5~_ and
-_F~6~_ (thanks to https://github.com/AhnHEL[@AhnHEL] for the packet
-captures which revealed these details):
+The advent of the CDJ-3000 and DJM-V10 introduced the possibility of having devices on up to six channels. To support that, the mixer sends a larger variant of the packet, with two new flag values, _F~5~_ and _F~6~_ (thanks to https://github.com/AhnHEL[@AhnHEL] for the packet captures which revealed these details):
 
-[[on-air-packet-six-channels]]
+#[on-air-packet-six-channels]
 .On Air flags packet (six channels).
 [bytefield]
 ----
@@ -103,6 +76,4 @@ include::example$status_shared.edn[]
 (draw-related-boxes (repeat 6 0))
 ----
 
-This packet uses a new subtype 03 for some reason (perhaps to identify
-it), and the length sent in _len~r~_ has the value `0011`, reflecting
-the seventeen bytes which follow it.
+This packet uses a new subtype 03 for some reason (perhaps to differentiate it from the four-channel version), and the length sent in _len~r~_ has the value `0011`, reflecting the seventeen bytes which follow it.
