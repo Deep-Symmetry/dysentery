@@ -5,6 +5,7 @@ James Elliott <james@deepsymmetry.org>
 Rekordbox provides a few mechanisms by which linked players can be remotely managed.
 This section explores the packets used.
 
+[#loading-tracks]
 == Loading Tracks
 
 When running rekordbox, you can tell a player to load a track from the collection by dragging the track onto the player icon.
@@ -43,6 +44,7 @@ Unlike most device numbers in the protocol, this value numbers the players start
 So for instance when loading a track on player 1, stem:[D_d^0] will be `00`.
 Sending this seems not to be required, as the player will load the track even if this byte does not have the correct value.
 
+[#load-track-response]
 Assuming the track can be loaded, the player will respond with a packet whose type indicator (at byte{nbsp}``0a``) has the value `1a` to acknowledge the command, and will load the specified track.
 
 [#xdj-loading]

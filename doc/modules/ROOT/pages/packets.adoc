@@ -3,145 +3,110 @@ James Elliott <james@deepsymmetry.org>
 
 == Background
 
-The protocol used by Pioneer professional DJ equipment to communicate
-and coordinate performances can be monitored to provide useful
-information for synchronizing other software, such as light shows and
-sequencers. By creating a “virtual CDJ” that sends appropriate packets
-to the network, other devices can be induced to send packets
-containing even more useful information about their state. This
-document details what has been learned so far about the protocol, and
-how to accomplish these tasks.
+The protocol used by Pioneer professional DJ equipment to communicate and coordinate performances can be monitored to provide useful information for synchronizing other software, such as light shows and sequencers.
+By creating a “virtual CDJ” that sends appropriate packets to the network, other devices can be induced to send packets containing even more useful information about their state.
+This document details what has been learned so far about the protocol, and how to accomplish these tasks.
 
-This information was discovered by studying packet captures and with
-the help of https://github.com/Deep-Symmetry/dysentery[dysentery], a
-bespoke protocol analysis tool written in Clojure. This document was
-created in parallel with the development of dysentery to help spread
-the knowledge to other developers using other languages.
+This information was discovered by studying packet captures and with the help of https://github.com/Deep-Symmetry/dysentery[dysentery], a bespoke protocol analysis tool written in Clojure.
+This document was created in parallel with the development of dysentery to help spread the knowledge to other developers regardless of the programming languages they wanted to work in.
 
-Once enough had been understood to start interacting in useful ways
-with the devices, the
-https://github.com/brunchboy/beat-link#beat-link[Beat Link] library
-was written to provide a convenient interface for other programs
-running in the Java virtual machine. Eventually enough was learned
-about the format of the media databases on USB drives and SD cards
-inserted in the players to implement
-https://github.com/Deep-Symmetry/crate-digger#crate-digger[Crate
-Digger], another Java library which parses them, and whose analysis is
-part of this documentation site as well.
+Once enough had been understood to start interacting in useful ways with the devices, the
+https://github.com/brunchboy/beat-link#beat-link[Beat Link] library was written to provide a convenient interface for other programs running in the Java virtual machine.footnote:[We would have been able to write it much faster and more concisely in Clojure, but we felt dropping down to Java would make it more accessible for porting and easier to adopt in other JVM language projects.]
+Eventually enough was learned about the format of the media databases on USB drives and SD cards inserted in the players to implement https://github.com/Deep-Symmetry/crate-digger#crate-digger[Crate Digger], another Java library which parses them, and whose analysis forms part of this document as well.
 
-Other implementations include
-https://github.com/EvanPurkhiser/prolink-go[prolink-go] and
-https://github.com/flesniak/python-prodj-link[python-prodj-link].
+Other known implementations include https://github.com/EvanPurkhiser/prolink-go[prolink-go] and https://github.com/flesniak/python-prodj-link[python-prodj-link].
 
-TIP: Even though the Opus Quad is unable to participate in a DJ Link network, Kyle Awayan has made
-https://github.com/kyleawayan/opus-quad-pro-dj-link-analysis[useful progress] in analyzing the packets it exchanges with rekordbox, presumably to support lighting mode.
+NOTE: Even though the Opus Quad is unable to participate in a DJ Link network, Kyle Awayan has made https://github.com/kyleawayan/opus-quad-pro-dj-link-analysis[useful progress] in analyzing the packets it exchanges with rekordbox, presumably to support lighting mode.
 https://github.com/cprepos[@cprepos] was able to build on that to enable the Beat Link library to pose as rekordbox rather than as a CDJ and make clever use of lighting-related metadata queries to unlock most of the features of the Beat Link library when working with Opus Quad hardware.
+We hope to be able to generalize this work to support the XDJ-AZ in four-deck mode as well.
 
-
-[[packet-types]]
+[#packet-types]
 == Known UDP Packet Types
 
-Although there are occasionally TCP connections involved in the
-protocol, especially for <<track_metadata.adoc#connecting,track
-metadata queries>>, most of the features of the protocol are
-implemented through UDP packets sent to a handful of ports, often to
-the network broadcast address, but occasionally to individual devices.
-These are discussed in more detail in their individual sections, but
-here is a breakdown of the packet types which have been discovered so
-far.
+Although there are occasionally TCP connections involved in the protocol, especially for xref:track_metadata.adoc#connecting[track metadata queries], most of the features of the protocol are implemented through UDP packets sent to a handful of ports, often to the network broadcast address, but occasionally to individual devices.
+These are discussed in more detail in their individual sections, but here is a breakdown of the packet types which have been discovered so far:
 
-DJ Link packets seem to all start with a fixed sequence of ten bytes,
-`51 73 70 74 31 57 6d 4a 4f 4c`. This is followed by a byte which
-(combined with the port on which it was received) identifies what kind
-of information is found in the packet.
+DJ Link packets seem to all start with a fixed sequence of ten bytes, `51 73 70 74 31 57 6d 4a 4f 4c`.
+This is followed by a byte which (combined with the port on which it was received) identifies what kind of information is found in the packet.
 
 === Port 50000 Packets
 
-Packets sent to port 50000 seem primarily related to announcing the
-devices present on the network, and negotiating the channel (device)
-number assigned to each.
+Packets sent to port 50000 seem primarily related to announcing the devices present on the network, and negotiating the channel (device) number assigned to each.
 
 [cols=">1m,<14"]
 |===
 |Kind |Purpose
 
-|00 |First-stage channel number claim, e.g. <<startup.adoc#mixer-assign-stage-1,mixers>> and <<startup.adoc#cdj-assign-stage-1,CDJs>>.
+|00 |First-stage channel number claim, e.g. xref:startup.adoc#mixer-assign-stage-1[mixers] and xref:startup.adoc#cdj-assign-stage-1[CDJs].
 
-|01 |<<startup.adoc#assignment-intention-packet,Mixer assignment intention>>, sent by mixers to devices connected to channel-specific ports.
+|01 |xref:startup.adoc#assignment-intention-packet[Mixer assignment intention], sent by mixers to devices connected to channel-specific ports.
 
-|02 |Second-stage channel number claim, e.g. <<startup.adoc#mixer-assign-stage-2,mixers>> and <<startup.adoc#cdj-assign-stage-2,CDJs>>.
+|02 |Second-stage channel number claim, e.g. xref:startup.adoc#mixer-assign-stage-2[mixers] and xref:startup.adoc#cdj-assign-stage-2[CDJs].
 
-|03 |<<startup.adoc#assignment-packet,Mixer channel assignment>>, sent by mixers to devices connected to channel-specific ports.
+|03 |xref:startup.adoc#assignment-packet[Mixer channel assignment], sent by mixers to devices connected to channel-specific ports.
 
-|04 |Final-stage channel number claim, e.g. <<startup.adoc#mixer-assign-final,mixers>> and <<startup.adoc#cdj-assign-final,CDJs>>.
+|04 |Final-stage channel number claim, e.g. xref:startup.adoc#mixer-assign-final[mixers] and xref:startup.adoc#cdj-assign-final[CDJs].
 
-|05 |<<startup.adoc#assignment-finished-packet,Mixer assignment finished>>, sent by mixers to devices connected to channel-specific ports.
+|05 |xref:startup.adoc#assignment-finished-packet[Mixer assignment finished], sent by mixers to devices connected to channel-specific ports.
 
-|06 |Device keep-alive (still present on network), e.g. <<startup.adoc#mixer-keep-alive,mixers>> and <<startup.adoc#cdj-keep-alive,CDJs>>.
+|06 |Device keep-alive (still present on network), e.g. xref:startup.adoc#mixer-keep-alive[mixers] and xref:startup.adoc#cdj-keep-alive[CDJs].
 
-|08 |<<startup.adoc#channel-conflict-packet,Channel Conflict>>, sent when a device sees another trying to claim the same channel.
+|08 |xref:startup.adoc#channel-conflict-packet[Channel Conflict], sent when a device sees another trying to claim the same channel.
 
-|0a |Initial device announcement, e.g. <<startup.adoc#mixer-initial-announcement,mixers>> and <<startup.adoc#cdj-initial-announcement,CDJs>>.
+|0a |Initial device announcement, e.g. xref:startup.adoc#mixer-initial-announcement[mixers] and xref:startup.adoc#cdj-initial-announcement[CDJs].
 
 |===
 
 
 === Port 50001 Packets
 
-Packets sent to port 50001 seem primarily related to beat
-synchronization (the first element of the protocol that we figured
-out), and mixer features like Fader Start and Channels On Air.
+Packets sent to port 50001 seem primarily related to beat synchronization (the first element of the protocol that we figured out), and mixer features like Fader Start and Channels On Air.
 
 [cols=">1m,<14"]
 |===
 |Kind |Purpose
 
-|02 |<<mixer_integration.adoc#fader-start,Fader Start>>
-|03 |<<mixer_integration.adoc#channels-on-air,Channels On Air>>
-|0b |<<beats.adoc#absolute-position-packets,Absolute Position>>
-|26 |<<sync.adoc#tempo-master-handoff,Master Handoff Request>>
-|27 |<<sync.adoc#master-takeover-response-packet,Master Handoff Response>>
-|28 |<<beats.adoc#beat-packets,Beat>>
-|2a |<<sync.adoc#sync-control,Sync Control>>
+|02 |xref:mixer_integration.adoc#fader-start[Fader Start]
+|03 |xref:mixer_integration.adoc#channels-on-air[Channels On Air]
+|0b |xref:beats.adoc#absolute-position-packets[Absolute Position]
+|26 |xref:sync.adoc#tempo-master-handoff[Master Handoff Request]
+|27 |xref:sync.adoc#master-takeover-response-packet[Master Handoff Response]
+|28 |xref:beats.adoc#beat-packets[Beat]
+|2a |xref:sync.adoc#sync-control[Sync Control]
 
 |===
 
 
 === Port 50002 Packets
 
-Packets sent to port 50002 provide more detailed device status (they
-are crucial for figuring out what track a player is playing, at what
-tempo, and how much has been played), as well as finding out
-information about the media that has been mounted in a particular
-slot. They also support remote-control features such as instructing
-players to load tracks.
+Packets sent to port 50002 provide more detailed device status (they are crucial for figuring out what track a player is playing, at what tempo, and how much has been played), as well as finding out information about the media that has been mounted in a particular slot.
+They also support remote-control features such as instructing players to load tracks.
 
 [cols=">1m,<14"]
 |===
 |Kind |Purpose
 
-|05 |<<media.adoc#,Media Query>>
-|06 |<<media.adoc#media-response-packet,Media Response>>
-|0a |<<vcdj.adoc#cdj-status-packets,CDJ Status>>
-|19 |<<loading_tracks.adoc#,Load Track Command>>
-|1a |<<loading_tracks.adoc#,Load Track Acknowledgment>>
-|29 |<<vcdj.adoc#mixer-status-packets,Mixer Status>>
-|34 |<<loading_tracks.adoc#loading-settings,Load Settings Command>>
+|05 |xref:media.adoc[Media Query]
+|06 |xref:media.adoc#media-response-packet[Media Response]
+|0a |xref:vcdj.adoc#cdj-status-packets[CDJ Status]
+|19 |xref:loading_tracks.adoc#loading-tracks[Load Track Command]
+|1a |xref:loading_tracks.adoc#load-track-response[Load Track Acknowledgment]
+|29 |xref:vcdj.adoc#mixer-status-packets[Mixer Status]
+|34 |xref:loading_tracks.adoc#loading-settings[Load Settings Command]
 
 |===
 
 
 === Port 50004 Packets
 
-Packets sent to port 50004 provide touch audio data between supported
-players and mixers.
+Packets sent to port 50004 provide touch audio data between supported players and mixers.
 
 [cols=">1m,<14"]
 |===
 |Kind |Purpose
 
-|1e |<<touch_audio.adoc#audio-data,Audio Data>>
-|1f |<<touch_audio.adoc#audio-handover,Audio Handover>>
-|20 |<<touch_audio.adoc#audio-timing,Audio Timing>>
+|1e |xref:touch_audio.adoc#audio-data[Audio Data]
+|1f |xref:touch_audio.adoc#audio-handover[Audio Handover]
+|20 |xref:touch_audio.adoc#audio-timing[Audio Timing]
 
 |===
