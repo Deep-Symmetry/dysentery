@@ -7,78 +7,40 @@ We know this analysis isn’t complete. Here are some loose ends to explore.
 
 Prior to Evan and Austin’s breakthroughs, here is all we knew:
 
-By setting up a managed switch to mirror traffic sent directly between
-CDJs, we have been able to see how the Link Info operation is
-implemented: The players open a direct TCP connection between each
-other, and send queries to obtain the metadata about tracks with
+By setting up a managed switch to mirror traffic sent directly between CDJs, we have been able to see how the Link Info operation is implemented: The players open a direct TCP connection between each other, and send queries to obtain the metadata about tracks with
 particular rekordbox ID values.
 
-Using an Ethernet switch with port mirroring was, as we hoped, very
-helpful. As can be seen in the
-https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/LinkInfo.pcapng?raw=true[packet
-capture], which shows a CDJ with IP address `169.254.192.112` booting,
-the new CDJ opens two TCP connections to the other CDJ at
-`169.254.119.181`.
+Using an Ethernet switch with port mirroring was, as we hoped, very helpful.
+As can be seen in the https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/LinkInfo.pcapng?raw=true[packet capture], which shows a CDJ with IP address `169.254.192.112` booting, the new CDJ opens two TCP connections to the other CDJ at `169.254.119.181`.
 
-The first session (given id 0 by Wireshark), which begins at packet
-206, connecting to port 12523, determines the port to use for metadata
-queries.
+The first session (given id 0 by Wireshark), which begins at packet 206, connecting to port 12523, determines the port to use for metadata queries.
 
-The second TCP connection (Wireshark display filter `tcp.stream eq
-1`), beginning at packet 212 and connecting to port 1051, shows the
-track information used by the Link Info display passing between the
-CDJs. You can see packets reflecting the initial display of a track
-that was already loaded, then new information as the linked CDJ loaded
-three other tracks.
+The second TCP connection (Wireshark display filter `tcp.stream eq 1`), beginning at packet 212 and connecting to port 1051, shows the track information used by the Link Info display passing between the CDJs.
+You can see packets reflecting the initial display of a track that was already loaded, then new information as the linked CDJ loaded three other tracks.
 
-There is
-https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/LinkInfo2.pcapng?raw=true[another
-capture], with more Link Info streams to be studied (all of the odd
-numbered `tcp.stream` values in Wireshark are the relevant ones).
+There is https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/LinkInfo2.pcapng?raw=true[another capture], with more Link Info streams to be studied (all the odd numbered `tcp.stream` values in Wireshark are the relevant ones).
 
 == Mysterious Values
 
-There are still many values with unknown meanings described above, and
-undoubtedly menu types that have yet to be explored; I have focused on
-the ones that will be immediately useful to Beat Link Trigger.
-Contributions of additional research and insight are eagerly
-welcomed—I would have not gotten nearly this far without help!
+There are still many values with unknown meanings described above, and undoubtedly menu types that have yet to be explored; I have focused on the ones that will be immediately useful to Beat Link Trigger.
+Contributions of additional research and insight are eagerly welcomed—I would have not gotten nearly this far without help!
 
-[[four-players]]
+[#four-players]
 == Reading Data with Four Players
 
-In order to offer metadata, timecode, waveforms, and so on, when there
-are four actual CDJs on the network, it is necessary get the data
-using a different mechanism. See the
-https://github.com/Deep-Symmetry/crate-digger[Crate Digger project]
-for the solution we have found.
+In order to offer metadata, timecode, waveforms, and so on, when there are four actual CDJs on the network, it is necessary get the data using a different mechanism.
+See the https://github.com/Deep-Symmetry/crate-digger[Crate Digger project] for the solution we have found.
 
-Before we discovered how to ask players for metadata about particular
-tracks, we did some research into the underlying rexordbox database.
-The database format is called
-https://www.quora.com/What-database-system-did-Greg-Kemnitz-develop[DeviceSQL]
-and there used to be a free quick start suite at
-\http://java.sys-con.com/node/328557 for working with it, but that
-site no longer exists because the original (California) company
-https://www.crunchbase.com/organization/encirq-corporation[Encirq] was
-http://www.ubiquitous.co.jp/en/news/press/pdf/p1730_01.pdf[acquired]
-by the Japanese Ubiquitous Corporation in 2008. It seems to still be
-http://www.ubiquitous.co.jp/en/products/db/md/devicesql/[available],
-but I’d be surprised if they wanted to help out an open source effort
-like this one.
+Before we discovered how to ask players for metadata about particular tracks, we did some research into the underlying rekordbox database.
+The database format is called https://www.quora.com/What-database-system-did-Greg-Kemnitz-develop[DeviceSQL] and there used to be a free quick start suite at \http://java.sys-con.com/node/328557 for working with it, but that site no longer exists because the original (California) company https://www.crunchbase.com/organization/encirq-corporation[Encirq] was http://www.ubiquitous.co.jp/en/news/press/pdf/p1730_01.pdf[acquired] by the Japanese Ubiquitous Corporation in 2008.
+It seems to still be http://www.ubiquitous.co.jp/en/products/db/md/devicesql/[available], but I’d be surprised if they wanted to help out an open source effort like this one.
 
 == CDJ Packets to Rekordbox
 
-Performing a packet capture while rekordbox is running reveals that
-the CDJs send unicast packets to the rekordbox address on port 50000,
-in addition to the packets they normally broadcast on that port.
-Figuring out how to pose as rekordbox might be useful in order to see
-what additional data these can offer, although that may be much more
-work than posing as a CDJ.
+Performing a packet capture while rekordbox is running reveals that the CDJs send unicast packets to the rekordbox address on port 50000, in addition to the packets they normally broadcast on that port.
+Figuring out how to pose as rekordbox might be useful in order to see what additional data these can offer, although that may be much more work than posing as a CDJ.
 
 == Dysentery
 
-If you have access to Pioneer equipment and are willing to help us
-validate this analysis, and perhaps even figure out more details, you
-can find the tool that is being used to perform this research at:
+If you have access to Pioneer equipment and are willing to help us validate this analysis, and perhaps even figure out more details, you can find the tool that is being used to perform this research at:
 https://github.com/deep-symmetry/dysentery
