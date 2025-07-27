@@ -1,0 +1,2 @@
+build:
+  command: asciidoctor-pdf -r asciidoctor-diagram -r asciidoctor-mathematical -a source-highlighter=rouge --theme default-with-font-fallbacks

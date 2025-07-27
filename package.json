@@ -13,7 +13,8 @@
     "node": ">=16.13.1"
   },
   "scripts": {
-    "local-docs": "npx antora --fetch doc/local.yml"
+    "local-docs": "npx antora --fetch doc/local.yml",
+    "docker-docs": "docker run -u $(id -u) -e HOME=/antora -v $PWD:/antora:Z --rm -t ghcr.io/deep-symmetry/docker-antora-pdf:main doc/docker-local.yml"
   },
   "repository": {
     "type": "git",

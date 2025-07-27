@@ -1,0 +1,24 @@
+site:
+  title: DJ Link Ecosystem Analysis
+  url: https://djl-analysis.deepsymmetry.org
+  start_page: djl-analysis::packets.adoc
+content:
+  sources:
+  - url: ./..
+    branches: HEAD
+    start_path: doc
+  - url: https://github.com/Deep-Symmetry/crate-digger.git
+    branches: [main]
+    start_path: doc
+antora:
+  extensions:
+  - '@antora/pdf-extension'
+  - '@antora/lunr-extension'
+asciidoc:
+  extensions:
+  - "@djencks/asciidoctor-mathjax"
+  - "@deepsymmetry/asciidoctor-bytefield"
+ui:
+  bundle:
+    url: https://deepsymmetry.org/media/antora/ui-bundle-3.zip
+    snapshot: true
