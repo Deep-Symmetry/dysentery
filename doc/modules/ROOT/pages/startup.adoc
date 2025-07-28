@@ -1,28 +1,20 @@
 = Mixer and CDJ Startup
 James Elliott <james@deepsymmetry.org>
 
-[[mixer-startup]]
+[#mixer-startup]
 == Mixer Startup
 
-When the mixer starts up, after it obtains an IP address (or gives up
-on doing that and self-assigns an address), it sends out what look
-like a series of packets{empty}footnote:[The packet capture used for
-the first version of this analysis can be found at
-https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/powerup.pcapng?raw=true]
-simply announcing its existence to UDP port 50000 on the broadcast
-address of the local network.
+When the mixer starts up, after it obtains an IP address (or gives up on doing that and self-assigns an address), it sends out what look like a series of packets{empty}footnote:[The packet capture used for the first version of this analysis can be found at https://github.com/Deep-Symmetry/dysentery/blob/main/doc/assets/powerup.pcapng?raw=true] simply announcing its existence to UDP port 50000 on the broadcast address of the local network.
 
 .Numbers in this document
 ****
-Values within packets, packet lengths, and byte offsets are all shown
-in hexadecimal in `code` font. Other numbers are in normal body text
-font and are decimal.
+Values within packets, packet lengths, and byte offsets are all shown in hexadecimal in `code` font.
+Other numbers are in normal body text font and are decimal.
 ****
 
-These have a data length of `25` bytes, appear roughly every 300
-milliseconds, and have the following content:
+These have a data length of `25` bytes, appear roughly every 300 milliseconds, and have the following content:
 
-[[mixer-initial-announcement]]
+[#mixer-initial-announcement]
 .Initial announcement packets from mixer.
 [bytefield]
 ----
@@ -35,33 +27,19 @@ include::example$startup_shared.edn[]
 (draw-box 2)
 ----
 
-Byte `0a` (inside the green header section) is shown in bold because
-its value changes in the different types of packets that devices send,
-and can be used to tell them apart.
+Byte `0a` (inside the green header section) is shown in bold because its value changes in the different types of packets that devices send, and can be used to tell them apart.
 
-The byte following the device name (at byte{nbsp}``20``) seems to
-always have the value 1 in every kind of packet seen. The next byte is
-in bold as well because it seems to indicate the structure of the
-remainder of the packet. The value `02` is followed by a two-byte
-value _len~p~_ that indicates the length of the entire packet
-(including the preceding header bytes), and followed by the payload.
-In the case of this kind of packet, the length is `0025`, and the
-payload is the single-byte value `02`.
+The byte following the device name (at byte{nbsp}``20``) seems to always have the value 1 in every kind of packet seen.
+The next byte is in bold as well because it seems to indicate the structure of the remainder of the packet.
+The value `02` is followed by a two-byte value _len~p~_ that indicates the length of the entire packet (including the preceding header bytes), and followed by the payload.
+In the case of this kind of mixer announcement packet, the length is `0025`, and the payload is the single-byte value `02`.
 
-After about three of these packets are sent, another series of three
-begins. It is not clear what purpose these packets serve, because they
-are not yet asserting ownership of any device number; perhaps they are
-used when CDJs are powering up as part of the mechanism the mixer can
-use to tell them which device number to use based on which network
-port they are connected to?
+After about three of these packets are sent, another series of three begins.
+It is not clear what purpose these packets serve, because they are not yet asserting ownership of any device number; perhaps they are used when CDJs are powering up as part of the mechanism the mixer can use to tell them which device number to use based on which network port they are connected to?
 
-In any case, these three packets have the value `00` at
-byte{nbsp}``0a``, a data length of `2c` bytes (reflected in _len~p~_),
-are again sent to UDP port 50000 on the local network broadcast
-address, at roughly 300 millisecond intervals, and have the following
-content:
+In any case, these three packets have the value `00` at byte{nbsp}``0a``, a data length of `2c` bytes (reflected in _len~p~_), are again sent to UDP port 50000 on the local network broadcast address, at roughly 300 millisecond intervals, and have the following content:
 
-[[mixer-assign-stage-1]]
+[#mixer-assign-stage-1]
 .First-stage mixer device number claim packets.
 [bytefield]
 ----
@@ -75,17 +53,13 @@ include::example$startup_shared.edn[]
 (draw-box "MAC address" {:span 6})
 ----
 
-The value _N_ at byte{nbsp}``24`` is `01`, `02`, or `03`, depending on
-whether this is the first, second, or third time the packet is sent.
+The value _N_ at byte{nbsp}``24`` is `01`, `02`, or `03`, depending on whether this is the first, second, or third time the packet is sent.
 
-After these comes another series of three numbered packets. These
-appear to be claiming the device number for a particular device, as
-well as announcing the IP address at which it can be found. They have
-a data length and _len~p~_ value of `32` bytes, and are again sent to
-UDP port 50000 on the local network broadcast address, at roughly 300
-millisecond intervals, with the following content:
+After these we see another series of three numbered packets.
+These appear to be claiming the device number for a particular device, as well as announcing the IP address at which it can be found.
+They have a data length and _len~p~_ value of `32` bytes, and are again sent to UDP port 50000 on the local network broadcast address, at roughly 300 millisecond intervals, with the following content:
 
-[[mixer-assign-stage-2]]
+[#mixer-assign-stage-2]
 .Second-stage mixer device number claim packets.
 [bytefield]
 ----
@@ -103,22 +77,14 @@ include::example$startup_shared.edn[]
 (draw-box 1 :box-last)
 ----
 
-I identify these as claiming/identifying the device number because the
-value _D_ at byte{nbsp}``2e`` is the same as the device number that
-the mixer uses to identify itself (`21`) and the same is true for the
-corresponding packets seen from my CDJs (they use device numbers `02`
-and `03`, as they are connected to those ports/channels on the mixer).
+I identify these as claiming/identifying the device number because the value _D_ at byte{nbsp}``2e`` is the same as the device number that the mixer uses to identify itself (`21`) and the same is true for the corresponding packets seen from my CDJs (they use device numbers `02`and `03`, as they are connected to those ports/channels on the mixer).
 
-As with the previous series of three packets, the value _N_ at
-byte{nbsp}``2f`` takes on the values `01`, `02`, and `03` in the three
-packets.
+As with the previous series of three packets, the value _N_ at byte{nbsp}``2f`` takes on the values `01`, `02`, and `03` in the three packets.
 
-These are followed by another three packets, perhaps the last stage of
-claiming the device number, again at 300 millisecond intervals, to the
-same port 50000. These shorter packets have `2a` bytes of data and the
-content shown here:
+These are followed by another three packets, perhaps the last stage of claiming the device number, again at 300 millisecond intervals, to the same port 50000.
+These shorter packets have `2a` bytes of data and the content shown here:
 
-[[mixer-assign-final]]
+[#mixer-assign-final]
 .Final-stage mixer device number claim packets.
 [bytefield]
 ----
@@ -131,19 +97,13 @@ include::example$startup_shared.edn[]
 (draw-boxes (map #(text % :math) ["D" "N"]))
 ----
 
-As before the value _D_ at byte{nbsp}``24`` is the same as the device
-number that the mixer uses to identify itself (`21`) and _N_ at
-byte{nbsp}``25`` takes on the values `01`, `02`, and `03` in the three
-packets.
+As before the value _D_ at byte{nbsp}``24`` is the same as the device number that the mixer uses to identify itself (`21`) and _N_ at byte{nbsp}``25`` takes on the values `01`, `02`, and `03` in the three packets.
 
-Once those are sent, the mixer seems to settle down and send what
-looks like a keep-alive packet to retain presence on the network and
-ownership of its device number, at a less frequent interval. These
-packets are `36` bytes long, again sent to port 50000 on the local
-network broadcast address, roughly every second and a half. They have
-the following content:
+Once those are sent, the mixer seems to settle down and send what looks like a keep-alive packet to retain presence on the network and ownership of its device number, at a less frequent interval.
+These packets are `36` bytes long, again sent to port 50000 on the local network broadcast address, roughly every second and a half.
+They have the following content:
 
-[[mixer-keep-alive]]
+[#mixer-keep-alive]
 .Mixer keep-alive packets.
 [bytefield]
 ----
@@ -164,25 +124,19 @@ _p_ indicates the number of peer devices recognized on the network (including it
 For example, this value starts as 1, and if another device is switched on, this value increments to 2.
 If the device is then switched off, this value decrements back to 1 (after about ten seconds).
 
-[[cdj-startup]]
+[#cdj-startup]
 == CDJ Startup
 
-When a CDJ starts up, there are a variety of different paths that can
-be followed, depending on two different variables:
+When a CDJ starts up, there are a variety of different paths that can be followed, depending on two different variables:
 
-* Is the player configured to try to automatically assign its channel
-  number, or to attempt to claim a specific channel?
-* Is the player plugged into a channel-specific Ethernet port on a
-  DJM-2000, or is it on a regular network port?
+* Is the player configured to try to automatically assign its channel number, or to attempt to claim a specific channel?
+* Is the player plugged into a channel-specific Ethernet port on a DJM-2000 or XDJ-XZ, or is it on a regular network port?
 
-However, regardless of these details, the initial series of three
-packets sent are always the same. They are nearly identical to the
-ones used by the mixer, and broadcast at 300 millisecond intervals as
-well. The only difference between the figure below and
-<<#mixer-initial-announcement,the mixer version>> is the final byte,
-which is `01` for the CDJ, and was `02` for the mixer.
+However, regardless of these details, the initial series of three packets sent are always the same.
+They are nearly identical to the ones used by the mixer, and broadcast at 300 millisecond intervals as well.
+The only difference between the figure below and <<mixer-initial-announcement,the mixer version>> is the final byte, which is `01` for the CDJ, and was `02` for the mixer.
 
-[[cdj-initial-announcement]]
+[#cdj-initial-announcement]
 .Initial announcement packets from CDJ.
 [bytefield]
 ----
@@ -195,25 +149,18 @@ include::example$startup_shared.edn[]
 (draw-box 1)
 ----
 
-NOTE: Things changed somewhat with the introduction of the CDJ-3000,
-which can use device numbers 5 and 6. To avoid errors displaying on
-the CDJ-3000 if it is configured to use one of those higher player
-numbers, use the variants of these packets described
-<<startup-3000,below>>. Other than the slightly different packet
-templates, the startup process remains the same.
+[#cdj-3000-foreshadowing]
+NOTE: Things changed somewhat with the introduction of the CDJ-3000, which can use device numbers 5 and 6.
+To avoid having errors appear on the CDJ-3000 if it is configured to use one of those higher player numbers, use the variants of these packets described <<startup-3000,below>>.
+Other than the slightly different packet templates, the startup process remains the same.
 
 === Startup in a Generic Port
 
-When not connected to a port that is specifically assigned a mixer
-channel, the process continues much as was seen for the Mixer startup.
-The next series of three messages, broadcast to port 50000 at 300
-millisecond intervals, are again nearly identical to those from the
-mixer. The only difference between the following figure and
-<<mixer-assign-stage-1,the mixer version>> is byte{nbsp}``25``
-(immediately after the packet counter _N_), which again is `01` for
-the CDJ, and was `02` for the mixer.
+When not connected to a port that is specifically assigned a mixer channel, the process continues much as was seen for the Mixer startup.
+The next series of three messages, broadcast to port 50000 at 300 millisecond intervals, are again nearly identical to those from the mixer.
+The only difference between the following figure and <<mixer-assign-stage-1,the mixer version>> is byte{nbsp}``25`` (immediately after the packet counter _N_), which again is `01` for the CDJ, and was `02` for the mixer.
 
-[[cdj-assign-stage-1]]
+[#cdj-assign-stage-1]
 .First-stage CDJ device number claim packets.
 [bytefield]
 ----
@@ -227,23 +174,14 @@ include::example$startup_shared.edn[]
 (draw-box "MAC address" {:span 6})
 ----
 
-Three hundred milliseconds after sending the third such packet with
-_N_ set to `03`, the player moves on to trying to claim an unused
-device number _D_. It's not clear how it picks one, although by this
-time it has had plenty of time to observe the network to see what
-other channels are claimed by other devices, and it seems to prefer
-staying on the same channel that it was using the last time it was
-powered on as long as that is not currently in use.
+Three hundred milliseconds after sending the third such packet with _N_ set to `03`, the player moves on to trying to claim an unused device number _D_.
+It’s not clear how it picks one, although by this time it has had plenty of time to observe the network to see what other channels are claimed by other devices, and it seems to prefer staying on the same channel that it was using the last time it was powered on as long as that is not currently in use.
 
-It uses packets again nearly identical to the ones the
-<<mixer-assign-stage-2,mixer used>> to claim its device number,
-broadcast at 300 millisecond intervals on port 50000, but it turns out
-the value of byte `31` has a meaning we didn’t appreciate until now:
-It has the value `01` when the CDJ is trying to auto-assign a device
-number, `02` when it it is trying to claim a specific number. We label
-this value _a_ for “auto-assign”:
+It uses packets again nearly identical to the ones the <<mixer-assign-stage-2,mixer used>> to claim its device number, broadcast at 300 millisecond intervals on port 50000, but it turns out the value of byte `31` has a meaning we didn’t appreciate until now:
+It has the value `01` when the CDJ is trying to auto-assign a device number, and `02` when it is trying to claim a specific number.
+We label this value _a_ for “auto-assign”:
 
-[[cdj-assign-stage-2]]
+[#cdj-assign-stage-2]
 .Second-stage CDJ device number claim packets.
 [bytefield]
 ----
@@ -259,13 +197,9 @@ include::example$startup_shared.edn[]
 (draw-boxes [1 (text "a" :math)])
 ----
 
-After sending the third such packet, with _N_ set to `03`, the player
-moves to the final stage of claiming its device number _D_,
-broadcasting packets at 300 millisecond intervals on port 50000, and
-this series is completely identical to the ones the
-<<mixer-assign-final,mixer used>>:
+After sending the third such packet, with _N_ set to `03`, the player moves to the final stage of claiming its device number _D_, broadcasting packets at 300 millisecond intervals on port 50000, and this series is completely identical to the ones the <<mixer-assign-final,mixer used>>:
 
-[[cdj-assign-final]]
+[#cdj-assign-final]
 .Final-stage CDJ device number claim packets.
 [bytefield]
 ----
@@ -278,15 +212,12 @@ include::example$startup_shared.edn[]
 (draw-boxes (map #(text % :math) ["D" "N"]))
 ----
 
-NOTE: When the CDJ is configured to use a specific device number, it
-sends only one packet in this series, and then moves on to the next
-stage. When set to auto-assign, it sends all three like the mixer did.
+NOTE: When the CDJ is configured to use a specific device number, it sends only one packet in this series, and then moves on to the next stage.
+When set to auto-assign, it sends all three like the mixer did.
 
-And just like the mixer, after sending the final such packet, the CDJ
-is done starting up, and settles down to broadcasting keep-alive
-packets on port 50000 at a less frequent interval:
+And just like the mixer, after sending the final such packet, the CDJ is done starting up, and settles down to broadcasting keep-alive packets on port 50000 at a less frequent interval:
 
-[[cdj-keep-alive]]
+[#cdj-keep-alive]
 .CDJ keep-alive packets.
 [bytefield]
 ----
@@ -304,10 +235,8 @@ include::example$startup_shared.edn[]
 (draw-related-boxes [0 0 0 1 0])
 ----
 
-As seems to usually be the case when comparing mixer and CDJ packets sent to port 50000, the difference between this and <<#mixer-keep-alive,the mixer version>> is that byte{nbsp}``25``
-(following the device number `D`) has the value `01` rather than `02`, and the same is true of the second-to-last byte in each of the packets.
-(Byte{nbsp}``34`` is `01` here and and `02` in <<#mixer-keep-alive,the mixer version>>.)
-
+As seems to usually be the case when comparing mixer and CDJ packets sent to port 50000, the difference between this and <<#mixer-keep-alive,the mixer version>> is that byte{nbsp}``25`` (following the device number `D`) has the value `01` rather than `02`, and the same is true of the second-to-last byte in each of the packets.
+(Byte{nbsp}``34`` is `01` here and `02` in <<#mixer-keep-alive,the mixer version>>.)
 
 As described earlier, _p_ indicates the number of peer devices recognized on the network (including itself).
 For example, this value starts as 1, and if another device is switched on, this value increments to 2.
@@ -315,20 +244,13 @@ If the device is then switched off, this value decrements back to 1 (after about
 
 === Startup in a Channel-Specific Port
 
-When connected to an Ethernet port that belongs to a specific mixer
-channel, the mixer will inform the player what channel it is supposed
-to use. Even if the player is configured to try to use a specific
-channel number, the mixer overrides this and the player accepts the
-device number assigned by the mixer.
+When connected to an Ethernet port that belongs to a specific mixer channel, the mixer will inform the player what channel it is supposed to use.
+Even if the player is configured to try to use a specific channel number, the mixer overrides this and the player accepts the device number assigned by the mixer.
 
-After broadcasting the three <<cdj-initial-announcement,initial
-announcement packets>>, the CDJ broadcasts the first of its
-<<cdj-assign-stage-1,first stage device number claim packets>> as
-usual. But this process is immediately pre-empted by the mixer sending
-a `2f`-byte packet directly to port 50000 on that player, telling the
-player that the mixer is going to assign it a device number:
+After broadcasting the three <<cdj-initial-announcement,initial announcement packets>>, the CDJ broadcasts the first of its <<cdj-assign-stage-1,first stage device number claim packets>> as usual.
+But this process is immediately preempted by the mixer sending a `2f`-byte packet directly to port 50000 on that player, telling the player that the mixer is going to assign it a device number:
 
-[[assignment-intention-packet]]
+[#assignment-intention-packet]
 .Mixer device number assignment intention packet.
 [bytefield]
 ----
@@ -343,16 +265,10 @@ include::example$startup_shared.edn[]
 (draw-box 1)
 ----
 
-> (As always, the device name and IP and MAC addresses in this packet
-> are those of the device that sends it, in this case the mixer.)
+> (As always, the device name and IP and MAC addresses in this packet are those of the device that sends it, in this case the mixer.)
 
-Immediately upon receipt of this packet, the CDJ responds by sending a
-`32`-byte packet directly to port 50000 on the mixer acknowledging
-that it is ready to be assigned a device number. This packet is a
-slight variation on the normal <<cdj-assign-stage-2,second stage
-device number claim packet>>: in addition to being sent directly
-to the mixer rather than being broadcast, it has a value of `01`
-instead of `00` at byte{nbsp}``0b`` immediately after the packet type.
+Immediately upon receipt of this packet, the CDJ responds by sending a `32`-byte packet directly to port 50000 on the mixer acknowledging that it is ready to be assigned a device number.
+This packet is a slight variation on the normal <<cdj-assign-stage-2,second stage device number claim packet>>: in addition to being sent directly to the mixer rather than being broadcast, it has a value of `01` instead of `00` at byte{nbsp}``0b`` immediately after the packet type.
 It also reports a value of `00` for _D_ at byte{nbsp}``2e``:
 
 .CDJ device number request packet.
@@ -371,14 +287,10 @@ include::example$startup_shared.edn[]
 (draw-boxes [1 (text "a" :math)])
 ----
 
-This packet does contain an _a_ value indicating whether or not the
-player is trying to auto-assign a device number, but that has no
-effect. Regardless of the value of _a_, the mixer immediately responds
-to this packet by telling the CDJ what channel number (_D_) it is
-plugged into by sending a `27`-byte packet directly to port 50000 on
-the player:
+This packet does contain a value for _a_ indicating whether the player is trying to auto-assign a device number, but that has no effect.
+Regardless of the value of _a_, the mixer immediately responds to this packet by telling the CDJ what channel number (_D_) it is plugged into by sending a `27`-byte packet directly to port 50000 on the player:
 
-[[assignment-packet]]
+[#assignment-packet]
 .CDJ device number assignment packet.
 [bytefield]
 ----
@@ -392,19 +304,13 @@ include::example$startup_shared.edn[]
 (draw-box 0)
 ----
 
-Notice that once again the byte immediately after the packet type,
-byte{nbsp}``0b``, has the value `01` rather than the `00` that we
-normaly see.
+Notice that once again the byte immediately after the packet type, byte{nbsp}``0b``, has the value `01` rather than the `00` that we normally see.
 
-At this point the player accepts the device number assigned by _D_ in
-the above packet, and broadcasts a single
-<<cdj-assign-final,final-stage claim packet>> to inform the other
-players of this assignment, with _N_ set to `01`.
+At this point the player accepts the device number assigned by _D_ in the above packet, and broadcasts a single <<cdj-assign-final,final-stage claim packet>> to inform the other players of this assignment, with _N_ set to `01`.
 
-Perhaps in response to this broadcast, the mixer sends one last
-`26`-byte packet directly to port 50000 on the CDJ:
+Perhaps in response to this broadcast, the mixer sends one last `26`-byte packet directly to port 50000 on the CDJ:
 
-[[assignment-finished-packet]]
+[#assignment-finished-packet]
 .CDJ device number assignment finished packet.
 [bytefield]
 ----
@@ -420,20 +326,15 @@ include::example$startup_shared.edn[]
 
 In this packet, the _D_ value is the mixer's own device number, `21`.
 
-At this point, rather than sending the remainder of the series of
-final stage claim packets, the CDJ immediately transitions to
-broadcasting <<cdj-keep-alive,keep-alive packets>>.
+At this point, rather than sending the remainder of the series of final stage claim packets, the CDJ immediately transitions to broadcasting <<cdj-keep-alive,keep-alive packets>>.
 
-[[startup-3000]]
+[#startup-3000]
 === Startup with CDJ-3000s
 
-As mentioned above, we need to use slightly different packet templates
-if we want to be able to start up or coexist on a network where a
-CDJ-3000 is using device number 5 or 6. The overall process described
-above is followed, with the following slight variations on the packet
-formats, starting with the initial announcement packets:
+As mentioned <<cdj-3000-foreshadowing,above>>, we need to use slightly different packet templates if we want to be able to start up or coexist on a network where a CDJ-3000 is using device number 5 or 6.
+The overall process described above is followed, with the following slight variations on the packet formats, starting with the initial announcement packets:
 
-[[cdj-3000-initial-announcement]]
+[#cdj-3000-initial-announcement]
 .CDJ-3000 compatible initial announcement packets.
 [bytefield]
 ----
@@ -446,13 +347,9 @@ include::example$startup_shared.edn[]
 (draw-boxes [1 64])
 ----
 
-> Note that this is one byte longer than the
-  <<cdj-initial-announcement,original version>>, as well as having a
-  different value at byte{nbsp}``21``. The remaining packets are the
-  same size as they used to be, but have slightly different numbers in
-  them.
+> Note that this is one byte longer than the <<cdj-initial-announcement,original version>>, as well as having a different value at byte{nbsp}``21``. The remaining packets are the same size as they used to be, but have slightly different numbers in them.
 
-.CDJ-3000 comaptible first-stage CDJ device number claim packets.
+.CDJ-3000 compatible first-stage CDJ device number claim packets.
 [bytefield]
 ----
 include::example$startup_shared.edn[]
@@ -465,8 +362,7 @@ include::example$startup_shared.edn[]
 (draw-box "MAC address" {:span 6})
 ----
 
-> This differs only at byte{nbsp}``21`` from the
-  <<cdj-assign-stage-1,original>>.
+> This differs only at byte{nbsp}``21`` from the <<cdj-assign-stage-1,original>>.
 
 .CDJ-3000 compatible second-stage CDJ device number claim packets.
 [bytefield]
@@ -483,8 +379,7 @@ include::example$startup_shared.edn[]
 (draw-boxes [1 (text "a" :math)])
 ----
 
-> Again this differs only at byte{nbsp}``21`` from the
-  <<cdj-assign-stage-2,original>>.
+> Again this differs only at byte{nbsp}``21`` from the <<cdj-assign-stage-2,original>>.
 
 
 .CDJ-3000 compatible final-stage CDJ device number claim packets.
@@ -499,11 +394,9 @@ include::example$startup_shared.edn[]
 (draw-boxes (map #(text % :math) ["D" "N"]))
 ----
 
-> Like the other number claim packets, this differs only at
-  byte{nbsp}``21`` from the <<cdj-assign-final,original>>.
+> Like the other number claim packets, this differs only at byte{nbsp}``21`` from the <<cdj-assign-final,original>>.
 
-Finally, after startup, the keep-alive packets need to be different,
-or they will cause problems as well:
+Finally, after startup, the keep-alive packets need to be different, or they will cause problems as well:
 
 .CDJ-3000 compatible keep-alive packets.
 [bytefield]
@@ -522,18 +415,13 @@ include::example$startup_shared.edn[]
 (draw-related-boxes [0 0 0 1 0x64])
 ----
 
-> This differs from the <<cdj-keep-alive,original>> at
-  byte{nbsp}``35``. Having the wrong value there can even cause CDJ-3000s set
-  to player 5 or 6 to repeatedly kick themselves off the network.
+> This differs from the <<cdj-keep-alive,original>> at byte{nbsp}``35``. Having the wrong value there can even cause CDJ-3000s set to player 5 or 6 to repeatedly kick themselves off the network.
 
 == Channel Conflicts
 
-When a player tries to lay claim to a device number that is already in
-use by another player, the existing player defends its channel by
-sending a `29`-byte packet like this one to port 50000 on the new
-player:
+When a player tries to lay claim to a device number that is already in use by another player, the existing player defends its channel by sending a `29`-byte packet like this one to port 50000 on the new player:
 
-[[channel-conflict-packet]]
+[#channel-conflict-packet]
 .Channel conflict packet.
 [bytefield]
 ----
@@ -547,34 +435,21 @@ include::example$startup_shared.edn[]
 (draw-box "IP address" {:span 4})
 ----
 
-When a player receives such a packet it gives up on trying to claim
-channel _D_.
+When a player receives such a packet it gives up on trying to claim channel _D_.
 
-[[xdj-xz-limitations]]
+[#xdj-xz-limitations]
 == XDJ-XZ (and similar device) Limitations
 
-When an XDJ-XZ is acting as the mixer, this protocol mostly works as
-described above, as long as you connect to one of its ports assigned
-to Channel 3 or Channel 4. However, it does not send the
-<<assignment-finished-packet,“assignment finished” packet>> which
-short-circuits the final stage claim packet series.
+When an XDJ-XZ is acting as the mixer, this protocol mostly works as described above, as long as you connect to one of its ports assigned to Channel 3 or Channel 4.
+However, it does not send the <<assignment-finished-packet,“assignment finished” packet>> which short-circuits the final stage claim packet series.
 
-More fundamentally, there seems to have been no effort made to
-properly support devices which plug into the network anywhere else,
-and thus reach the XDJ-XZ via the laptop/network port. When connected
-to that port, regardless of what device number the player is trying to
-claim, the XDJ-XZ will send it an
-<<assignment-intention-packet,“assignment intention” packet>> telling
-it to go ahead and use that number, even if the number was zero. Even
-worse, it does that even if the number was 1 or 2, which the XDJ-XZ is
-already using for its two decks. Further, it will not even send
-<<channel-conflict-packet,channel conflict packets>> to attempt to
-defend its own device numbers, so implementations that don't watch
-carefully for devices using particular numbers before claiming them
-can end up in a bad state when plugged into the laptop port.
+More fundamentally, there seems to have been no effort made to properly support devices which plug into the network anywhere else, and thus reach the XDJ-XZ via the laptop/network port.
+When connected to that port, regardless of what device number the player is trying to
+claim, the XDJ-XZ will send it an <<assignment-intention-packet,“assignment intention” packet>> telling it to go ahead and use that number, even if the number was zero.
+Even worse, it does that even if the number was 1 or 2, which the XDJ-XZ is
+already using for its two decks.
+Further, it will not even send <<channel-conflict-packet,channel conflict packets>> to attempt to defend its own device numbers, so implementations that don’t watch carefully for devices using particular numbers before claiming them can end up in a bad state when plugged into the laptop port.
 
-Even actual Pioneer hardware has issues picking device numbers when
-plugged into the laptop port, though, so this is clearly not a
-situation that was envisioned or supported.
+Even actual Pioneer hardware has issues picking device numbers when plugged into the laptop port, though, so this is clearly not a situation that was envisioned or supported.
 
 NOTE: We expect to find similar limitations in newer all-in-one devices, like the Opus Quad and XDJ-AZ, although the details have not yet been explored.
