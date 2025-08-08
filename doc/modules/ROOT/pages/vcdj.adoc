@@ -204,6 +204,7 @@ It has the value `00` when no track is loaded, `01` when a rekordbox track is lo
 NOTE: The XDJ-XZ presents an unusual situation because it embodies two separate players and a mixer all sharing the same IP address.
 Because of limitations in the protocol, that means it can only offer one pair of slots to the network, so its two USB slots are represented as though they belong to player 1.
 The slot labeled USB 1 is treated on the network as the SD slot, and the slot labeled USB 2 as the USB slot.
+The XDJ-AZ behaves the same way in Pro DJ Link mode, but in four-deck mode it uses a new _S~r~_ value of `07` to represent a track loaded from USB 2.
 
 The field _rekordbox_ at bytes{nbsp}``2c``–`2f` contains the rekordbox database ID of the loaded track when a rekordbox track is being played.
 When a non-rekordbox track is loaded from a media slot, this field still holds a unique ID by which the track can be identified for metadata requests, and when an audio CD track is loaded, this is just the track number.
@@ -313,6 +314,7 @@ If the player is not synced, but the current pitch is different from what the pi
 _Pitch~3~_ and begin to affect the actual effective pitch.
 From that point on, moving the pitch fader sets the value of all of _Pitch~1~_, _Pitch~2~_, _Pitch~3~_, and _Pitch~4~_. This all seems more complicated than it really needs to be...
 
+[#current-track-bpm]
 The current BPM of the track (the BPM at the point that is currently being played, or at the location where the player is currently paused) can be found at bytes{nbsp}``92``–`93` (labeled _BPM_).
 It is a two-byte integer representing one hundred times the current track BPM.
 So, the current track BPM value to two decimal places can be calculated as (only byte offsets are hexadecimal):
@@ -422,7 +424,7 @@ Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus players, `1f` fo
 
 Byte `cd`, labeled _t_, is used to indicate when a player supports xref:touch_audio.adoc[Touch Audio], by setting bit 5.
 
-Byte `fa` (labeled _W~c~_) indicates the Waveform Color setting the player is set to.
+Byte `fa` (labeled _W~c~_) indicates the Waveform Color setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
 
 [#known-waveform-color-values]
 .Known _W~c~_ values.
@@ -435,7 +437,7 @@ Byte `fa` (labeled _W~c~_) indicates the Waveform Color setting the player is se
 |04 |3-Band
 |===
 
-Byte `fd` (labeled _W~p~_) indicates the Waveform Current Position setting the player is set to.
+Byte `fd` (labeled _W~p~_) indicates the Waveform Current Position setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
 
 [#known-waveform-current-position-values]
 .Known _W~p~_ values.
@@ -453,7 +455,7 @@ As this bar expands, the values in `11d` and `11e` increase. `11d` indicates the
 
 Byte `11f` (_Buf~s~_ for “Buffer Status”) changes to value `01` when the entire track is buffered in memory.
 
-Byte `158` (labeled _M~t~_) indicates whether Master Tempo is engaged on the deck.
+Byte `158` (labeled _M~t~_) indicates whether Master Tempo is engaged on the deck, having the value `00` when it is off, and `01` when on.
 
 Bytes `15c`-`15e` (labeled _Key_) indicate the key of the current track, taking into account Master Tempo and the Tempo Slider position but before Key Shift is applied.
 Byte `15c` represents the note, byte `15d` is `00` for minor and `01` for major.
@@ -467,28 +469,28 @@ However, if the Master Tempo is off and the Tempo Slider is moved outside the or
 |Value |Key
 
 |00 00 00 |Am
-|01 00 ff |B&#9837;m
+|01 00 ff |B♭m
 |02 00 00 |Bm
 |03 00 00 |Cm
-|04 00 01 |C&#9839;m
+|04 00 01 |C♯m
 |05 00 00 |Dm
-|06 00 ff |E&#9837;m
+|06 00 ff |E♭m
 |07 00 00 |Em
 |08 00 00 |Fm
-|09 00 01 |F&#9839;m
+|09 00 01 |F♯m
 |0a 00 00 |Gm
-|0b 00 ff |A&#9837;m
+|0b 00 ff |A♭m
 |00 01 00 |C
-|01 01 ff |D&#9837;
+|01 01 ff |D♭
 |02 01 00 |D
-|03 01 ff |E&#9837;
+|03 01 ff |E♭
 |04 01 00 |E
 |05 01 00 |F
-|06 01 01 |F&#9839;
+|06 01 01 |F♯
 |07 01 00 |G
-|08 01 ff |A&#9837;
+|08 01 ff |A♭
 |09 01 00 |A
-|0a 01 ff |B&#9837;
+|0a 01 ff |B♭
 |0b 01 00 |B
 |===
 
@@ -516,7 +518,7 @@ Bytes `1b6`-`1b9` (labeled _Loop~s~_ for “Loop Start”) will be non-zero when
 It indicates the starting position of the loop within the track in milliseconds, using a new format.
 To calculate the start time, multiply this value by 65,536, then divide by 1,000.
 
-Bytes `1b3`-`1c1` (labeled _Loop~e~_ for “Loop End”) will be also non-zero when a CDJ-3000 is actively playing a loop (whether that loop was stored in the track metadata or dynamically set up by the DJ).
+Bytes `1be`-`1c1` (labeled _Loop~e~_ for “Loop End”) will be also non-zero when a CDJ-3000 is actively playing a loop (whether that loop was stored in the track metadata or dynamically set up by the DJ).
 It indicates the ending position of the loop within the track in milliseconds, using the same format as _Loop~s~_: multiply this value by 65,536, then divide by 1,000.
 
 Bytes `1c8`-`1c9` (labeled _Loop~b~_ for “Loop Beats”) will be also be non-zero when a CDJ-3000 is actively playing a loop (whether that loop was stored in the track metadata or dynamically set up by the DJ).

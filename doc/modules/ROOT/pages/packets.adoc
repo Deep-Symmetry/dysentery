@@ -10,6 +10,8 @@ This document details what has been learned so far about the protocol, and how t
 This information was discovered by studying packet captures and with the help of https://github.com/Deep-Symmetry/dysentery[dysentery], a bespoke protocol analysis tool written in Clojure.
 This document was created in parallel with the development of dysentery to help spread the knowledge to other developers regardless of the programming languages they wanted to work in.
 
+TIP: If you want to look at these packets today, and see what is changing as new hardware comes out, be sure to check out these https://github.com/nudge/wireshark-prodj-dissectors[Wireshark dissectors] that make it much easier to recognize and read the packets.
+
 Once enough had been understood to start interacting in useful ways with the devices, the
 https://github.com/brunchboy/beat-link#beat-link[Beat Link] library was written to provide a convenient interface for other programs running in the Java virtual machine.footnote:[We would have been able to write it much faster and more concisely in Clojure, but we felt dropping down to Java would make it more accessible for porting and easier to adopt in other JVM language projects.]
 Eventually enough was learned about the format of the media databases on USB drives and SD cards inserted in the players to implement https://github.com/Deep-Symmetry/crate-digger#crate-digger[Crate Digger], another Java library which parses them, and whose analysis forms part of this document as well.
