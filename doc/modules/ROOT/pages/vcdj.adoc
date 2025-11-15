@@ -180,6 +180,7 @@ include::example$status_shared.edn[]
 (draw-related-boxes (concat [(text "W" :math [:sub "c"]) 1 1 (text "W" :math [:sub "p"])]))
 (draw-padding 0x110 nil)
 (draw-box (text "edit" :math [:sub "menu"]) {:span 3})
+(draw-box (text "P" :math [:sub "4"]))
 (draw-padding 0x11d nil)
 (draw-related-boxes (concat [(text "Buf" :math [:sub "f"]) (text "Buf" :math [:sub "b"]) (text "Buf" :math [:sub "s"])]))
 (draw-box (text "NeedleCntPos") {:span 4})
@@ -518,6 +519,25 @@ Byte `fd` (labeled _W~p~_) indicates the Waveform Current Position setting the p
 
 |01 |Center
 |02 |Left
+|===
+
+Byte `113`, labeled _P~4~_, is another play state.
+The data looks like flags, however, so far we have not found a _consistent_ bit pattern.
+Help on this is appreciated. 
+The meanings that we have found so far are:
+
+[#known-p4-values]
+.Known _P~4~_ values.
+[cols=">1m,<12"]
+
+|===
+|Value |Meaning
+
+|05 |Player is playing and not in master mode.
+|07 |Player is playing and in master mode.
+|23 |Player is playing in reserve and is not in master mode.
+|33 |Player is playing in reverse and is in master mode.
+|25 |Player is slipping in reverse mode.
 |===
 
 Bytes `11d`-`11e` (_Buf~f~_ and  _Buf~b~_ respectively) seem to indicate the in-memory buffer status of the player.
