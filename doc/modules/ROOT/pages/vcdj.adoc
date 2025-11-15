@@ -178,6 +178,8 @@ include::example$status_shared.edn[]
 (draw-related-boxes [0x12 0x34 0x56 0x78])
 (draw-padding 0xfa nil)
 (draw-related-boxes (concat [(text "W" :math [:sub "c"]) 1 1 (text "W" :math [:sub "p"])]))
+(draw-padding 0x110 nil)
+(draw-box (text "edit" :math [:sub "menu"]) {:span 3})
 (draw-padding 0x11d nil)
 (draw-related-boxes (concat [(text "Buf" :math [:sub "f"]) (text "Buf" :math [:sub "b"]) (text "Buf" :math [:sub "s"])]))
 (draw-box (text "NeedleCntPos") {:span 4})
@@ -495,6 +497,9 @@ Byte `fa` (labeled _W~c~_) indicates the Waveform Color setting the player is se
 [#known-waveform-color-values]
 .Known _W~c~_ values.
 [cols=">1m,<6"]
+
+Byte `110`--`112`, labeled _edit~menu~_, turn to `01 02 03` for one packet and then to `02 02 03` when the track filter menu is opened.
+However, the values do not seem to change when you change any settings in the menu itself. 
 |===
 |Value |Meaning
 
