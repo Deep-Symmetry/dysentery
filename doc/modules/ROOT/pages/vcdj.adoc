@@ -180,6 +180,7 @@ include::example$status_shared.edn[]
 (draw-related-boxes (concat [(text "W" :math [:sub "c"]) 1 1 (text "W" :math [:sub "p"])]))
 (draw-padding 0x11d nil)
 (draw-related-boxes (concat [(text "Buf" :math [:sub "f"]) (text "Buf" :math [:sub "b"]) (text "Buf" :math [:sub "s"])]))
+(draw-box (text "NeedleCntPos") {:span 4})
 
 (draw-padding 0x158 nil)
 (draw-box (text "M" :math [:sub "t"]))
@@ -517,6 +518,9 @@ The buffer is shown on the player under the waveform with a thin red bar.
 As this bar expands, the values in `11d` and `11e` increase. `11d` indicates the buffer length in the forward direction from the playhead, `11e` indicates the buffer length in the backwards direction from the playhead.
 
 Byte `11f` (_Buf~s~_ for “Buffer Status”) changes to value `01` when the entire track is buffered in memory.
+
+Bytes `120`-`124` (_NeedleCntPos_) gives the timestamp of the currently set needle counter (by dragging on the touch screen in the waveform preview of a playing song).
+Reads all zeros, when not set or needle was _passed_.
 
 Byte `158` (labeled _M~t~_) indicates whether Master Tempo is engaged on the deck, having the value `00` when it is off, and `01` when on.
 
