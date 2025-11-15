@@ -118,8 +118,15 @@ include::example$status_shared.edn[]
 (draw-box (text "t" :math [:sub "cat2"]) {:span 4})
 (draw-related-boxes (repeat 6 0))
 (draw-box (text "d" :math [:sub "n"]) {:span 2})
-(draw-related-boxes (concat (repeat 0x20 0)
-                            [1 0 (text "U" :math [:sub "a"]) (text "S" :math [:sub "a"])
+(draw-related-boxes (repeat 0x10 0))
+(draw-box (text "ld" :math [:sub "1"]))
+(draw-related-boxes [0])
+(draw-box (text "u" :math [:sub "c1"]) {:span 2})
+(draw-related-boxes [0 0])
+(draw-box (text "u" :math [:sub "t"]) {:span 2})
+(draw-related-boxes (repeat 6 0))
+(draw-box (text "ld" :math [:sub "2"]) {:span 2})
+(draw-related-boxes (concat [1 0 (text "U" :math [:sub "a"]) (text "S" :math [:sub "a"])
                              0 0 0 (text "U" :math [:sub "l"]) 0 0 0
                              (text "S" :math [:sub "l"]) 0]))
 (draw-box (text "L" :math))
@@ -129,7 +136,7 @@ include::example$status_shared.edn[]
 
 (draw-related-boxes [0 0 0 0])
 (draw-box (text "Sync" :math [:sub "n"]) {:span 4})
-(draw-box 0)
+(draw-box (text "u" :math [:sub "c2"]))
 (draw-box (text "F" :math))
 (draw-box 0xff)
 (draw-box (text "P" :math [:sub "2"]))
@@ -147,7 +154,9 @@ include::example$status_shared.edn[]
 (draw-box (text "Beat" :math) {:span 4})
 (draw-box (text "Cue" :math) {:span 2})
 (draw-box (text "B" :math [:sub "b"]))
-(draw-related-boxes (repeat 15 0))
+(draw-related-boxes (repeat 12 0))
+(draw-box (text "u" :math [:sub "g"]))
+(draw-related-boxes [0 0])
 (draw-box 1)
 (draw-box (text "M" :math [:sub "p"]))
 (draw-box (text "U" :math [:sub "e"]))
@@ -262,6 +271,14 @@ Relatedly, when a track is loaded from a disc, playlist, or menu (including sear
 
 Some of the fields shown as having value `00` in this region will sometimes have other values in them; their meanings are simply not yet known.
 If you notice any patterns or figure anything out _please_ let us know on https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger[Zulip] or open a pull request!
+
+Next we identified some update triggers that seem to tell other CDJs that, e.g., the cue points were updated.
+Byte{nbsp}``58`` is called _ld~1~_, since it briefly shows `80` when a new song is loaded (see also _ld~2~_, which seem to change when load is finished).
+Byte{nbsp}``5a``--`5b`, labeled _u~c1~_ (update cue info 1) shows `ffff` for one packet when a hot cue is added or deleted as well as when a memory cue is added or removed.
+Byte{nbsp}``5e``--`5f`, labeled _u~t~_ (update tag list) changes for one packet to `00ff`, then to `ff00` and again to `0000` when a song is tagged.
+Byte{nbsp}``66``--`67`, _ld~2~_ shows `ffff` for one packet when a song has finished loaded.
+(Quick note: I think _ld~1~_ is rather a status flag as it is only one byte and does not follow the same scheme as the other _update_ packets. Hence _ld~2~_ is more like update of track on player).
+Assumedly, there are more update triggers in this area of the packet.
 
 Byte{nbsp}``6a``, labeled _U~a~_ (for “USB activity”), alternates between the values `04` and `06` when there is USB activity—it may even alternate in time with the flashing USB indicator LED on the player, although visual inspection suggests there is not a perfect
 correlation.
@@ -417,6 +434,8 @@ As each beat goes by, this value decreases by 1, until the cue point is about to
 On the beat on which the cue point was saved the value is `0000` and the CDJ displays
 “`00.0 Bars`”.
 On the next beat, the value becomes determined by the next cue point (if any) in the track.
+
+Byte `b3`, labeled _u~g~_ (update grid), seems to change to `ff` when the beat grid is changed (By long-pressing the rotary encoder next to the screen).
 
 Byte `b7`, labeled _Mp_, seems to indicate local media presence status on the CDJ-3000.
 For other players, this value remains `0`.
