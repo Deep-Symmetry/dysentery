@@ -144,7 +144,8 @@ include::example$status_shared.edn[]
 
 (draw-box (text "M" :math [:sub "v"]) {:span 2})
 (draw-box (text "BPM" :math) {:span 2})
-(draw-related-boxes [0x7f 0xff 0xff 0xff])
+(draw-box (text "M" :math [:sub "slip"]) {:span 2})
+(draw-box (text "BPM" :math [:sub "slip"]) {:span 2})
 (draw-box (text "Pitch" :math [:sub "2"]) {:span 4})
 (draw-box 0)
 (draw-box (text "P" :math [:sub "3"]))
@@ -396,6 +397,9 @@ When no track is loaded, _BPM_ has the value `ffff`.
 
 _M~v~_ (bytes `90`–`91`) seems to control whether the _BPM_ value is accepted when this player is the master.
 It has the value `7fff` when no track is loaded, `8000` when a rekordbox track is loaded, and `0000` when a non-rekordbox track (like from a physical CD) is loaded, and only when the value is `8000` are tempos from this player accepted when it is acting as master (otherwise the mixer shows the master to have a tempo of “`---.-`” and other players do not respond to its tempo changes).
+
+Bytes{nbsp}``94``--`97` have the same characteristics as _M~v~_ and _BPM_ when the player is currently slipping.
+By default these bytes read `7fff` and `ffff`.
 
 Byte{nbsp}``9d`` (labeled _P~3~_) seems to communicate additional information about the current play mode.
 The meanings that we have found so far are:
