@@ -172,12 +172,12 @@ include::example$status_shared.edn[]
 (draw-box (text "nx" :math))
 (draw-box (text "t" :math))
 (draw-related-boxes (repeat 2 0))
-(draw-related-boxes [0x12 0x34 0x56 0x78])
-(draw-padding 0xf0 nil)
 
-(draw-related-boxes [0x12 0x34 0x56 0x78])
-(draw-padding 0xfa nil)
-(draw-related-boxes (concat [(text "W" :math [:sub "c"]) 1 1 (text "W" :math [:sub "p"])]))
+(draw-box (text "Settings block 1") [{:span 16} :box-above])
+(draw-box nil [{:span 16} :box-below])
+(draw-box (text "Settings block 2 (only CDJ-3000)") [{:span 16} :box-above])
+(draw-box nil [{:span 16} :box-below])
+
 
 (draw-padding 0x110 nil)
 (draw-box (text "edit" :math [:sub "menu"]) {:span 3})
@@ -499,33 +499,7 @@ Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus players, `1f` fo
 
 Byte `cd`, labeled _t_, is used to indicate when a player supports xref:touch_audio.adoc[Touch Audio], by setting bit 5.
 
-Byte `fa` (labeled _W~c~_) indicates the Waveform Color setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
-
-[#known-waveform-color-values]
-.Known _W~c~_ values.
-[cols=">1m,<6"]
-
-Byte `110`--`112`, labeled _edit~menu~_, turn to `01 02 03` for one packet and then to `02 02 03` when the track filter menu is opened.
-However, the values do not seem to change when you change any settings in the menu itself. 
-|===
-|Value |Meaning
-
-|01 |Blue
-|03 |RGB
-|04 |3-Band
-|===
-
-Byte `fd` (labeled _W~p~_) indicates the Waveform Current Position setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
-
-[#known-waveform-current-position-values]
-.Known _W~p~_ values.
-[cols=">1m,<6"]
-|===
-|Value |Meaning
-
-|01 |Center
-|02 |Left
-|===
+Bytes `d0`--`ef` and `ff`--`10f` seem to be some kind of setting blocks. See xref:vcdj.adoc#cdj-settings-block[here] for more details.
 
 Byte `113`, labeled _P~4~_, is another play state.
 The data looks like flags, however, so far we have not found a _consistent_ bit pattern.
@@ -638,6 +612,69 @@ It indicates the ending position of the loop within the track in milliseconds, u
 
 Bytes `1c8`-`1c9` (labeled _Loop~b~_ for “Loop Beats”) will be also be non-zero when a CDJ-3000 is actively playing a loop (whether that loop was stored in the track metadata or dynamically set up by the DJ).
 It holds the number of whole beats in the loop, so is not meaningful for sub-beat loops.
+
+[#cdj-settings-block]
+=== CDJ Settings blocks
+
+Setting blocks store and share the settings of the player.
+Each valid packet starts with `12 34 56 78`, if there is no setting block all values read zero.
+CDJ-3000 status packets have two setting blocks, CDJ-2000 only one, XDJ-1000 do not send any.
+
+The blocks look something like this.
+We assume all the zero-values are reserved for future use.
+
+[bytefield]
+----
+(draw-related-boxes [18 52 86 120])
+(draw-related-boxes [00 00 00 01])
+(draw-box (text "s" :math [:sub "1"]))
+(draw-box (text "s" :math [:sub "2"]))
+(draw-box (text "s" :math [:sub "3"]))
+(draw-box (text "s" :math [:sub "4"]))
+(draw-box (text "s" :math [:sub "5"]))
+(draw-box (text "s" :math [:sub "6"]))
+(draw-related-boxes [00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00])
+(draw-bottom)
+----
+
+So far we only identified two settings for Block 1:
+
+Byte `08` (setting 1) reads always `01`. Not identified yet.
+
+Byte `09` (setting 2) reads always `01`. Not identified yet.
+
+Byte `0a` (setting 3) indicates the Waveform Color setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
+
+[#known-waveform-color-values]
+.Known values.
+[cols=">1m,<6"]
+|===
+|Value |Meaning
+
+|01 |Blue
+|03 |RGB
+|04 |3-Band
+|===
+
+Byte `0b` (setting 4) reads always `01`. Not identified yet.
+
+Byte `0c` (setting 5) reads always `02`. Not identified yet.
+
+Byte `0d` (setting 6) indicates the Waveform Current Position setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
+
+[#known-waveform-current-position-values]
+.Known values.
+[cols=">1m,<6"]
+|===
+|Value |Meaning
+
+|01 |Center
+|02 |Left
+|===
+
+In setting block 2, the values are not identified yet.
+On a CDJ-3000 the six-bytes read `01 01 01 00 01 01`.
+
 
 [#rekordbox-status-packets]
 == Rekordbox Status packets
