@@ -286,7 +286,7 @@ Byte{nbsp}``6a``, labeled _U~a~_ (for “USB activity”), alternates between th
 correlation.
 Byte{nbsp}``6b``, _S~a~_, is the same kind of activity indicator for the SD slot.
 
-Byte{nbsp}``6f`` (_U~l~_ for “USB local”) has the value `04` when there is no USB media loaded, `00` when USB is loaded, and `02` or`03` when the USB Stop button has been pressed and the USB media is being unmounted.
+Byte{nbsp}``6f`` (_U~l~_ for “USB local”) has the value `04` when there is no USB media loaded, `00` when USB is loaded, and `02` or `03` when the USB Stop button has been pressed and the USB media is being unmounted.
 Byte{nbsp}``73`` (_S~l~_ for “SD local”) has the value `04` when there is no SD media loaded, `00` when SD is loaded, and `02` or `03` when the SD door has been opened and the SD media is being unmounted.
 
 Byte{nbsp}``75``, labeled _L_ (for “Link available”), appears to have the value `01` whenever USB, SD, or CD media is present in any player on the network, regardless of whether the Link option is chosen in the other players, and `00` otherwise.
