@@ -178,9 +178,15 @@ include::example$status_shared.edn[]
 (draw-related-boxes [0x12 0x34 0x56 0x78])
 (draw-padding 0xfa nil)
 (draw-related-boxes (concat [(text "W" :math [:sub "c"]) 1 1 (text "W" :math [:sub "p"])]))
+
 (draw-padding 0x110 nil)
 (draw-box (text "edit" :math [:sub "menu"]) {:span 3})
 (draw-box (text "P" :math [:sub "4"]))
+(draw-padding 0x116 nil)
+(draw-box (text "T" :math [:sub "b"]) {:span 2})
+(draw-padding 0x11a nil)
+(draw-box (text "T" :math [:sub "p"]) {:span 2})
+(draw-box (text "n" :math [:sub "mc"]))
 (draw-padding 0x11d nil)
 (draw-related-boxes (concat [(text "Buf" :math [:sub "f"]) (text "Buf" :math [:sub "b"]) (text "Buf" :math [:sub "s"])]))
 (draw-box (text "NeedleCntPos") {:span 4})
@@ -539,6 +545,21 @@ The meanings that we have found so far are:
 |33 |Player is playing in reverse and is in master mode.
 |25 |Player is slipping in reverse mode.
 |===
+
+Next, we found some high-resolution bar position information.
+We assume it is to render the small phase meter diagram above the big waveform, which is only available in later players.
+
+Bytes `116`-`117` (_T~b~_) show how many _timesteps_ the current bar has.
+Note that is _almost_ the same for each bar, however, it seem to change by +/-1.
+Perhaps because of how the song was analyzed.
+This value is also depended on the tempo.
+
+Bytes `11a`-`11b` (_T~pos~_) give the position in the current bar in relation to _T~b~_.
+At the beginning of the bar it reads `0000` and slightly searching with the jog wheel moves it up until the end of the bar.
+Note that _T~b~_ and _T~pos~_ are only available when the player is in master mode and not playing, otherwise they read all zeros.
+Interestingly, when the loop is very small (1/2 beat and below) these values become active again, maybe to indicate in detail where the loop actually is.
+
+Byte `11c` seem to give information about which is the next memory cue, starting from `0a` for the first memory cue.
 
 Bytes `11d`-`11e` (_Buf~f~_ and  _Buf~b~_ respectively) seem to indicate the in-memory buffer status of the player.
 The buffer is shown on the player under the waveform with a thin red bar.
