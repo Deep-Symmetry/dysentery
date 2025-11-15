@@ -311,6 +311,7 @@ The values seen so far, and their apparent meanings, are:
 |09 |Player is searching forwards or backwards.
 |0e |Audio CD has spun down due to lack of use.
 |11 |Player reached the end of the track and stopped.
+|12 |Player is in emergency loop.
 |===
 
 The value _Firmware_ at bytes{nbsp}``7c``–`7f` is an ASCII representation of the firmware version running in the player.
@@ -414,6 +415,7 @@ The meanings that we have found so far are:
 |00 |No track is loaded.
 |01 |Player is paused or playing in Reverse mode.
 |09 |Player is playing in Forward mode with jog mode set to Vinyl.
+|0b |Player is currently slipping.
 |0d |Player is playing in Forward mode with jog mode set to CDJ.
 |===
 
