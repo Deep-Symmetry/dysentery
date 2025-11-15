@@ -110,7 +110,13 @@ include::example$status_shared.edn[]
 
 (draw-related-boxes [0 0])
 (draw-box (text "Track" :math) {:span 2})
-(draw-related-boxes (concat [0 0 0 (text "d" :math [:sub "l"]) 0 0 0xa0 0 0 0 0 0] (repeat 6 0)))
+(draw-box 0)
+(draw-box (text "t" :math [:sub "srt"]))
+(draw-box 0)
+(draw-box (text "t" :math [:sub "src"]))
+(draw-box (text "t" :math [:sub "cat1"]) {:span 4})
+(draw-box (text "t" :math [:sub "cat2"]) {:span 4})
+(draw-related-boxes (repeat 6 0))
 (draw-box (text "d" :math [:sub "n"]) {:span 2})
 (draw-related-boxes (concat (repeat 0x20 0)
                             [1 0 (text "U" :math [:sub "a"]) (text "S" :math [:sub "a"])
@@ -217,12 +223,42 @@ In all cases, combined with the player number and slot information, this can be 
 The track number being played (its position within a playlist or other scrolling list of tracks, as displayed on the CDJ) can be found at bytes{nbsp}``32`` and `33`, labeled _Track_.
 (It may be a 4-byte value and also include bytes `30` and `31`, but that would seem an unmanageable number of tracks to search through.)
 
-The field _d~l~_ at byte{nbsp}``37`` was given this label because we first believed it to indicate when a disc is loaded.
-It has the value `00` when the disc slot is empty, and seems to have the value `1e`
-when a CD Audio disc is loaded, and `11` when a data disc containing files in MP3, AAC, WAV or AIFF format is loaded.
-However, we later noticed that it also gets non-zero values when a track is loaded from
-a playlist (`05`) or another player menu (different values, depending on the type of menu; if anyone would like to take the time to record all the different values and their meanings, a report on the https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger[Zulip channel] or—if you are willing to fork the project and update this document, a pull request—would be extremely welcome).
-Relatedly, when a track is loaded from a disc, playlist, or menu, the field _d~n~_ at bytes{nbsp}``46``–`47` changes from `0000` to the number of tracks on the disc or in the playlist or menu (a data disc will generally have one track).
+Byte{nbsp}``35``, labeled _t~srt~_, indicates the sort state in the browse menu. Mapping: `00`: default, `01`: Alphabet, `02`: Artist, `03`: Album, `04`: BPM, `05`: Rating, `0c`: Key.
+
+The field _t~src~_ at byte{nbsp}``37`` was initially given the label _d~l~_, since it was thought of indicating whether a disc is loaded.
+However, it is rather a track source field.
+So far, we have observed the following values.
+Please note, that this list can be incomplete (and was yet only tested on CDJ-2000nxs2).
+
+[#knows-tsrc-values]
+.Known _t~src~_ values.
+[cols=">1m,<12"]
+|===
+|Value |Source from where the track was loaded
+
+|00 |No track is loaded.
+|02 |Artist menu
+|03 |Album menu
+|04 |Track menu
+|05 |Playlist
+|06 |BPM menu
+|0c |Key menu
+|11 |Folder menu (Same when loaded from CD)
+|12 |Search song
+|16 |History
+|1f |Search artist
+|20 |Search album
+|28 |Tag List
+|32 |Instant double or previous track
+|===
+
+Depending on the source from where the song was loaded, the next two 4-byte fields _t~cat1~_ and _t~cat2~_ at bytes{nbsp}``38``--`3a` and `3b`--`3f` indicate detail information of the track.
+For example, when the song is picked first by the artist menu, then the album and finally the track, _t~cat1~_ will have the rekordbox ID of the artist and _t~cat2~_ the ID of the album.
+Another example, when choosing via the BPM menu, you can first select a BPM value, which will end up in _t~cat1~_ and then a range, which lands in _t~cat2~_.
+Same applies for searches.
+Whether the track was loaded locally or from a linked devices does not seem to matter.
+
+Relatedly, when a track is loaded from a disc, playlist, or menu (including searches), the field _d~n~_ at bytes{nbsp}``46``–`47` changes from `0000` to the number of tracks on the disc or in the playlist or menu (a data disc will generally have one track).
 
 Some of the fields shown as having value `00` in this region will sometimes have other values in them; their meanings are simply not yet known.
 If you notice any patterns or figure anything out _please_ let us know on https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger[Zulip] or open a pull request!
