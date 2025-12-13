@@ -83,7 +83,11 @@ If the mixer has been the tempo master, and it is currently yielding this role t
 
 Packets from a CDJ have the content shown below. Nexus players have a length of `d4` bytes.
 Older players send `d0`-byte packets with slightly less information (notably the current beat number is not available, so it is impossible to interpolate playback position to calculate a virtual timecode value).
-Newer firmware and Nexus 2 players send packets that are `11c` or `124` bytes long. CDJ-3000 devices send packets that are `200` bytes long.
+Newer firmware and Nexus 2 players send packets that are `11c` or `124` bytes long.
+XDJ-1000 send packets that are `11b` bytes long.
+CDJ-3000 devices send packets that are `200` bytes long.
+
+Status packets are send every 200ms, except when using the jog wheel.
 
 [#cdj-status-packet]
 .CDJ status packet.
@@ -106,10 +110,23 @@ include::example$status_shared.edn[]
 
 (draw-related-boxes [0 0])
 (draw-box (text "Track" :math) {:span 2})
-(draw-related-boxes (concat [0 0 0 (text "d" :math [:sub "l"]) 0 0 0xa0 0 0 0 0 0] (repeat 6 0)))
+(draw-box 0)
+(draw-box (text "t" :math [:sub "srt"]))
+(draw-box 0)
+(draw-box (text "t" :math [:sub "src"]))
+(draw-box (text "t" :math [:sub "cat1"]) {:span 4})
+(draw-box (text "t" :math [:sub "cat2"]) {:span 4})
+(draw-related-boxes (repeat 6 0))
 (draw-box (text "d" :math [:sub "n"]) {:span 2})
-(draw-related-boxes (concat (repeat 0x20 0)
-                            [1 0 (text "U" :math [:sub "a"]) (text "S" :math [:sub "a"])
+(draw-related-boxes (repeat 0x10 0))
+(draw-box (text "ld" :math [:sub "1"]))
+(draw-related-boxes [0])
+(draw-box (text "u" :math [:sub "c1"]) {:span 2})
+(draw-related-boxes [0 0])
+(draw-box (text "u" :math [:sub "t"]) {:span 2})
+(draw-related-boxes (repeat 6 0))
+(draw-box (text "ld" :math [:sub "2"]) {:span 2})
+(draw-related-boxes (concat [1 0 (text "U" :math [:sub "a"]) (text "S" :math [:sub "a"])
                              0 0 0 (text "U" :math [:sub "l"]) 0 0 0
                              (text "S" :math [:sub "l"]) 0]))
 (draw-box (text "L" :math))
@@ -119,7 +136,7 @@ include::example$status_shared.edn[]
 
 (draw-related-boxes [0 0 0 0])
 (draw-box (text "Sync" :math [:sub "n"]) {:span 4})
-(draw-box 0)
+(draw-box (text "u" :math [:sub "c2"]))
 (draw-box (text "F" :math))
 (draw-box 0xff)
 (draw-box (text "P" :math [:sub "2"]))
@@ -127,7 +144,8 @@ include::example$status_shared.edn[]
 
 (draw-box (text "M" :math [:sub "v"]) {:span 2})
 (draw-box (text "BPM" :math) {:span 2})
-(draw-related-boxes [0x7f 0xff 0xff 0xff])
+(draw-box (text "M" :math [:sub "slip"]) {:span 2})
+(draw-box (text "BPM" :math [:sub "slip"]) {:span 2})
 (draw-box (text "Pitch" :math [:sub "2"]) {:span 4})
 (draw-box 0)
 (draw-box (text "P" :math [:sub "3"]))
@@ -137,7 +155,9 @@ include::example$status_shared.edn[]
 (draw-box (text "Beat" :math) {:span 4})
 (draw-box (text "Cue" :math) {:span 2})
 (draw-box (text "B" :math [:sub "b"]))
-(draw-related-boxes (repeat 15 0))
+(draw-related-boxes (repeat 12 0))
+(draw-box (text "u" :math [:sub "g"]))
+(draw-related-boxes [0 0])
 (draw-box 1)
 (draw-box (text "M" :math [:sub "p"]))
 (draw-box (text "U" :math [:sub "e"]))
@@ -152,14 +172,24 @@ include::example$status_shared.edn[]
 (draw-box (text "nx" :math))
 (draw-box (text "t" :math))
 (draw-related-boxes (repeat 2 0))
-(draw-related-boxes [0x12 0x34 0x56 0x78])
-(draw-padding 0xf0 nil)
 
-(draw-related-boxes [0x12 0x34 0x56 0x78])
-(draw-padding 0xfa nil)
-(draw-related-boxes (concat [(text "W" :math [:sub "c"]) 1 1 (text "W" :math [:sub "p"])]))
+(draw-box (text "Settings block 1") [{:span 16} :box-above])
+(draw-box nil [{:span 16} :box-below])
+(draw-box (text "Settings block 2 (only CDJ-3000)") [{:span 16} :box-above])
+(draw-box nil [{:span 16} :box-below])
+
+
+(draw-padding 0x110 nil)
+(draw-box (text "edit" :math [:sub "menu"]) {:span 3})
+(draw-box (text "P" :math [:sub "4"]))
+(draw-padding 0x116 nil)
+(draw-box (text "T" :math [:sub "b"]) {:span 2})
+(draw-padding 0x11a nil)
+(draw-box (text "T" :math [:sub "p"]) {:span 2})
+(draw-box (text "n" :math [:sub "mc"]))
 (draw-padding 0x11d nil)
 (draw-related-boxes (concat [(text "Buf" :math [:sub "f"]) (text "Buf" :math [:sub "b"]) (text "Buf" :math [:sub "s"])]))
+(draw-box (text "NeedleCntPos") {:span 4})
 
 (draw-padding 0x158 nil)
 (draw-box (text "M" :math [:sub "t"]))
@@ -181,7 +211,7 @@ include::example$status_shared.edn[]
 
 These use yet another packet structure variant following the device name.
 As always the byte after the name has the value `01`, but the subtype value which follows that (at byte{nbsp}``20``) has the value `03` here, rather than `00` as we saw in the mixer status packets.
-Values of `03`, `04` and `06` have been seen which may indicate this byte represents the protocol or packet version.
+Values of `03`, `04`, `05` and `06` have been seen which may indicate this byte represents the protocol or packet version.
 
 Packets of subtype `03` seem structurally equivalent to subtype `00` however: the subtype indicator is followed by the Device Number _D_ at byte{nbsp}``21`` and a length-remaining value _len~r~_ at bytes{nbsp}``22``–`23`.
 If anyone can think of a reason why these packets don’t simply reuse subtype `00`, please share it!
@@ -213,21 +243,59 @@ In all cases, combined with the player number and slot information, this can be 
 The track number being played (its position within a playlist or other scrolling list of tracks, as displayed on the CDJ) can be found at bytes{nbsp}``32`` and `33`, labeled _Track_.
 (It may be a 4-byte value and also include bytes `30` and `31`, but that would seem an unmanageable number of tracks to search through.)
 
-The field _d~l~_ at byte{nbsp}``37`` was given this label because we first believed it to indicate when a disc is loaded.
-It has the value `00` when the disc slot is empty, and seems to have the value `1e`
-when a CD Audio disc is loaded, and `11` when a data disc containing files in MP3, AAC, WAV or AIFF format is loaded.
-However, we later noticed that it also gets non-zero values when a track is loaded from
-a playlist (`05`) or another player menu (different values, depending on the type of menu; if anyone would like to take the time to record all the different values and their meanings, a report on the https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger[Zulip channel] or—if you are willing to fork the project and update this document, a pull request—would be extremely welcome).
-Relatedly, when a track is loaded from a disc, playlist, or menu, the field _d~n~_ at bytes{nbsp}``46``–`47` changes from `0000` to the number of tracks on the disc or in the playlist or menu (a data disc will generally have one track).
+Byte{nbsp}``35``, labeled _t~srt~_, indicates the sort state in the browse menu. Mapping: `00`: default, `01`: Alphabet, `02`: Artist, `03`: Album, `04`: BPM, `05`: Rating, `0c`: Key.
+
+The field _t~src~_ at byte{nbsp}``37`` was initially given the label _d~l~_, since it was thought of indicating whether a disc is loaded.
+However, it is rather a track source field.
+So far, we have observed the following values.
+Please note, that this list can be incomplete (and was yet only tested on CDJ-2000nxs2).
+
+[#knows-tsrc-values]
+.Known _t~src~_ values.
+[cols=">1m,<12"]
+|===
+|Value |Source from where the track was loaded
+
+|00 |No track is loaded.
+|02 |Artist menu
+|03 |Album menu
+|04 |Track menu
+|05 |Playlist
+|06 |BPM menu
+|0c |Key menu
+|11 |Folder menu (Same when loaded from CD)
+|12 |Search song
+|16 |History
+|1f |Search artist
+|20 |Search album
+|28 |Tag List
+|32 |Instant double or previous track
+|===
+
+Depending on the source from where the song was loaded, the next two 4-byte fields _t~cat1~_ and _t~cat2~_ at bytes{nbsp}``38``--`3a` and `3b`--`3f` indicate detail information of the track.
+For example, when the song is picked first by the artist menu, then the album and finally the track, _t~cat1~_ will have the rekordbox ID of the artist and _t~cat2~_ the ID of the album.
+Another example, when choosing via the BPM menu, you can first select a BPM value, which will end up in _t~cat1~_ and then a range, which lands in _t~cat2~_.
+Same applies for searches.
+Whether the track was loaded locally or from a linked devices does not seem to matter.
+
+Relatedly, when a track is loaded from a disc, playlist, or menu (including searches), the field _d~n~_ at bytes{nbsp}``46``–`47` changes from `0000` to the number of tracks on the disc or in the playlist or menu (a data disc will generally have one track).
 
 Some of the fields shown as having value `00` in this region will sometimes have other values in them; their meanings are simply not yet known.
 If you notice any patterns or figure anything out _please_ let us know on https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger[Zulip] or open a pull request!
+
+Next we identified some update triggers that seem to tell other CDJs that, e.g., the cue points were updated.
+Byte{nbsp}``58`` is called _ld~1~_, since it briefly shows `80` when a new song is loaded (see also _ld~2~_, which seem to change when load is finished).
+Byte{nbsp}``5a``--`5b`, labeled _u~c1~_ (update cue info 1) shows `ffff` for one packet when a hot cue is added or deleted as well as when a memory cue is added or removed.
+Byte{nbsp}``5e``--`5f`, labeled _u~t~_ (update tag list) changes for one packet to `00ff`, then to `ff00` and again to `0000` when a song is tagged.
+Byte{nbsp}``66``--`67`, _ld~2~_ shows `ffff` for one packet when a song has finished loaded.
+(Quick note: I think _ld~1~_ is rather a status flag as it is only one byte and does not follow the same scheme as the other _update_ packets. Hence _ld~2~_ is more like update of track on player).
+Assumedly, there are more update triggers in this area of the packet.
 
 Byte{nbsp}``6a``, labeled _U~a~_ (for “USB activity”), alternates between the values `04` and `06` when there is USB activity—it may even alternate in time with the flashing USB indicator LED on the player, although visual inspection suggests there is not a perfect
 correlation.
 Byte{nbsp}``6b``, _S~a~_, is the same kind of activity indicator for the SD slot.
 
-Byte{nbsp}``6f`` (_U~l~_ for “USB local”) has the value `04` when there is no USB media loaded, `00` when USB is loaded, and `02` or`03` when the USB Stop button has been pressed and the USB media is being unmounted.
+Byte{nbsp}``6f`` (_U~l~_ for “USB local”) has the value `04` when there is no USB media loaded, `00` when USB is loaded, and `02` or `03` when the USB Stop button has been pressed and the USB media is being unmounted.
 Byte{nbsp}``73`` (_S~l~_ for “SD local”) has the value `04` when there is no SD media loaded, `00` when SD is loaded, and `02` or `03` when the SD door has been opened and the SD media is being unmounted.
 
 Byte{nbsp}``75``, labeled _L_ (for “Link available”), appears to have the value `01` whenever USB, SD, or CD media is present in any player on the network, regardless of whether the Link option is chosen in the other players, and `00` otherwise.
@@ -252,6 +320,7 @@ The values seen so far, and their apparent meanings, are:
 |09 |Player is searching forwards or backwards.
 |0e |Audio CD has spun down due to lack of use.
 |11 |Player reached the end of the track and stopped.
+|12 |Player is in emergency loop.
 |===
 
 The value _Firmware_ at bytes{nbsp}``7c``–`7f` is an ASCII representation of the firmware version running in the player.
@@ -340,6 +409,9 @@ When no track is loaded, _BPM_ has the value `ffff`.
 _M~v~_ (bytes `90`–`91`) seems to control whether the _BPM_ value is accepted when this player is the master.
 It has the value `7fff` when no track is loaded, `8000` when a rekordbox track is loaded, and `0000` when a non-rekordbox track (like from a physical CD) is loaded, and only when the value is `8000` are tempos from this player accepted when it is acting as master (otherwise the mixer shows the master to have a tempo of “`---.-`” and other players do not respond to its tempo changes).
 
+Bytes{nbsp}``94``--`97` have the same characteristics as _M~v~_ and _BPM_ when the player is currently slipping.
+By default these bytes read `7fff` and `ffff`.
+
 Byte{nbsp}``9d`` (labeled _P~3~_) seems to communicate additional information about the current play mode.
 The meanings that we have found so far are:
 
@@ -352,6 +424,7 @@ The meanings that we have found so far are:
 |00 |No track is loaded.
 |01 |Player is paused or playing in Reverse mode.
 |09 |Player is playing in Forward mode with jog mode set to Vinyl.
+|0b |Player is currently slipping.
 |0d |Player is playing in Forward mode with jog mode set to CDJ.
 |===
 
@@ -377,6 +450,8 @@ As each beat goes by, this value decreases by 1, until the cue point is about to
 On the beat on which the cue point was saved the value is `0000` and the CDJ displays
 “`00.0 Bars`”.
 On the next beat, the value becomes determined by the next cue point (if any) in the track.
+
+Byte `b3`, labeled _u~g~_ (update grid), seems to change to `ff` when the beat grid is changed (By long-pressing the rotary encoder next to the screen).
 
 Byte `b7`, labeled _Mp_, seems to indicate local media presence status on the CDJ-3000.
 For other players, this value remains `0`.
@@ -424,36 +499,50 @@ Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus players, `1f` fo
 
 Byte `cd`, labeled _t_, is used to indicate when a player supports xref:touch_audio.adoc[Touch Audio], by setting bit 5.
 
-Byte `fa` (labeled _W~c~_) indicates the Waveform Color setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
+Bytes `d0`--`ef` and `ff`--`10f` seem to be some kind of setting blocks. See xref:vcdj.adoc#cdj-settings-block[here] for more details.
 
-[#known-waveform-color-values]
-.Known _W~c~_ values.
-[cols=">1m,<6"]
+Byte `113`, labeled _P~4~_, is another play state.
+The data looks like flags, however, so far we have not found a _consistent_ bit pattern.
+Help on this is appreciated. 
+The meanings that we have found so far are:
+
+[#known-p4-values]
+.Known _P~4~_ values.
+[cols=">1m,<12"]
+
 |===
 |Value |Meaning
 
-|01 |Blue
-|03 |RGB
-|04 |3-Band
+|05 |Player is playing and not in master mode.
+|07 |Player is playing and in master mode.
+|23 |Player is playing in reserve and is not in master mode.
+|33 |Player is playing in reverse and is in master mode.
+|25 |Player is slipping in reverse mode.
 |===
 
-Byte `fd` (labeled _W~p~_) indicates the Waveform Current Position setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
+Next, we found some high-resolution bar position information.
+We assume it is to render the small phase meter diagram above the big waveform, which is only available in later players.
 
-[#known-waveform-current-position-values]
-.Known _W~p~_ values.
-[cols=">1m,<6"]
-|===
-|Value |Meaning
+Bytes `116`-`117` (_T~b~_) show how many _timesteps_ the current bar has.
+Note that is _almost_ the same for each bar, however, it seem to change by +/-1.
+Perhaps because of how the song was analyzed.
+This value is also depended on the tempo.
 
-|01 |Center
-|02 |Left
-|===
+Bytes `11a`-`11b` (_T~pos~_) give the position in the current bar in relation to _T~b~_.
+At the beginning of the bar it reads `0000` and slightly searching with the jog wheel moves it up until the end of the bar.
+Note that _T~b~_ and _T~pos~_ are only available when the player is in master mode and not playing, otherwise they read all zeros.
+Interestingly, when the loop is very small (1/2 beat and below) these values become active again, maybe to indicate in detail where the loop actually is.
+
+Byte `11c` seem to give information about which is the next memory cue, starting from `0a` for the first memory cue.
 
 Bytes `11d`-`11e` (_Buf~f~_ and  _Buf~b~_ respectively) seem to indicate the in-memory buffer status of the player.
 The buffer is shown on the player under the waveform with a thin red bar.
 As this bar expands, the values in `11d` and `11e` increase. `11d` indicates the buffer length in the forward direction from the playhead, `11e` indicates the buffer length in the backwards direction from the playhead.
 
 Byte `11f` (_Buf~s~_ for “Buffer Status”) changes to value `01` when the entire track is buffered in memory.
+
+Bytes `120`-`124` (_NeedleCntPos_) gives the timestamp of the currently set needle counter (by dragging on the touch screen in the waveform preview of a playing song).
+Reads all zeros, when not set or needle was _passed_.
 
 Byte `158` (labeled _M~t~_) indicates whether Master Tempo is engaged on the deck, having the value `00` when it is off, and `01` when on.
 
@@ -523,6 +612,69 @@ It indicates the ending position of the loop within the track in milliseconds, u
 
 Bytes `1c8`-`1c9` (labeled _Loop~b~_ for “Loop Beats”) will be also be non-zero when a CDJ-3000 is actively playing a loop (whether that loop was stored in the track metadata or dynamically set up by the DJ).
 It holds the number of whole beats in the loop, so is not meaningful for sub-beat loops.
+
+[#cdj-settings-block]
+=== CDJ Settings blocks
+
+Setting blocks store and share the settings of the player.
+Each valid packet starts with `12 34 56 78`, if there is no setting block all values read zero.
+CDJ-3000 status packets have two setting blocks, CDJ-2000 only one, XDJ-1000 do not send any.
+
+The blocks look something like this.
+We assume all the zero-values are reserved for future use.
+
+[bytefield]
+----
+(draw-related-boxes [18 52 86 120])
+(draw-related-boxes [00 00 00 01])
+(draw-box (text "s" :math [:sub "1"]))
+(draw-box (text "s" :math [:sub "2"]))
+(draw-box (text "s" :math [:sub "3"]))
+(draw-box (text "s" :math [:sub "4"]))
+(draw-box (text "s" :math [:sub "5"]))
+(draw-box (text "s" :math [:sub "6"]))
+(draw-related-boxes [00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00])
+(draw-bottom)
+----
+
+So far we only identified two settings for Block 1:
+
+Byte `08` (setting 1) reads always `01`. Not identified yet.
+
+Byte `09` (setting 2) reads always `01`. Not identified yet.
+
+Byte `0a` (setting 3) indicates the Waveform Color setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
+
+[#known-waveform-color-values]
+.Known values.
+[cols=">1m,<6"]
+|===
+|Value |Meaning
+
+|01 |Blue
+|03 |RGB
+|04 |3-Band
+|===
+
+Byte `0b` (setting 4) reads always `01`. Not identified yet.
+
+Byte `0c` (setting 5) reads always `02`. Not identified yet.
+
+Byte `0d` (setting 6) indicates the Waveform Current Position setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
+
+[#known-waveform-current-position-values]
+.Known values.
+[cols=">1m,<6"]
+|===
+|Value |Meaning
+
+|01 |Center
+|02 |Left
+|===
+
+In setting block 2, the values are not identified yet.
+On a CDJ-3000 the six-bytes read `01 01 01 00 01 01`.
+
 
 [#rekordbox-status-packets]
 == Rekordbox Status packets
