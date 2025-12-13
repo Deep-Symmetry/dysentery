@@ -1,6 +1,7 @@
 DirectoryPath: "doc/build/site"
 IgnoreURLs:
-  - "https://www.crunchbase.com/organization/encirq-corporation"
-  - "github.com"
   - "bufferpool.quora.com"
+  - "github.com"
+  - "https://www.crunchbase.com/organization/encirq-corporation"
+  - "soundcloud.com"
   - "www.quora.com"
