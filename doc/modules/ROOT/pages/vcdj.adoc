@@ -87,7 +87,7 @@ Newer firmware and Nexus 2 players send packets that are `11c` or `124` bytes lo
 XDJ-1000 send packets that are `11b` bytes long.
 CDJ-3000 devices send packets that are `200` bytes long.
 
-Status packets are send every 200ms, except when using the jog wheel.
+Status packets are sent roughly every 200ms, except when using the jog wheel: newer players might send them more frequently during such changes.
 
 [#cdj-status-packet]
 .CDJ status packet.
@@ -189,7 +189,7 @@ include::example$status_shared.edn[]
 (draw-box (text "n" :math [:sub "mc"]))
 (draw-padding 0x11d nil)
 (draw-related-boxes (concat [(text "Buf" :math [:sub "f"]) (text "Buf" :math [:sub "b"]) (text "Buf" :math [:sub "s"])]))
-(draw-box (text "NeedleCntPos") {:span 4})
+(draw-box (text "NeedleDragPos" :math) {:span 4})
 
 (draw-padding 0x158 nil)
 (draw-box (text "M" :math [:sub "t"]))
@@ -243,14 +243,30 @@ In all cases, combined with the player number and slot information, this can be 
 The track number being played (its position within a playlist or other scrolling list of tracks, as displayed on the CDJ) can be found at bytes{nbsp}``32`` and `33`, labeled _Track_.
 (It may be a 4-byte value and also include bytes `30` and `31`, but that would seem an unmanageable number of tracks to search through.)
 
-Byte{nbsp}``35``, labeled _t~srt~_, indicates the sort state in the browse menu. Mapping: `00`: default, `01`: Alphabet, `02`: Artist, `03`: Album, `04`: BPM, `05`: Rating, `0c`: Key.
+Byte{nbsp}``35``, labeled _t~srt~_, indicates the track sort state that was in effect in the browse menu when the track was loaded.
 
-The field _t~src~_ at byte{nbsp}``37`` was initially given the label _d~l~_, since it was thought of indicating whether a disc is loaded.
-However, it is rather a track source field.
-So far, we have observed the following values.
-Please note, that this list can be incomplete (and was yet only tested on CDJ-2000nxs2).
+[#known-tsrt-values]
+.Known _t~srt~_ values
+[cols=">1m,<12"]
+|===
+|Value |Sort mode
 
-[#knows-tsrc-values]
+|00 |Default
+|01 |Track Title
+|02 |Artist Name
+|03 |Album Name
+|04 |BPM
+|05 |Rating
+|0c |Key
+|===
+
+Reversing the sort order does not affect this value.
+
+The field _t~src~_ at byte{nbsp}``37`` was initially given the label _d~l~_, since it seemed to indicate whether a disc was loaded.
+However, it is instead a track source field which indicates the menu from which a track was loaded.
+So far, we have observed the following values:
+
+[#known-tsrc-values]
 .Known _t~src~_ values.
 [cols=">1m,<12"]
 |===
@@ -263,7 +279,7 @@ Please note, that this list can be incomplete (and was yet only tested on CDJ-20
 |05 |Playlist
 |06 |BPM menu
 |0c |Key menu
-|11 |Folder menu (Same when loaded from CD)
+|11 |Folder menu (same when loaded from CD)
 |12 |Search song
 |16 |History
 |1f |Search artist
@@ -272,11 +288,10 @@ Please note, that this list can be incomplete (and was yet only tested on CDJ-20
 |32 |Instant double or previous track
 |===
 
-Depending on the source from where the song was loaded, the next two 4-byte fields _t~cat1~_ and _t~cat2~_ at bytes{nbsp}``38``--`3a` and `3b`--`3f` indicate detail information of the track.
-For example, when the song is picked first by the artist menu, then the album and finally the track, _t~cat1~_ will have the rekordbox ID of the artist and _t~cat2~_ the ID of the album.
-Another example, when choosing via the BPM menu, you can first select a BPM value, which will end up in _t~cat1~_ and then a range, which lands in _t~cat2~_.
-Same applies for searches.
-Whether the track was loaded locally or from a linked devices does not seem to matter.
+Depending on the manu from which the track was loaded, the next two 4-byte fields _t~cat1~_ and _t~cat2~_ at bytes{nbsp}``38``--`3a` and `3b`--`3f` provide information about menu choices that were made along the way.
+For example, when the track is picked by choosing an artist from the artist menu, then an album, and finally the track, _t~cat1~_ will have the rekordbox ID of the artist and _t~cat2~_ the ID of the album.
+As another example, when choosing via the BPM menu, you can first select a BPM value, which will end up in _t~cat1~_ and then a range, which lands in _t~cat2~_.
+Similar information is available when searches are used to find artists and/or albums on the path to tracks.
 
 Relatedly, when a track is loaded from a disc, playlist, or menu (including searches), the field _d~n~_ at bytes{nbsp}``46``–`47` changes from `0000` to the number of tracks on the disc or in the playlist or menu (a data disc will generally have one track).
 
@@ -285,11 +300,12 @@ If you notice any patterns or figure anything out _please_ let us know on https:
 
 Next we identified some update triggers that seem to tell other CDJs that, e.g., the cue points were updated.
 Byte{nbsp}``58`` is called _ld~1~_, since it briefly shows `80` when a new song is loaded (see also _ld~2~_, which seem to change when load is finished).
-Byte{nbsp}``5a``--`5b`, labeled _u~c1~_ (update cue info 1) shows `ffff` for one packet when a hot cue is added or deleted as well as when a memory cue is added or removed.
-Byte{nbsp}``5e``--`5f`, labeled _u~t~_ (update tag list) changes for one packet to `00ff`, then to `ff00` and again to `0000` when a song is tagged.
-Byte{nbsp}``66``--`67`, _ld~2~_ shows `ffff` for one packet when a song has finished loaded.
-(Quick note: I think _ld~1~_ is rather a status flag as it is only one byte and does not follow the same scheme as the other _update_ packets. Hence _ld~2~_ is more like update of track on player).
-Assumedly, there are more update triggers in this area of the packet.
+Bytes{nbsp}``5a``–`5b`, labeled _u~c1~_ (update cue info 1) shows `ffff` for one packet when a hot cue is added or deleted as well as when a memory cue is added or removed.
+Bytes{nbsp}``5e``–`5f`, labeled _u~t~_ (update tag list) changes for one packet to `00ff`, then to `ff00` and then returns to `0000` when a song is tagged.
+Bytes{nbsp}``66``–`67`, _ld~2~_ shows `ffff` for one packet when a song has finished being loaded.
+
+NOTE: We think _ld~1~_ is more like a status flag as it is only one byte, and does not follow the same scheme as the other update elements. Hence, _ld~2~_ is more likely to indicate the update of the track on the player.
+There may well be other update triggers in this area of the packet.
 
 Byte{nbsp}``6a``, labeled _U~a~_ (for “USB activity”), alternates between the values `04` and `06` when there is USB activity—it may even alternate in time with the flashing USB indicator LED on the player, although visual inspection suggests there is not a perfect
 correlation.
@@ -350,7 +366,7 @@ It seems to only be available on nexus (and later) players, and older ones alway
 (draw-box (hex-text 0 1))
 ----
 
-> Bit 6, “Play”, is 1 when the player is playing, and 0 when it is idle. Bit 5, “Master”, indicates whether it is the current tempo master, while bit 4, “Sync” tracks whether it is in sync mode.
+NOTE: Bit 6, “Play”, is 1 when the player is playing, and 0 when it is idle. Bit 5, “Master”, indicates whether it is the current tempo master, while bit 4, “Sync” tracks whether it is in sync mode.
 Bit 3, “On-Air”, is 1 when it believes its output can be heard in the mix (so its platter lights will be red rather than white); this requires xref:mixer_integration.adoc#channels-on-air[cooperation with the mixer].
 Finally, bit 1, “BPM”, is 1 when the player has degraded in to BPM Sync mode (that is, it is in Sync mode, but the DJ has used pitch bend, e.g. nudged the jog wheel, so while it is still tracking the tempo of the Master player, it is no longer trying to align beats).
 
@@ -409,8 +425,8 @@ When no track is loaded, _BPM_ has the value `ffff`.
 _M~v~_ (bytes `90`–`91`) seems to control whether the _BPM_ value is accepted when this player is the master.
 It has the value `7fff` when no track is loaded, `8000` when a rekordbox track is loaded, and `0000` when a non-rekordbox track (like from a physical CD) is loaded, and only when the value is `8000` are tempos from this player accepted when it is acting as master (otherwise the mixer shows the master to have a tempo of “`---.-`” and other players do not respond to its tempo changes).
 
-Bytes{nbsp}``94``--`97` have the same characteristics as _M~v~_ and _BPM_ when the player is currently slipping.
-By default these bytes read `7fff` and `ffff`.
+Bytes{nbsp}``94``–`97` have the same characteristics as _M~v~_ and _BPM_ when the player is currently slipping.
+When slip play is not taking place these bytes read `7fff` and `ffff`.
 
 Byte{nbsp}``9d`` (labeled _P~3~_) seems to communicate additional information about the current play mode.
 The meanings that we have found so far are:
@@ -524,9 +540,9 @@ Next, we found some high-resolution bar position information.
 We assume it is to render the small phase meter diagram above the big waveform, which is only available in later players.
 
 Bytes `116`-`117` (_T~b~_) show how many _timesteps_ the current bar has.
-Note that is _almost_ the same for each bar, however, it seem to change by +/-1.
+Note that is _almost_ the same for each bar, however, it seems to change by +/-1.
 Perhaps because of how the song was analyzed.
-This value is also depended on the tempo.
+This value also depends on the tempo.
 
 Bytes `11a`-`11b` (_T~pos~_) give the position in the current bar in relation to _T~b~_.
 At the beginning of the bar it reads `0000` and slightly searching with the jog wheel moves it up until the end of the bar.
@@ -541,8 +557,8 @@ As this bar expands, the values in `11d` and `11e` increase. `11d` indicates the
 
 Byte `11f` (_Buf~s~_ for “Buffer Status”) changes to value `01` when the entire track is buffered in memory.
 
-Bytes `120`-`124` (_NeedleCntPos_) gives the timestamp of the currently set needle counter (by dragging on the touch screen in the waveform preview of a playing song).
-Reads all zeros, when not set or needle was _passed_.
+Bytes `120`-`124` (_NeedleDragPos_) gives the timestamp of the currently set needle counter (by dragging on the touch screen in the waveform preview of a playing song).
+Holds all zeros if a drag is not in progress or the needle was passed.
 
 Byte `158` (labeled _M~t~_) indicates whether Master Tempo is engaged on the deck, having the value `00` when it is off, and `01` when on.
 
