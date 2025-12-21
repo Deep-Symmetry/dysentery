@@ -615,12 +615,11 @@ It holds the number of whole beats in the loop, so is not meaningful for sub-bea
 [#cdj-settings-block]
 === CDJ Settings blocks
 
-Setting blocks store and share the settings of the player.
-Each valid packet starts with `12 34 56 78`, if there is no setting block all values read zero.
-CDJ-3000 status packets have two setting blocks, CDJ-2000 only one, XDJ-1000 do not send any.
+Settings blocks share some settings of the player.
+Each valid block starts with `12 34 56 78`. If there is no settings block all values are zero.
+CDJ-3000 status packets have two settings blocks, CDJ-2000 packets have only one, and XDJ-1000s do not send any.
 
-The blocks look something like this.
-We assume all the zero-values are reserved for future use.
+The blocks look something like this:
 
 [bytefield]
 ----
@@ -636,16 +635,14 @@ We assume all the zero-values are reserved for future use.
 (draw-bottom)
 ----
 
-So far we only identified two settings for Block 1:
+So far we have only identified two settings in block 1:
 
-Byte `08` (setting 1) reads always `01`. Not identified yet.
+Bytes `08` and `09` (settings 1 and 2) have always been `01` in packets seen so far.
 
-Byte `09` (setting 2) reads always `01`. Not identified yet.
+Byte `0a` (setting 3) indicates the Waveform Color setting the player is using:
 
-Byte `0a` (setting 3) indicates the Waveform Color setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
-
-[#known-waveform-color-values]
-.Known values.
+[#settings-block-waveform-color-values]
+.Settings block waveform color values.
 [cols=">1m,<6"]
 |===
 |Value |Meaning
@@ -655,14 +652,12 @@ Byte `0a` (setting 3) indicates the Waveform Color setting the player is set to,
 |04 |3-Band
 |===
 
-Byte `0b` (setting 4) reads always `01`. Not identified yet.
+Bytes `0b` and `0c` (settings 4 and 5) have always been `01` in packets seen so far.
 
-Byte `0c` (setting 5) reads always `02`. Not identified yet.
+Byte `0d` (setting 6) indicates the Waveform Current Position setting the player is using:
 
-Byte `0d` (setting 6) indicates the Waveform Current Position setting the player is set to, although newer players like the CDJ-3000 seem to always send `01` here regardless of what they are actually displaying.
-
-[#known-waveform-current-position-values]
-.Known values.
+[#settings-block-waveform-current-position-values]
+.Settings block waveform current position values.
 [cols=">1m,<6"]
 |===
 |Value |Meaning
@@ -671,8 +666,8 @@ Byte `0d` (setting 6) indicates the Waveform Current Position setting the player
 |02 |Left
 |===
 
-In setting block 2, the values are not identified yet.
-On a CDJ-3000 the six-bytes read `01 01 01 00 01 01`.
+In settings block 2, no values have been identified yet.
+On a CDJ-3000 the six bytes have always been `01 01 01 00 01 01`.
 
 
 [#rekordbox-status-packets]
