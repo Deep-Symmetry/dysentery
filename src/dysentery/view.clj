@@ -914,7 +914,7 @@
       (stop-watching-devices))))
 
 (defn describe-devices
-  "Print a descrption of the DJ Link devices found, and how to
+  "Print a description of the DJ Link devices found, and how to
   interact with them."
   [devices]
   (println "Found:")
