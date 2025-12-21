@@ -299,13 +299,12 @@ Some of the fields shown as having value `00` in this region will sometimes have
 If you notice any patterns or figure anything out _please_ let us know on https://deep-symmetry.zulipchat.com/#narrow/stream/275855-dysentery-.26-crate-digger[Zulip] or open a pull request!
 
 Next we identified some update triggers that seem to tell other CDJs that, e.g., the cue points were updated.
-Byte{nbsp}``58`` is called _ld~1~_, since it briefly shows `80` when a new song is loaded (see also _ld~2~_, which seem to change when load is finished).
+Byte{nbsp}``58`` is called _ld~1~_, since it briefly shows `80` when a new song is loaded (although this has only been seen on nxs2 and XDJ-1000 hardware, not on the CDJ-3000; see also _ld~2~_, which seem to change when load is finished, but only on the same hardware as this byte).
 Bytes{nbsp}``5a``–`5b`, labeled _u~c1~_ (update cue info 1) shows `ffff` for one packet when a hot cue is added or deleted as well as when a memory cue is added or removed.
 Bytes{nbsp}``5e``–`5f`, labeled _u~t~_ (update tag list) changes for one packet to `00ff`, then to `ff00` and then returns to `0000` when a song is tagged.
-Bytes{nbsp}``66``–`67`, _ld~2~_ shows `ffff` for one packet when a song has finished being loaded.
+Bytes{nbsp}``66``–`67`, _ld~2~_ shows `ffff` for one packet when a song has finished being loaded on nxs2 and XDJ-1000 players.
 
-NOTE: We think _ld~1~_ is more like a status flag as it is only one byte, and does not follow the same scheme as the other update elements. Hence, _ld~2~_ is more likely to indicate the update of the track on the player.
-There may well be other update triggers in this area of the packet.
+There may well be other update triggers in this area of the packet, perhaps only on subsets of player hardware.
 
 Byte{nbsp}``6a``, labeled _U~a~_ (for “USB activity”), alternates between the values `04` and `06` when there is USB activity—it may even alternate in time with the flashing USB indicator LED on the player, although visual inspection suggests there is not a perfect
 correlation.
@@ -425,8 +424,8 @@ When no track is loaded, _BPM_ has the value `ffff`.
 _M~v~_ (bytes `90`–`91`) seems to control whether the _BPM_ value is accepted when this player is the master.
 It has the value `7fff` when no track is loaded, `8000` when a rekordbox track is loaded, and `0000` when a non-rekordbox track (like from a physical CD) is loaded, and only when the value is `8000` are tempos from this player accepted when it is acting as master (otherwise the mixer shows the master to have a tempo of “`---.-`” and other players do not respond to its tempo changes).
 
-Bytes{nbsp}``94``–`97` have the same characteristics as _M~v~_ and _BPM_ when the player is currently slipping.
-When slip play is not taking place these bytes read `7fff` and `ffff`.
+Bytes{nbsp}``94``–`95` (labeled _M~slip~_) and{nbsp}``96``–`97` (labeled _BPM~slip~_)  have the same characteristics as _M~v~_ and _BPM_ when the player is currently slipping, but only on the XDJ-1000 and nxs2 hardware.
+When slip play is  not taking place these bytes read `7fff` and `ffff`.
 
 Byte{nbsp}``9d`` (labeled _P~3~_) seems to communicate additional information about the current play mode.
 The meanings that we have found so far are:
@@ -467,7 +466,7 @@ On the beat on which the cue point was saved the value is `0000` and the CDJ dis
 “`00.0 Bars`”.
 On the next beat, the value becomes determined by the next cue point (if any) in the track.
 
-Byte `b3`, labeled _u~g~_ (update grid), seems to change to `ff` when the beat grid is changed (By long-pressing the rotary encoder next to the screen).
+Byte `b3`, labeled _u~g~_ (update grid), seems to change to `ff` for one packet when the beat grid is changed (by long-pressing the rotary encoder next to the screen).
 
 Byte `b7`, labeled _Mp_, seems to indicate local media presence status on the CDJ-3000.
 For other players, this value remains `0`.
@@ -515,41 +514,25 @@ Byte `cc`, labeled _nx_, seems to have the value `0f` for nexus players, `1f` fo
 
 Byte `cd`, labeled _t_, is used to indicate when a player supports xref:touch_audio.adoc[Touch Audio], by setting bit 5.
 
-Bytes `d0`--`ef` and `ff`--`10f` seem to be some kind of setting blocks. See xref:vcdj.adoc#cdj-settings-block[here] for more details.
+Bytes `d0`–`ef` and `ff`–`10f` seem to be some kind of setting blocks. See xref:vcdj.adoc#cdj-settings-block[below] for more details.
 
-Byte `113`, labeled _P~4~_, is another play state.
-The data looks like flags, however, so far we have not found a _consistent_ bit pattern.
-Help on this is appreciated. 
-The meanings that we have found so far are:
+Byte `113`, labeled _P~4~_, seems to be another playback state bit mask, but the details have not yet been figured out.
+Help in researching this would be appreciated, join the conversation on https://deep-symmetry.zulipchat.com/#narrow/channel/275855-dysentery-.26-crate-digger[Zulip] if you are interested in exploring it.
 
-[#known-p4-values]
-.Known _P~4~_ values.
-[cols=">1m,<12"]
+NOTE: The next two values contain some high-resolution bar position information, likely to help render the small phase meter diagram above the big waveform, which is only available in later players, but before the CDJ-3000 introduced <<beats.adoc#absolute-position-packets,precise position packets>> (which work even better for such purposes).
+This idea is supported by the fact that these values are only sent when a player is paused and is the tempo master, so small adjustments to the jog wheel can be picked up by other players, but not during normal playback when beat packets and tempo can be used to interpolate playback position (these bytes are always just zero then).
+Of course, that kind of interpolation breaks down when a loop smaller than a beat is being played, and, guess what, these values are sent in that circumstance as well.
 
-|===
-|Value |Meaning
-
-|05 |Player is playing and not in master mode.
-|07 |Player is playing and in master mode.
-|23 |Player is playing in reserve and is not in master mode.
-|33 |Player is playing in reverse and is in master mode.
-|25 |Player is slipping in reverse mode.
-|===
-
-Next, we found some high-resolution bar position information.
-We assume it is to render the small phase meter diagram above the big waveform, which is only available in later players.
-
-Bytes `116`-`117` (_T~b~_) show how many _timesteps_ the current bar has.
-Note that is _almost_ the same for each bar, however, it seems to change by +/-1.
-Perhaps because of how the song was analyzed.
+Bytes `116`–`117` (_T~b~_) show how many _time steps_ the current bar has.
+Note that is _almost_ the same for each bar, however, it seems to vary by ±1, perhaps because of how the song was analyzed.
 This value also depends on the tempo.
 
 Bytes `11a`-`11b` (_T~pos~_) give the position in the current bar in relation to _T~b~_.
 At the beginning of the bar it reads `0000` and slightly searching with the jog wheel moves it up until the end of the bar.
-Note that _T~b~_ and _T~pos~_ are only available when the player is in master mode and not playing, otherwise they read all zeros.
-Interestingly, when the loop is very small (1/2 beat and below) these values become active again, maybe to indicate in detail where the loop actually is.
 
-Byte `11c` seem to give information about which is the next memory cue, starting from `0a` for the first memory cue.
+Byte `11c` seems to hold information about which is the next memory point.
+When playback is before the first memory point in the track, it has the value `0a`, then increments to `0b` for the second, and so on, until there are no more upcoming memory points, when it has the value `00`.
+The presence of hot cues does not affect this value at all.
 
 Bytes `11d`-`11e` (_Buf~f~_ and  _Buf~b~_ respectively) seem to indicate the in-memory buffer status of the player.
 The buffer is shown on the player under the waveform with a thin red bar.
@@ -557,8 +540,8 @@ As this bar expands, the values in `11d` and `11e` increase. `11d` indicates the
 
 Byte `11f` (_Buf~s~_ for “Buffer Status”) changes to value `01` when the entire track is buffered in memory.
 
-Bytes `120`-`124` (_NeedleDragPos_) gives the timestamp of the currently set needle counter (by dragging on the touch screen in the waveform preview of a playing song).
-Holds all zeros if a drag is not in progress or the needle was passed.
+Bytes `120`-`124` (_NeedleDragPos_) gives the timestamp of the currently set needle marker (by dragging on the touch screen in the waveform preview of a playing song).
+Holds all zeros if a marker has not been set, or if playback passes the marked position.
 
 Byte `158` (labeled _M~t~_) indicates whether Master Tempo is engaged on the deck, having the value `00` when it is off, and `01` when on.
 

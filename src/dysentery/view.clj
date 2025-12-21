@@ -2,10 +2,11 @@
   "Provides a way to inspect DJ Link packets, watch for changing
   values, and develop an understanding of what they mean."
   (:require [clojure.java.io :as io]
+            [clojure.math.numeric-tower :as math]
+            [clojure.string]
             [dysentery.finder :as finder]
             [dysentery.util :as util]
             [dysentery.vcdj :as vcdj]
-            [clojure.math.numeric-tower :as math]
             [selmer.parser :as parser]
             [taoensso.timbre :as timbre])
   (:import [java.awt Color Font]
@@ -346,7 +347,8 @@
 (defn- create-timestamp-label
   "Creates labels that show when a packet was received."
   [panel]
-  (let [label (JLabel. (.format timestamp-formatter (java.util.Date.)) SwingConstants/CENTER)]
+  (let [^String text (.format timestamp-formatter (java.util.Date.))
+        label (JLabel. text SwingConstants/CENTER)]
     (.setFont label byte-font)
     (.setForeground label Color/yellow)
     (.setBackground label Color/black)
@@ -425,13 +427,16 @@
     [hex (recognized-if (#{0 1 2 5} value))]
 
     (<= 44 index 47)  ; Rekordbox ID of the track
-    [hex (Color/green)]
+    [hex Color/green]
 
     (#{50 51} index)  ; Track index
-    [hex (Color/green)]  ; All values are valid
+    [hex Color/green]  ; All values are valid
 
-    (= index 0x37)  ; CD slot status, or track loaded from playlist/menu.
-    [hex (recognized-if (#{0 5 0x11 0x1e} value))]
+    (= index 0x35)  ; Browse menu track sort state
+    [hex (recognized-if (#{0 1 2 3 4 5 0xc} value))]
+
+    (= index 0x37)  ; Track source
+    [hex (recognized-if (#{0 2 3 4 5 6 0x0c 0x11 0x12 0x16 0x1f 0x20 0x28 0x32} value))]
 
     (= index 106)  ; USB actvity. Alternates between 4 and 6 when USB in use.
     [hex (recognized-if (#{4 6} value))]
@@ -456,7 +461,7 @@
     [(if (pos? value) (str (char value)) "") Color/green]
 
     (#{134 135} index)  ; Sync counter
-    [hex (Color/green)]  ; All values are valid
+    [hex Color/green]  ; All values are valid
 
     (= index 137)  ; State flags
     [hex (recognized-if (or (= (bit-and value 2r10000101) 2r10000100)
@@ -469,7 +474,7 @@
     [hex (recognized-if (< value 0x80))] ; Valid pitces range from 0x000000 to 0x200000 but can scratch much faster
 
     (#{142 143 154 155 194 195 198 199} index)  ; Later bytes of the four pitch copies
-    [hex (Color/green)]  ; All values are valid
+    [hex Color/green]  ; All values are valid
 
     (= 144 index)  ; First byte of some kind of loaded indicator?
     [hex (recognized-if (or (and (= value 0x7f) (= (get packet (inc index)) 0xff))
@@ -480,7 +485,7 @@
                             (and (zero? value) (#{0x00 0x80} (get packet (dec index))))))]
 
     (#{146 147} index)  ; The BPM
-    [hex (Color/green)]  ; All values are valid for now
+    [hex Color/green]  ; All values are valid for now
 
     (= index 157)  ; Play mode part 3?
     [hex (recognized-if (#{0 1 9 13} value))]
@@ -492,20 +497,20 @@
     [hex (recognized-if (#{1 2 3 4 0xff} value))]
 
     (<= 160 index 163)  ; The beat number within the track
-    [hex (Color/green)]
+    [hex Color/green]
 
     (= index 164)  ; First byte of countdown to next memory point; always 0 or 1
     [hex (recognized-if (#{0 1} value))]
 
     (= index 165)  ; Second byte of countdown to next memory point
-    [hex (Color/green)]
+    [hex Color/green]
 
     (= index 166)  ; We think this is a beat number ranging from 1 to 4, when analyzed track loaded.
-    [hex (recognized-if (or (and (zero? value) (or (every? #(= 0xff %) (subvec packet 160 164))))
+    [hex (recognized-if (or (and (zero? value) (every? #(= 0xff %) (subvec packet 160 164)))
                             (and (<= 1 value 4) (some #(not= 0xff %) (subvec packet 160 164)))))]
 
     (<= 200 index 203)  ; Packet counter
-    [hex (Color/green)]
+    [hex Color/green]
 
     (= index 204)  ; Seems to be 0x0f for nexus players, 0x1f for the XDJ-XZ, 0x05 for others?
     [hex (recognized-if (or (and (#{0x0f 0x1f} value) (#{212 284 512} (count packet)))
@@ -570,13 +575,13 @@
       [hex (if (= current device-number) Color/green Color/red)]
 
       (<= 0x24 index 0x3b)  ; Next beat / bar timings
-      [hex (Color/green)]
+      [hex Color/green]
 
       (= index 85)  ; The first byte of the pitch
       [hex (recognized-if (< current 0x21))] ; Valid pitces range from 0x000000 to 0x200000
 
       (#{86 87} index)  ; Later bytes of the pitch
-      [hex (Color/green)]  ; All values are valid
+      [hex Color/green]  ; All values are valid
 
       (#{90 91} index)  ; This is the current BPM
       [hex Color/green]
@@ -593,7 +598,7 @@
   how to format each packet byte."
   [packet byte-formatter]
   (vec (for [index (range (count packet))]
-         (let [[value color] (byte-formatter packet index)
+         (let [[^String value color] (byte-formatter packet index)
                label (JLabel. value SwingConstants/CENTER)]
            (.setForeground label color)
            label))))
@@ -603,14 +608,14 @@
   packet has been received."
   [packet byte-labels byte-formatter]
   (dotimes [index (count packet)]  ; We have a packet to update our state with
-    (let [label (get byte-labels index)
+    (let [^JLabel label (get byte-labels index)
           [value color] (byte-formatter packet index)]
       (when label
         (.setForeground label color)
         (when-not (.equals value (.getText label))
           ;; The value has changed, update the label and set the background bright blue, setting up a fade
           (.setText label value)
-          (.setBackground label (Color/blue))
+          (.setBackground label Color/blue)
           (swap! changed-labels assoc label (System/currentTimeMillis)))))))
 
 (defn- create-address-labels
@@ -899,7 +904,7 @@
                                       (if (= 96 (.getLength packet))  ; A beat packet to display
                                         (handle-device-packet 50001 (get data 33) data)
                                         (when-not (handle-special-command data)
-                                          #_(timbre/warn "Unrecognized port 50001 packet received, type:"
+                                          (timbre/debug "Unrecognized port 50001 packet received, type:"
                                                          (get data 33)))))
                                     (recur))))))))
     (catch Exception e
