@@ -904,7 +904,9 @@
                                       (if (= 96 (.getLength packet))  ; A beat packet to display
                                         (handle-device-packet 50001 (get data 33) data)
                                         (when-not (handle-special-command data)
-                                          (timbre/debug "Unrecognized port 50001 packet received, type:"
+                                          nil               ; Suppress warning about empty body.
+                                          ;; This just produces way too much noise on newer players.
+                                          #_(timbre/debug "Unrecognized port 50001 packet received, type:"
                                                          (get data 33)))))
                                     (recur))))))))
     (catch Exception e
