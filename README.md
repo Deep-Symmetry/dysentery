@@ -126,6 +126,7 @@ played on CDJs.
 > * [Prolink Tools](https://prolink.tools)
 > * [prolink-go](https://github.com/EvanPurkhiser/prolink-go)
 > * [python-prodj-link](https://github.com/flesniak/python-prodj-link)
+> * [prolink-cpp](https://github.com/grantHarris/prolink-cpp)
 
 You can run dysentery and look at what it finds on your network by
 just downloading and executing the jar, though, and we hope you will,
@@ -172,7 +173,7 @@ to let us know. Bytes which are expected to contain the device name
 and firmware version are rendered as text rather than hex, to make
 them more readable.
 
-<img src="doc/assets/PacketWindow.png" width="600" alt="Packet Window">
+<img src="doc/assets/PacketWindow.png" width="520" alt="Packet Window">
 
 Underneath the raw byte values there is a timestamp which shows when
 the most recent packet was received. As with the byte values, its
