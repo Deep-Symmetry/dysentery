@@ -113,6 +113,6 @@ These broadcasts use the same packet format as the <<media-response-packet,media
 This allows passive observers to learn about mounted media without sending any packets to the network.
 The broadcasts occur when media is inserted or ejected, and periodically while media is mounted.
 
-NOTE: All-in-one units like the XDJ-XZ, XDJ-RX series, and XDJ-AZ do *not* send these unsolicited media slot broadcasts.
+NOTE: All-in-one units like the XDJ-XZ, XDJ-RX series, and Opus Quad do *not* send these unsolicited media slot broadcasts.
 Implementations that need media slot information from these devices must either query for it actively, or attempt to access the media without prior knowledge of its contents.
 See xref:startup.adoc#xdj-xz-limitations[XDJ-XZ Limitations] for more details.
