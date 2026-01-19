@@ -103,3 +103,16 @@ The number of rekordbox playlists present on the media (also zero if there is no
 
 Finally, there are two eight-byte numbers at the end of the packet.
 The value at bytes{nbsp}``b0`` through `b7` is the total capacity of the media (in bytes), and the value at bytes{nbsp}``b8`` through `bf` is the number of unused bytes left on it.
+
+[#media-slot-broadcasts]
+== Media Slot Broadcasts
+
+In addition to responding to queries, standalone CDJs periodically broadcast media slot information packets (type `06`) on port 50002 without being queried.
+These broadcasts use the same packet format as the <<media-response-packet,media response packet>> described above.
+
+This allows passive observers to learn about mounted media without sending any packets to the network.
+The broadcasts occur when media is inserted or ejected, and periodically while media is mounted.
+
+NOTE: All-in-one units like the XDJ-XZ, XDJ-RX series, and XDJ-AZ do *not* send these unsolicited media slot broadcasts.
+Implementations that need media slot information from these devices must either query for it actively, or attempt to access the media without prior knowledge of its contents.
+See xref:startup.adoc#xdj-xz-limitations[XDJ-XZ Limitations] for more details.
