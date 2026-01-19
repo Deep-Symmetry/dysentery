@@ -467,4 +467,5 @@ However, note that the xref:media.adoc#media-slot-broadcasts[media slot broadcas
 
 NFS access to the rekordbox databases on mounted USB media does work through this interface, allowing passive implementations to fetch track metadata directly without sending announcement packets.
 
-NOTE: We expect to find similar limitations in newer all-in-one devices, like the Opus Quad and XDJ-AZ, although the details have not yet been explored.
+NOTE: The XDJ-AZ has a full Pro DJ Link implementation, although only 2 of its 4 decks are exposed to the network.
+We expect to find similar limitations in newer all-in-one devices like the Opus Quad, although the details have not yet been explored.
