@@ -452,4 +452,22 @@ Further, it will not even send <<channel-conflict-packet,channel conflict packet
 
 Even actual Pioneer hardware has issues picking device numbers when plugged into the laptop port, though, so this is clearly not a situation that was envisioned or supported.
 
-NOTE: We expect to find similar limitations in newer all-in-one devices, like the Opus Quad and XDJ-AZ, although the details have not yet been explored.
+Additionally, unlike standalone CDJs which periodically broadcast xref:media.adoc#media-slot-broadcasts[media slot information packets] (type `06`), the XDJ-XZ does not send these unsolicited broadcasts.
+This affects passive implementations that rely on observing network traffic without sending packets—they cannot discover what media is mounted in the XDJ-XZ's slots without actively querying for it.
+
+[#xdj-xz-usb-network]
+=== USB-to-Host Network Interface
+
+The XDJ-XZ has a USB-B port on the rear panel intended for connecting to a computer running rekordbox.
+When connected, this USB port presents itself to the host computer as a virtual ethernet network interface (for example, `en15` on macOS).
+This interface exposes the XDJ-XZ's internal Pro DJ Link network traffic, allowing the computer to observe packets from both decks without being connected to the physical ethernet ports.
+
+This can be useful for passive implementations that want to monitor the XDJ-XZ without joining the Pro DJ Link network as a device.
+However, note that the xref:media.adoc#media-slot-broadcasts[media slot broadcast limitation] still applies—passive observers will not receive media slot information packets through this interface either.
+
+NFS access to the rekordbox databases on mounted USB media does work through this interface, allowing passive implementations to fetch track metadata directly without sending announcement packets.
+
+NOTE: The XDJ-AZ has a full Pro DJ Link implementation, although only 2 of its 4 decks are exposed to the network.
+
+The Opus Quad behaves similarly to the XDJ-XZ: it exposes three device IDs on the network (1 for Player 1, 2 for Player 2, and 33 for the mixer section), and the USB-to-host network interface works the same way for passive implementations.
+Like other all-in-one units, it does not broadcast media slot information packets.
