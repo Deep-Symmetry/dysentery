@@ -13,7 +13,7 @@ will need a
 [Java runtime environment](https://java.com/inc/BrowserRedirect1.jsp)
 Once you have a recent one installed, you can probably run dysentery
 by just double-clicking the jar file. See the [Status](#status)
-section for more details, explanation, and a screen shot.
+section for more details, explanation, and a screenshot.
 
 > :wrench: If you&rsquo;re looking for a library to use in your own
 > projects, that&rsquo;s what
@@ -39,7 +39,7 @@ should be obvious, but:
 > the XDJ-RX does not actually implement the protocol:
 >
 > &ldquo;The LINK on the RX is ONLY for linking to rekordbox on your
-> computer or a router with WiFi to connect rekordbox mobile. It can
+> computer or a router with Wi-Fi to connect rekordbox mobile. It can
 > not exchange LINK data with other CDJs or DJMs.&rdquo;
 
 While these techniques appear to work for us so far, there are many
@@ -180,7 +180,7 @@ the most recent packet was received. As with the byte values, its
 background will flash blue when the timestamp changes, and fade to
 black over the next second, until the next packet is received.
 
-Beneath the timestamp is a an interpretation of the meaning of the
+Beneath the timestamp is an interpretation of the meaning of the
 packet, as best we can currently understand it, with italic field
 labels corresponding to the byte fields identified in the
 [beats](https://djl-analysis.deepsymmetry.org/djl-analysis/beats.html)
@@ -285,7 +285,7 @@ shows with performances on my CDJs. I broke out
 captures over a weekend, I was able to identify how to track the
 current BPM and beat locations by passively watching broadcast
 traffic, which was my main goal. I still could not get a lock on where
-the down beat fell, because I could not tell which player was the
+the downbeat fell, because I could not tell which player was the
 Master.
 
 #### Virtual CDJ
