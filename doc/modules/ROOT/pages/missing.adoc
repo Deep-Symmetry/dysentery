@@ -33,7 +33,7 @@ See the https://github.com/Deep-Symmetry/crate-digger[Crate Digger project] for 
 
 Before we discovered how to ask players for metadata about particular tracks, we did some research into the underlying rekordbox database.
 The database format is called https://www.quora.com/What-database-system-did-Greg-Kemnitz-develop[DeviceSQL] and there used to be a free quick start suite at \http://java.sys-con.com/node/328557 for working with it, but that site no longer exists because the original (California) company https://www.crunchbase.com/organization/encirq-corporation[Encirq] was http://www.ubiquitous.co.jp/en/news/press/pdf/p1730_01.pdf[acquired] by the Japanese Ubiquitous Corporation in 2008.
-It seems to still be http://www.ubiquitous.co.jp/en/products/db/md/devicesql/[available], but I’d be surprised if they wanted to help out an open source effort like this one.
+It seems to no longer be https://web.archive.org/web/20160812170057/http://www.ubiquitous.co.jp/en/products/db/md/devicesql/[available], which is no surprise as even Alpha Theta have moved on to (encrypted) SQLite.
 
 == CDJ Packets to Rekordbox
 
