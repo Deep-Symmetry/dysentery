@@ -253,6 +253,7 @@ The XDJ-AZ behaves the same way in Pro DJ Link mode, but in four-deck mode it us
 NOTE: Slot values `06` and `09` have been observed on CDJ-3000 hardware when tracks are loaded from streaming services (Streaming Direct Play and Beatport LINK, respectively).
 Slot values `05`, `07`, and `08` may correspond to other streaming services such as TIDAL, Apple Music, or SoundCloud Go, but this has not yet been confirmed.
 When a streaming track is loaded, the _rekordbox_ field at bytes{nbsp}``2c``–`2f` contains an internal CDJ index rather than a catalog ID from the streaming service.
+CDJ-3000 supports two separate streaming systems: **Cloud Direct Play** (CDP), which streams from the DJ's personal rekordbox library via `cloud.kuvo.com` — inserting a USB stick with credential files under `/PIONEER/CDP/` allows the CDJ to authenticate automatically without requiring the DJ to enter a username and password — and **Beatport LINK**, which accesses Beatport's streaming catalog and requires the DJ to log in on the CDJ touchscreen each time.
 
 _T~r~_ at byte{nbsp}``2a`` indicates the track type:
 
