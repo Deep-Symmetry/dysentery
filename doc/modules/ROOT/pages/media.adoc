@@ -95,9 +95,11 @@ In other words, it will have the value `01` when a rekordbox database is present
 The value _set_ at byte{nbsp}``ab`` indicates whether there is a “My Settings” file present on the media.
 If it has a non-zero value, when the user links to that media (or navigates to its root menu), the player will pop up an alert saying to press the *Menu* button to load *My Settings* (which allows the player configuration to be quickly restored to the DJ’s preferred state).
 
-> The actual settings are found in the `/PIONEER/` folder at the root of the mounted media, in the files `MYSETTING.DAT`, `MYSETTING2.DAT`, and `DEVSETTING.DAT`.
-> The DJ’s Kuvo profile information is in the same folder, in the file `djprofile.nxs.`
-> The details of these files have not yet been explored.
+> The actual settings are found in the `/PIONEER/` folder at the root of the mounted media, in the files `MYSETTING.DAT`, `MYSETTING2.DAT`, `DJMMYSETTING.DAT`, and `DEVSETTING.DAT`.
+> The DJ's Kuvo profile information is in the same folder, in the file `djprofile.nxs`.
+>
+> When a USB stick has been authorized for Cloud Direct Play (CDP) in rekordbox, the `/PIONEER/CDP/` directory will also be present, containing authentication files (`ak.dat` and `nn.dat`) that the CDJ reads to authenticate with Pioneer's cloud service at `cloud.kuvo.com`.
+> A `.CacheData/CloudTemp/` directory is also prepared as a cache for streaming content downloaded during playback.
 
 The number of rekordbox playlists present on the media (also zero if there is no rekordbox database) is found at bytes{nbsp}``ae`` and `af`.
 
