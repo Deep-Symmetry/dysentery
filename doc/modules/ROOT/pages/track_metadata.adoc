@@ -941,6 +941,7 @@ Each pair of bytes encodes the height of the waveform at that segment as a five 
 
 With the help of some https://github.com/Deep-Symmetry/dysentery/issues/33[additional
 analysis] we know now how to request and interpret the 3-band style waveforms introduced with the CDJ-3000.
+The `.2EX` file also contains a <<requesting-vocal-config,vocal detection configuration>> tag (`PWVC`).
 
 Both the 3-band waveform preview and detail are requested using variations on the <<requesting-new-tags,same request type>>, which asks for specific content from the `ANLZ0000.2EX` file created by rekordbox.
 The https://github.com/Deep-Symmetry/crate-digger[Crate Digger project] which has its own
@@ -1045,6 +1046,49 @@ The colors for low, mid-range, and high frequencies are the same as in the previ
 The area where low and mid-range frequencies overlap is drawn in brown, and their pure colors are seen where there is no overlap.
 The white high frequency is drawn last so it obscures any low or mid-range information underneath it.
 Recordbox actually seems to do some light blending, but it is so dim that we have not bothered to reproduce it so far.
+
+[#requesting-vocal-config]
+== Requesting Vocal Detection Configuration
+
+The `.2EX` analysis file also contains a `PWVC` tag (tag code `0x50575643`) that stores vocal detection configuration for the track.
+This tag contains threshold values that rekordbox uses to classify frequency content as vocal or non-vocal.
+Like the 3-band waveforms, it can be requested using the <<requesting-new-tags,general tag request mechanism>>.
+
+To request the vocal configuration of a track, send a message with _type_ `2c04` containing the _rekordbox_ ID of the track, the tag type identifier `PWVC` and the file extension identifier `2EX` encoded as four-byte numbers, holding the ASCII in big-endian (backwards) order:
+
+.Vocal config request message.
+[bytefield]
+----
+include::example$dbserver_shared.edn[]
+(draw-remotedb-header 0x2c04 6 6 6 6)
+(draw-dmst-field 1)
+(draw-number-field (text "rekordbox" :math))
+(draw-related-boxes [0x11 0x43 0x56 0x57 0x50])
+(draw-related-boxes [0x11 0x00 0x58 0x45 0x32])
+----
+
+As usual, _TxID_ should be incremented each time you send a query, and will be used to identify the response messages.
+_D_ should have the same value you used in your initial query context setup packet, identifying the device that is asking the question.
+_S~r~_ and _T~r~_ are the slot in which the track being asked about can be found and its
+track type; each has the same values used in xref:vcdj.adoc#cdj-status-packet[CDJ status packets].
+_rekordbox_ identifies the specific track whose analysis you are requesting, as found in a CDJ status packet or playlist response, and the final two numeric arguments specify that you are interested in the `PWVC` tag (which holds the vocal detection configuration) from the track's `2EX` extended analysis file.
+
+The response follows the same <<requesting-new-tags,analysis tag response>> format, with _type_ `4f02`.
+The vocal configuration data begins at byte `34` and has the following structure:
+
+.Vocal config data.
+[bytefield]
+----
+(draw-column-headers)
+(draw-related-boxes (repeat 2 nil))
+(draw-box (text "thr" :math [:sub "low"]) {:span 2})
+(draw-box (text "thr" :math [:sub "mid"]) {:span 2})
+(draw-box (text "thr" :math [:sub "high"]) {:span 2})
+----
+
+The first two bytes have an unknown purpose (always observed as zero).
+_thr~low~_, _thr~mid~_, and _thr~high~_ are each two-byte big-endian unsigned integers containing the vocal detection thresholds for the low, mid-range, and high frequency bands respectively.
+Across 192 analyzed tracks, observed threshold ranges are: _thr~low~_ 80–114, _thr~mid~_ 80–146, _thr~high~_ 98–159.
 
 [#requesting-cues]
 == Requesting Cue Points and Loops

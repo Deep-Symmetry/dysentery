@@ -127,6 +127,7 @@ played on CDJs.
 > * [prolink-go](https://github.com/EvanPurkhiser/prolink-go)
 > * [python-prodj-link](https://github.com/flesniak/python-prodj-link)
 > * [prolink-cpp](https://github.com/grantHarris/prolink-cpp)
+> * [Now Playing](https://nowplayingapp.com)
 
 You can run dysentery and look at what it finds on your network by
 just downloading and executing the jar, though, and we hope you will,
