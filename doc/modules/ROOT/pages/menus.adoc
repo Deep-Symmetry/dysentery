@@ -70,6 +70,7 @@ The menus available to you will be returned as entries in the root menu response
 |1105 |xref:track_metadata.adoc#playlist-requests[Playlist Menu] | _r:m:s:t_, sort, playlist or folder id, type (0:playlist, 1:folder)
 |1300 |Search by substring | _r:m:s:t_, sort, search string byte size, search string (uppercase), unknown (0)
 |2006 |Folder Menu | _r:m:s:t_, sort?, folder id, unknown (0)
+|2102 |Track Stream Start | _r:m:s:t_, track ID
 |===
 
 The first argument to every menu request is a four-byte number where each byte means something different.
