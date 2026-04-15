@@ -671,6 +671,10 @@ NOTE: We also know how to request Nxs2-style higher resolution and color wavefor
 
 TIP: As noted above, you can request waveforms (of all types and styles) even for tracks that were not analyzed by rekordbox when talking to CDJ-3000s; just use the track ID the player is reporting in its status packet, and correctly reflect the “unanalyzed” track type in your _T~r~_ byte.
 
+NOTE: Waveform preview and detailed waveforms are also available for streaming tracks (e.g. Beatport LINK, _T~r~_ = `06`).
+Use the same request format with the streaming slot and track type values from the CDJ status packet.
+This has been confirmed on CDJ-3000 hardware.
+
 
 === Waveform Previews
 
@@ -813,6 +817,8 @@ Thanks to some https://github.com/Deep-Symmetry/dysentery/issues/9[wonderful ana
 Both the enhanced waveform preview and enhanced detail are requested using variations on the <<requesting-new-tags,same request type>>, which asks for specific content from the `ANLZ0000.EXT` file created by rekordbox.
 The https://github.com/Deep-Symmetry/crate-digger[Crate Digger project], which has its own
 xref:rekordbox-export-analysis::anlz.adoc[analysis document], is focused on obtaining and interpreting these files.
+
+NOTE: The HD waveform (`GetWaveformHD`) is also available for streaming tracks (e.g. Beatport LINK, _T~r~_ = `06`), confirmed on CDJ-3000 hardware.
 
 To request the enhanced waveform preview of a track, send a message with _type_ `2c04` containing the _rekordbox_ ID of the track, the tag type identifier `PWV4` and the file extension identifier `EXT` encoded as four-byte numbers, holding the ASCII in big-endian (backwards) order:
 
@@ -989,7 +995,21 @@ include::example$dbserver_shared.edn[]
 (draw-number-field 0)
 ----
 
-The 3-band preview data begins at byte `34` and is 3,600 (decimal) bytes long, representing 1,200 columns of waveform preview information.
+The 3-band preview tag body begins at byte `34` and has the following structure, which is identical to the `PWV4` (wave_color_preview) layout:
+
+.3-band waveform preview tag body.
+[bytefield]
+----
+(draw-column-headers)
+(draw-box (text "len_entry_bytes" :math) {:span 4})
+(draw-box (text "len_entries" :math) {:span 4})
+(draw-binary-field "entries" {:span 8})
+----
+
+_len_entry_bytes_ is always `3`.
+_len_entries_ is typically 1,200, giving a total of 3,600 bytes of waveform data.
+The entries immediately follow — there are no additional header fields between _len_entries_ and the data.
+This layout is identical to `PWV4`.
 
 The three-band waveform preview entries each consist of three one-byte height values representing the mid-range, high, and low frequencies, in that order.
 There is some scaling involved, and they seem to be drawn stacked on top of each other, with the lows in dark blue, the mid-range in amber, and the highs in white.
@@ -1037,7 +1057,25 @@ include::example$dbserver_shared.edn[]
 (draw-number-field 0)
 ----
 
-The 3-band waveform detail data begins at byte `34` and has a variable length, but the same structure as the preview data.
+The 3-band waveform detail tag body begins at byte `34` and has the following structure, which is identical to the `PWV5` (wave_color_scroll) layout:
+
+.3-band waveform detail tag body.
+[bytefield]
+----
+(draw-column-headers)
+(draw-box (text "len_entry_bytes" :math) {:span 4})
+(draw-box (text "len_entries" :math) {:span 4})
+(draw-related-boxes (repeat 4 nil))
+(draw-binary-field "entries" {:span 8})
+----
+
+_len_entry_bytes_ is always `3`.
+_len_entries_ holds the number of waveform columns (variable length, higher resolution than `PWV6`).
+The four-byte field after _len_entries_ has an unknown purpose; it has been observed as `0x00960000`.
+The entries follow immediately after.
+This layout is identical to `PWV5`.
+
+The waveform detail data has a variable length, but the same entry structure as the preview data.
 Each detail entry is three bytes long, holding a series of one-byte height values representing the mid-range, high, and low frequencies, in that order.
 There is a different kind of scaling involved in drawing these, and it seems to be non-linear.
 
