@@ -255,6 +255,35 @@ Slot values `05`, `07`, and `08` may correspond to other streaming services such
 When a streaming track is loaded, the _rekordbox_ field at bytes{nbsp}``2c``–`2f` contains an internal CDJ index rather than a catalog ID from the streaming service.
 CDJ-3000 supports two separate streaming systems: **Cloud Direct Play** (CDP), which streams from the DJ's personal rekordbox library via `cloud.kuvo.com` — inserting a USB stick with credential files under `/PIONEER/CDP/` allows the CDJ to authenticate automatically without requiring the DJ to enter a username and password — and **Beatport LINK**, which accesses Beatport's streaming catalog and requires the DJ to log in on the CDJ touchscreen each time.
 
+[#streaming-metadata]
+=== Querying Metadata for Streaming Tracks
+
+Streaming tracks (_T~r~_ = `06`) respond to the standard metadata query (`2002`) rather than the non-rekordbox variant (`2202`).
+Use the _rekordbox_ value from the CDJ status packet as the track ID, with the appropriate _S~r~_ slot value (`06` for Streaming Direct Play, `09` for Beatport LINK).
+
+NOTE: Because the CDJ expects to be queried by another CDJ, the virtual CDJ device number must be 6 or lower for these queries to succeed.
+A device number greater than 6 will not receive responses.
+
+The following queries have been tested against a CDJ-3000 playing a Beatport LINK streaming track:
+
+[cols=">1,<3,<8"]
+|===
+|Query |Result |Notes
+
+|`GetTrackInfo` |✅ Success |Returns the Beatport track ID as a pseudo-path (e.g. `/23315459.m4a`). See below.
+|`GetWaveformPreview` |✅ Success |Returns a full waveform preview (400 entries observed).
+|`GetWaveformDetailed` |✅ Success |Returns a full detailed waveform.
+|`GetWaveformHD` |✅ Success |Returns a full 3-band HD waveform (CDJ-3000 only).
+|`GetBeatGrid` |❌ Error |CDJ returns an error response. Do not send this query for streaming tracks.
+|`GetCueAndLoops` |❌ Error |CDJ returns an error response.
+|`GetAdvCueAndLoops` |❌ Error |CDJ returns an error response.
+|===
+
+For Beatport LINK tracks specifically, issuing a `GetTrackInfo` query (the same query used to obtain a local file path for rekordbox tracks) returns the Beatport catalog ID encoded as a pseudo-path rather than a real filesystem location.
+For example, a response of `/26883657.m4a` means the Beatport track ID is `26883657`.
+This value can be used directly with the Beatport catalog API — for example, `https://api.beatport.com/v4/catalog/tracks/26883657/` — to retrieve richer metadata than the CDJ itself provides.
+Authenticating with the Beatport API is outside the scope of this document.
+
 _T~r~_ at byte{nbsp}``2a`` indicates the track type:
 
 [#known-tr-values]
