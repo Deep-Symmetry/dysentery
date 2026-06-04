@@ -19,4 +19,3 @@ pom.xml.asc
 .hgignore
 .hg/
 /node_modules
-.DS_Store
