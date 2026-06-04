@@ -254,7 +254,7 @@ include::example$status_shared.edn[]
 (draw-box (text "len" :math [:sub "r"]) {:span 2})
 (draw-box "?" {:span 2})
 (draw-padding 0x30 nil)
-(draw-box (text "Per-channel × 4 + master + FX state (232 B, " :plain [:hex "24"] " " :plain "..." :plain " " [:hex "109"] ")") [{:span 16} :box-above])
+(draw-box (text "Per-channel × 4 + master + FX state (232 B, " :plain [:hex "24"] " ... " [:hex "109"] ")") [{:span 16} :box-above])
 (draw-box nil [{:span 16} :box-below])
 (draw-padding 0x10a nil)
 ----
@@ -277,7 +277,7 @@ Decoded by single-control provocation against a known baseline:
 |02 |— |Always `00` at baseline (padding, or low byte of TRIM).
 |03 |EQ HI |`00` cut, `80` unity, `ff` boost.
 |04 |EQ MID |`00` cut, `80` unity, `ff` boost.
-|05 |Center-detented unknown |`80` at baseline; CUE-level / FX-send candidate.
+|05 |Center-detented unknown _(hypothesis: second EQ MID band)_ |`80` at baseline, between EQ MID (`04`) and EQ LOW (`06`). A strong candidate for the extra mid band of a 4-band DJM-V10 isolator (which splits MID into MID-HI / MID-LOW): on a V10 offsets `04`/`05` would carry both mids, while the A9's 3-band EQ drives only `04` and leaves `05` detented at `80`. Cannot be validated on this A9-only rig.
 |06 |EQ LOW |`00` cut, `80` unity, `ff` boost.
 |07 |Color FX knob |`00`–`ff`, center = `80`.
 |08–0a |— |Always `00`.
@@ -372,8 +372,9 @@ The full inventory:
 A CDJ-3000 attached to a Stagehand-bearing network publishes *three* distinct names on the wire:
 
 * `CDJ-3000` — the broadcast-facing identity, used in every xref:startup.adoc#cdj-3000-initial-announcement[announce], xref:startup.adoc#cdj-3000-foreshadowing[keep-alive], and xref:vcdj.adoc#cdj-status-packets[status broadcast].
-* `NXS-GW` — a legacy Nexus-protocol persona used to send a sparse `0x40` heartbeat every ~3 minutes.
-The model-code byte for this persona is `00` (the dysentery-era value), suggesting it exists for backward compatibility with older mixers and players that don't recognise the CDJ-3000-shaped frames.
+* `NXS-GW` — an embedded *Kuvo gateway* persona used to send a sparse `0x40` heartbeat every ~3 minutes.
+The model-code byte for this persona is `00` (the dysentery-era value).
+Deep Symmetry's read (per maintainer feedback on this analysis) is that modern CDJ-3000s carry an embedded Kuvo server here: when several CDJ-3000s share a network they negotiate amongst themselves which one offers the Kuvo gateway, and only the elected unit publishes the `NXS-GW` persona — presumably so AlphaTheta no longer has to sell clubs a physical Kuvo server box.
 * `VCDJ-3000` — used **only** in `0x56` waveform / cue-color / metadata replies to Stagehand.
 Never broadcast.
 Stagehand's UI relies on `0x56` data for its waveform and cue-color rendering, and every such reply names the source as `VCDJ-3000` rather than `CDJ-3000`.
