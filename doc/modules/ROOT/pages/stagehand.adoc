@@ -277,7 +277,7 @@ Decoded by single-control provocation against a known baseline:
 |02 |— |Always `00` at baseline (padding, or low byte of TRIM).
 |03 |EQ HI |`00` cut, `80` unity, `ff` boost.
 |04 |EQ MID |`00` cut, `80` unity, `ff` boost.
-|05 |Center-detented unknown _(hypothesis: second EQ MID band)_ |`80` at baseline, between EQ MID (`04`) and EQ LOW (`06`). A strong candidate for the extra mid band of a 4-band DJM-V10 isolator (which splits MID into MID-HI / MID-LOW): on a V10 offsets `04`/`05` would carry both mids, while the A9's 3-band EQ drives only `04` and leaves `05` detented at `80`. Cannot be validated on this A9-only rig.
+|05 |Center-detented unknown _(hypothesis: EQ MID-LOW band)_ |`80` at baseline, sitting between EQ MID (`04`) and EQ LOW (`06`). The four EQ slots `03`–`06` lay out in physical top-to-bottom order, which matches the *4-band* per-channel isolator of the DJM-V10 (HIGH / MID-HIGH / MID-LOW / LOW) rather than the A9's 3-band HIGH / MID / LOW. On that reading `04` is MID-HIGH and `05` is MID-LOW; the A9 drives only its single MID into `04` and leaves the MID-LOW slot detented at `80`. The center-detent (unity = `80`) fits an EQ band, and the Color-FX knob already occupies `07`, so the earlier CUE-level / FX-send guess now seems unlikely. Unverifiable on this A9-only rig — a DJM-V10 + Stagehand capture (e.g. from https://github.com/AhnHEL[@AhnHEL], who supplied the V10 captures behind xref:mixer_integration.adoc[the 6-channel mixer packet]) would settle `04`/`05` directly.
 |06 |EQ LOW |`00` cut, `80` unity, `ff` boost.
 |07 |Color FX knob |`00`–`ff`, center = `80`.
 |08–0a |— |Always `00`.
