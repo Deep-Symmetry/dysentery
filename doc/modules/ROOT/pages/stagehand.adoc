@@ -1,0 +1,551 @@
+= The Stagehand iPad App
+Chris Le <chris@iamchrisle.com>
+:stem: latexmath
+
+Pioneer DJ's *Stagehand* iOS app (bundle ID `com.pioneerdj.nma`) is a front-of-house monitor for an AlphaTheta-era DJM-A9 mixer + CDJ-3000 rig.
+It joins the Pro DJ Link network like any other device, but takes a few shortcuts in the handshake, advertises itself with a new device-type byte, and is almost entirely a passive receiver: the mixer and the players push state to it over unicast UDP, and the iPad answers with a small command vocabulary that drives a handful of preference toggles and CDJ transport.
+
+This page documents what was learned about Stagehand by packet-capturing a single-iPad, single-A9, single-CDJ-3000 rig over the course of May 2026.
+The packet structures here build on the announcement and keep-alive frames described in xref:startup.adoc[Mixer and CDJ Startup], and on the various status frames described in xref:vcdj.adoc[Detailed Device Status].
+
+.Numbers in this document
+****
+Values within packets, packet lengths, and byte offsets are all shown in hexadecimal in `code` font.
+Other numbers are in normal body text font and are decimal.
+****
+
+NOTE: Almost everything below was decoded from captures taken with a Mac in the middle (`bettercap` ARP-spoof MITM), because Stagehand's wire traffic is overwhelmingly unicast and is therefore invisible to a third-party Wi-Fi sniffer.
+A few findings are marked _hypothesis_ where they were inferred from indirect evidence rather than directly provoked; the rest were verified by single-control diffs against baseline captures.
+
+[#background]
+== Background
+
+Stagehand presents the operator with a tile per known device (mixer, deck, FX block) and a live view of channel meters, channel-fader and EQ positions, the current loaded track on each deck, and a settings panel for the CDJ-3000s.
+Stagehand was already known to the author as the front-of-house tool for remotely adjusting A9 mixer settings and running sound checks on the A9.
+What decoding revealed is that those control writes are a tiny slice of the wire traffic — the bulk is the A9 and CDJ-3000 unicasting dense monitor state to the iPad, with the CDJ transport / preference and A9 settings / sound-check controls being a small command vocabulary bolted on the side.
+The continuous mixer state (faders, EQ, trim, crossfader, FX knobs) is not under Stagehand's control: the iPad reads those positions but cannot modify them remotely.
+
+A few things make Stagehand worth careful decoding compared to every other integration path dysentery has previously documented:
+
+* *No virtual CDJ.* Stagehand does not pose as a player to receive this data — it just claims a new device-type byte (`05`) with a new model code (`0x20`), drops most of the xref:startup.adoc[CDJ / mixer handshake], and the A9 and CDJ-3000 start pushing once they see the marker.
+* *A far denser state stream than any prior dysentery-documented client receives* — per-channel A9 mixer position, EQ, source/color-FX selectors, and crossfader (<<a9-mixer-state,`0x39`>>); per-channel VU at ~30 Hz (<<a9-vu-stream,`0x58`>>); CDJ settings-panel state (`0x69`); CDJ waveforms, cue-color palettes, and a ~2.5 kB metadata blob (<<waveform-cue-color,`0x55`/`0x56`>>, <<track-metadata-push,`0x3d`>>); a 142.857 Hz network timebase tick (<<timing-stream,`0x20`>>); and a unicast mirror of the broadcast beat-lookahead vector (<<cdj-0b-multiplex,`0x0b`>>).
+* *Unicast push.* None of these streams appear on the broadcast plane, which is why the analysis on this page was performed under `bettercap` ARP-spoof MITM rather than passive sniffing.
+* *A small but real command surface back the other way* — CDJ transport (<<transport-channel,`0x07`>>: play / pause / skip / seek), CDJ preference writes (<<pref-write-channel,`0x6b`>>: on-air-display and quantize verified; wider surface pending decode), and A9 settings / remote sound-check (<<stagehand-to-a9,`0x3a`>>: seven opcodes observed, UI mapping still _hypothesis_).
+
+The two devices Stagehand expects to see on the wire are:
+
+* A *DJM-A9* mixer.
+The A9 broadcasts the classic mixer handshake (xref:startup.adoc#mixer-startup[`0x0a` → `0x00` → `0x02` → `0x04` → `0x06`]) and then unicasts ~38 packets/sec of state to the iPad.
+* A *CDJ-3000* player.
+The CDJ-3000 broadcasts what looks like a normal CDJ handshake but with a slightly different keep-alive (the xref:startup.adoc#startup-3000[CDJ-3000 keep-alive variant]) and, once Stagehand joins, also unicasts a dense state stream to the iPad in parallel with the broadcasts that the other CDJs see.
+
+[#joining-the-network]
+== Joining the Network
+
+Stagehand sends an abbreviated form of the classic startup sequence.
+Where a CDJ runs the full xref:startup.adoc#cdj-initial-announcement[`0x0a`×3] → xref:startup.adoc#cdj-assign-stage-1[`0x00`×3] → xref:startup.adoc#cdj-assign-stage-2[`0x02`×3] → xref:startup.adoc#cdj-assign-final[`0x04`×3] handshake and the DJM-A9 runs that exact same five-phase mixer handshake, Stagehand sends *only `0x0a`×3 → `0x02`×3*, then transitions straight to broadcasting `0x06` keep-alives.
+The `0x00` pre-claim phase and the `0x04` confirmation phase are both omitted.
+
+[#stagehand-initial-announcement]
+.Stagehand initial announcement packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 0x0a)
+
+(draw-boxes [1 (hex-text 3 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-box 5)
+----
+
+This is structurally an xref:startup.adoc#cdj-initial-announcement[initial announcement] of length `0025` (the same 37-byte form a pre-3000 CDJ broadcasts), but byte{nbsp}``21`` (the second protocol-structure byte) is `03` rather than `02`, matching the CDJ-3000-era protocol marker.
+Byte{nbsp}``24`` (the trailing device-type slot) is `05` rather than the `01` of a CDJ or the `02` of a DJM mixer.
+Stagehand is the first device this analysis has seen to claim device type `0x05`.
+
+The claim packet that follows is also structurally CDJ-3000-shaped, but again ends with `05`:
+
+[#stagehand-claim]
+.Stagehand device-number claim packets.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 2)
+
+(draw-boxes [1 (hex-text 3 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-box "IP address" {:span 4})
+(draw-box "MAC address" {:span 6})
+(draw-boxes [(hex-text 0x3a 2 :bold) (text "N" :math)])
+
+(draw-boxes [1 (text "a" :math)])
+----
+
+Byte{nbsp}``2e`` in this packet (the device-number `D` slot in the xref:startup.adoc#mixer-assign-stage-2[mixer's claim] or the xref:startup.adoc#cdj-assign-stage-2[CDJ's claim]) is **always** `3a` for Stagehand.
+This is a fixed symbolic value, not the number Stagehand actually operates with — see <<device-numbers,Device Numbers>> below.
+_N_ at byte{nbsp}``2f`` takes the values `01`, `02`, `03` across the three iterations, exactly as in a CDJ or mixer claim.
+
+After the third `0x02` packet Stagehand transitions immediately to broadcasting `0x06` keep-alives at roughly 2 second intervals, the same cadence the DJM-A9 uses.
+
+NOTE: An empty network is enough to elicit this whole sequence — Stagehand will run through the handshake even with no other devices present, just chasing announce/claim retries.
+The keep-alives become byte-stable as soon as one full claim cycle completes.
+
+[#device-numbers]
+=== Device Numbers and Per-Launch Identity
+
+The classic device-number contract is that the value claimed in the `0x02` packet (the `D` at byte{nbsp}``2e``) becomes the device number that appears in every subsequent keep-alive and status packet.
+Stagehand is the only device this analysis has seen that *breaks* that contract: it claims `0x3a` (decimal 58) but operates with a *random number drawn from a high range* on each launch.
+
+The runtime number lives in byte 36 of the `0x06` keep-alive (the slot where a CDJ or mixer puts `D`).
+Across five cold-launches of the Stagehand app over the same captured Wi-Fi network, the observed values were 141, 211, 156, 190, and 199.
+That spread is consistent with a random integer drawn from roughly `0x80`–`0xff` excluding the canonical CDJ slots (1–6) and the mixer slot (33).
+The reason for the mismatch is presumably to keep Stagehand visible-but-out-of-the-way: the symbolic slot 58 leaves a marker on the wire that any other device on the network can recognise as "a Stagehand instance is present", while the high-range runtime number guarantees no collision with player or mixer slots regardless of how many are connected.
+
+A second piece of per-launch identity lives at byte 39 of the `0x0a` announce and `0x02` claim packets: a 4-byte _identifier_ field.
+Across the same five cold-launches the identifier was distinct each launch — but **lagged by one launch**: each launch's announce contained the value that the *previous* launch had used in its claim.
+This suggests Stagehand caches the random identifier it picks once, uses it for the announce on the next launch, then picks a new one for that launch's claim.
+The mechanism is curious but not load-bearing for any downstream protocol behaviour.
+
+[#dual-mac]
+=== The Dual MAC
+
+Stagehand presents two distinct MAC addresses on the wire:
+
+* The protocol-layer MAC embedded inside `0x02` / `0x06` payloads is a stable-looking AlphaTheta-OUI value (`c8:3d:fc:**:**:**`), the same OUI block as real Pioneer/AlphaTheta hardware.
+This is the MAC the A9 names back to the iPad in its xref:#a9-paired-keepalive[paired keep-alive].
+* The link-layer (Ethernet/802.11) MAC visible to ARP is a locally-administered random value (e.g. `5a:2d:07:**:**:**`).
+This is iOS's standard Wi-Fi privacy MAC, rotated per network.
+
+Both values change between launches.
+The A9 binds its outgoing unicast UDP traffic to the *protocol* MAC's IP, not to the link-layer MAC — so an `arp` lookup of the iPad's IP will never return the MAC embedded in Stagehand's protocol payloads, only the iOS Wi-Fi privacy MAC.
+This is harmless under normal operation but matters when MITM-ing the link: the bettercap target list must use the link-layer MAC, while any decoded `0x06` payload comparison must use the protocol MAC.
+
+[#keep-alive]
+== Stagehand Keep-Alive
+
+The keep-alive Stagehand broadcasts at ~2 second intervals on port 50000 is a 54-byte packet structurally identical to the xref:startup.adoc#cdj-keep-alive[CDJ keep-alive], but ends with a different model-code byte.
+
+[#stagehand-keep-alive]
+.Stagehand keep-alive packet.
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 6)
+
+(draw-boxes [1 (hex-text 3 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-boxes [(text "D" :math) 1])
+(draw-box "MAC address" {:span 6})
+(draw-box "IP address" {:span 4})
+(draw-related-boxes [1 0 0 0 5 0x20])
+----
+
+`D` at byte{nbsp}``24`` is Stagehand's per-launch runtime number (141–211), *not* the `3a` it stamped in its claim.
+Byte{nbsp}``21`` is `03` rather than `02` — the CDJ-3000-era protocol marker, which Stagehand carries through all of its broadcast frames.
+Byte{nbsp}``34`` is `05`, marking the device type as Stagehand (same value as the trailing byte of the xref:#stagehand-initial-announcement[initial announcement]).
+
+[#model-code]
+=== The Model Code at Byte{nbsp}``35``
+
+Byte{nbsp}``35`` of every modern keep-alive is a *per-product model code* that AlphaTheta-era firmware appears to have added to the legacy Pioneer ProDJLink protocol.
+The dysentery-documented xref:startup.adoc#cdj-keep-alive[original CDJ keep-alive] left this slot at `00`; the xref:startup.adoc#cdj-3000-foreshadowing[CDJ-3000-compatible variant] uses `64`, and dysentery already flagged that "having the wrong value there can even cause CDJ-3000s set to player 5 or 6 to repeatedly kick themselves off the network".
+That CDJ-3000 special-case generalises: every modern AlphaTheta product appears to stamp its own code.
+
+The values observed so far:
+
+[cols=">1m,<14"]
+|===
+|Code |Device
+
+|00 |Legacy / dysentery-era hardware (also used by CDJ-3000 when posing as the legacy *NXS-GW* persona — see <<vcdj-3000-persona>>).
+|20 |Stagehand iPad app.
+|31 |DJM-A9 mixer.
+|64 |CDJ-3000.
+|===
+
+The numeric pattern (`0x20` ASCII space, `0x31` ASCII '1', `0x64` ASCII 'd') does not seem semantic — likely just a per-product enum assigned by AlphaTheta engineering.
+Devices that stamp `00` are treated as legacy; devices that stamp anything else are treated as their specific product.
+
+[#unicast-peer-marker]
+== The Unicast Peer Marker
+
+Every unicast packet the A9 and the CDJ-3000 send to Stagehand has the same ten-byte magic and device-name field as their broadcasts, but uses the *one-byte* type field at byte{nbsp}``0a`` (the byte after the magic) — so the device name begins one byte earlier at byte{nbsp}``0b``, exactly as in the xref:beats.adoc#beat-packets[beat packets].
+The byte that follows the name field at byte{nbsp}``1e`` is **always `3a`** in unicast frames addressed to Stagehand, and never appears in broadcast frames.
+
+This `3a` byte distinguishes the unicast peer-channel from the broadcast plane and is presumably the receiver's discriminator: a device that sees a `3a` at offset `1e` knows the packet was sent unicast to a Stagehand-class peer rather than broadcast to "the network".
+The value matches the symbolic device number Stagehand claims in its `0x02` packet (`0x3a` = 58), which is consistent with the marker being read as "to-Stagehand traffic".
+
+The lone exception is the *paired* `0x06` keep-alive on port 50000, which keeps the two-byte type field of the broadcast keep-alive (`06 02`) so that its first 54 bytes are byte-identical to the broadcast form.
+See <<a9-paired-keepalive>> below.
+
+[#a9-unicast-channel]
+== DJM-A9 → Stagehand Unicast State
+
+When Stagehand is attached, the A9 unicasts five distinct packet types to the iPad across the three ProDJLink ports, at a combined steady-state rate of ~38 packets/sec.
+The iPad answers with a tiny trickle of unicast `0x3a`-type packets back the other way — single-digit packets per minute even under heavy provocation.
+The asymmetry is the point: the A9 is the talker, Stagehand is the listener.
+
+The breakdown:
+
+[cols=">1m,>1m,>1m,>1m,<10"]
+|===
+|Port |Type |Size |Rate |Purpose
+
+|50000 |06 02 |100 B |~0.5/sec |<<a9-paired-keepalive,Paired keep-alive>> naming both the A9 and the Stagehand peer.
+|50001 |6a |53 B |~3.4/sec |Beat-cadence heartbeat with a 17-byte zero payload (parallel to the broadcast beat heartbeat).
+|50001 |58 |584 B |~30/sec |<<a9-vu-stream,Per-channel level meter / VU stream>>.
+|50002 |39 |266 B |~4/sec |<<a9-mixer-state,Per-channel mixer state>> — fader, EQ, trim, color, crossfader.
+|50002 |3b |40 B |~0.24/sec |Short heartbeat — only a sequence counter varies across the body.
+|===
+
+[#a9-paired-keepalive]
+=== Paired Keep-Alive (`0x06 02`)
+
+The only A9 → Stagehand packet that keeps the two-byte type field is the 100-byte paired keep-alive on port 50000.
+The first 54 bytes are byte-for-byte identical to the A9's broadcast keep-alive — same MAC, same IP, same device number `21`, same model-code byte `31`.
+The next 46 bytes name the Stagehand peer the A9 is paired with.
+
+The A9's broadcast keep-alive itself is the legacy xref:startup.adoc#mixer-keep-alive[mixer keep-alive] form with two AlphaTheta-era amendments: byte{nbsp}``34`` is `03` rather than `02` (the modern mixer device-type marker), and byte{nbsp}``35`` is `31` rather than `00` (the A9 model code).
+
+[#a9-paired-keepalive-packet]
+.A9 paired keep-alive (unicast to Stagehand on port 50000).
+[bytefield]
+----
+include::example$startup_shared.edn[]
+
+(draw-packet-header 6)
+
+(draw-boxes [1 (hex-text 2 2 :bold)])
+(draw-box (text "len" :math [:sub "p"]) {:span 2})
+(draw-boxes [(hex-text 0x21 2 :bold) 2])
+(draw-box "A9 MAC" {:span 6})
+(draw-box "A9 IP" {:span 4})
+(draw-related-boxes [2 0 0 0 3 0x31])
+(draw-related-boxes (repeat 14 0))
+
+(draw-boxes [(hex-text 0x3a 2 :bold) 1])
+(draw-box "Stagehand MAC" {:span 6})
+(draw-box "Stagehand IP" {:span 4})
+(draw-related-boxes [0 0 0 0 5 0x20])
+(draw-related-boxes (repeat 14 0))
+----
+
+The second-block header at byte{nbsp}``44`` carries the unicast peer marker `3a` in place of the A9's mixer device number, then names the Stagehand peer with its protocol-layer MAC, its IP, the device type `05`, and Stagehand's model code `20`.
+
+The pairing is *one-way*: only the A9 emits this paired form.
+Stagehand's own broadcast keep-alives never name the A9 in return.
+The A9 is keeping the record of "who I am serving"; Stagehand never asserts a partner.
+
+[#a9-mixer-state]
+=== Mixer State (`0x39`)
+
+The 266-byte `0x39` packet on port 50002 is where Stagehand sources every per-channel fader / EQ / trim / color / crossfader reading.
+It is broadcast at ~4 Hz with no apparent triggering by state changes; the per-control bytes update in place from one frame to the next.
+
+[#stagehand-039]
+.A9 per-channel mixer state packet (0x39).
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x39 3)
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-box "?" {:span 2})
+(draw-padding 0x30 nil)
+(draw-box (text "Per-channel × 4 + master + FX state (232 B, " :plain [:hex "24"] " ... " [:hex "109"] ")") [{:span 16} :box-above])
+(draw-box nil [{:span 16} :box-below])
+(draw-padding 0x10a nil)
+----
+
+The peer marker `3a` and the constant `03` follow at bytes{nbsp}``1e``–`1f`, then a length-like field _len~r~_ at bytes{nbsp}``20``–`21` (`00 da` at baseline = 218 — close to but not equal to the 232 bytes that follow it).
+The low byte of _len~r~_ at byte{nbsp}``21`` also acts as a partial state-counter: it ticks on some control changes but not all (no change on EQ-Hi-cut or crossfader-position; jumped by 3 on a crossfader-assign flip).
+Bytes{nbsp}``22``–`23` (`00 e6` at baseline) are unexplained.
+
+==== Per-Channel Block
+
+Each per-channel block is *24 bytes*, repeated for channels 1–4 at offsets 36 / 60 / 84 / 108.
+Decoded by single-control provocation against a known baseline:
+
+[cols=">1m,<2m,<10"]
+|===
+|Offset within block |Control |Encoding
+
+|00 |Input source selector _(hypothesis)_ |`08`/`02`/`02`/`00` at baseline; per-channel distinct values.
+|01 |TRIM |`00`–`ff`, unity = `80`.
+|02 |— |Always `00` at baseline (padding, or low byte of TRIM).
+|03 |EQ HI |`00` cut, `80` unity, `ff` boost.
+|04 |EQ MID |`00` cut, `80` unity, `ff` boost.
+|05 |Center-detented unknown _(hypothesis: EQ MID-LOW band)_ |`80` at baseline, sitting between EQ MID (`04`) and EQ LOW (`06`). The four EQ slots `03`–`06` lay out in physical top-to-bottom order, which matches the *4-band* per-channel isolator of the DJM-V10 (HIGH / MID-HIGH / MID-LOW / LOW) rather than the A9's 3-band HIGH / MID / LOW. On that reading `04` is MID-HIGH and `05` is MID-LOW; the A9 drives only its single MID into `04` and leaves the MID-LOW slot detented at `80`. The center-detent (unity = `80`) fits an EQ band, and the Color-FX knob already occupies `07`, so the earlier CUE-level / FX-send guess now seems unlikely. Unverifiable on this A9-only rig — a DJM-V10 + Stagehand capture (e.g. from https://github.com/AhnHEL[@AhnHEL], who supplied the V10 captures behind xref:mixer_integration.adoc[the 6-channel mixer packet]) would settle `04`/`05` directly.
+|06 |EQ LOW |`00` cut, `80` unity, `ff` boost.
+|07 |Color FX knob |`00`–`ff`, center = `80`.
+|08–0a |— |Always `00`.
+|0b |Channel fader |`00` (down) – `ff` (max), linear.
+|0c |Crossfader assign |`00` THRU, `01` A, `02` B.
+|0d–17 |— |Always `00` at baseline.
+|===
+
+The 24-byte stride was verified by predicting CH2's fader offset from CH1's: at offset 47 in CH1, then at `47 + 24 = 71` for CH2, which exactly matched.
+
+==== Global Master / Effects Region
+
+After the four channel blocks comes 40 bytes of reserved space (all-zero in every capture seen so far, including with audio flowing), then a ~94-byte master / effects block beginning at byte{nbsp}``ac``.
+One global control has been pinned down inside that region:
+
+[cols=">1m,<2,<10"]
+|===
+|Offset |Control |Encoding
+
+|0xb4 (180) |Crossfader position |`00` full-left (A), `ff` full-right (B); centered at ~`78` (120) on this unit — slightly off the mathematical midpoint, presumably reflecting a hardware-specific dead-zone target.
+|===
+
+The remainder of the master / effects block has a visible repeating skeleton (`78 00 00 00 01 01 01 06 07 00 00 ff 07 80 00`) that almost certainly encodes the master fader, booth knob, headphone level / CUE mix, BEAT FX type / depth / level, Color FX selector, and MASTER EQ — but no master/FX controls were provoked under MITM, so the byte-level mapping is **open**.
+
+[#a9-vu-stream]
+=== VU Stream (`0x58`)
+
+The 584-byte `0x58` packet is the most active stream on the wire — ~30/sec, every second of the 103-minute idle capture and the 19-minute provocation capture.
+With no audio passing through the mixer, the body is almost entirely zero apart from a small structured prefix (`02 24 00 00 00 00 00 a5 38 ...`).
+
+The rate, the size, and the fact that this is the *only* A9 → Stagehand stream that runs at audio-frame cadence (~30 Hz matches a typical VU-meter refresh) make per-channel level metering the strongest candidate for the body's contents.
+But no live audio capture has been run, so this is unverified — _hypothesis (strong)_.
+
+[#a9-short-heartbeat]
+=== Short Heartbeat (`0x3b`)
+
+A 40-byte `0x3b` packet on port 50002 carries a 4-byte payload at byte{nbsp}``24``.
+Across 1,465 instances in the 103-minute capture the only field that varies is byte{nbsp}``25``, which behaves as a sequence counter that increments and wraps every ~32 ticks (and a couple of adjacent bytes that look derived from it).
+All other bytes are constant.
+So `0x3b` is a heartbeat, not a state-carrying packet — it appears to keep the unicast channel warm even when no other A9 → Stagehand traffic is moving.
+
+[#stagehand-to-a9]
+=== Stagehand → A9 Commands (`0x3a`)
+
+Across the entire 103-minute capture, Stagehand sent only 14 unicast packets to the A9 — all 40 bytes, all sent in pairs ~10 ms apart, so 7 distinct commands.
+Each uses packet type `0x3a` (the same value Stagehand stamps as its symbolic device number), names the A9 by its real device number `21` at byte{nbsp}``1e``, and carries a 2-byte opcode followed by a 4-byte payload.
+
+[#stagehand-3a-command]
+.Stagehand to A9 unicast command packet (0x3a).
+[bytefield]
+----
+include::example$status_shared.edn[]
+
+(draw-packet-header 0x3a 2)
+(draw-box (text "op" :math) {:span 2})
+(draw-box (text "len" :math [:sub "r"]) {:span 2})
+(draw-box (text "arg" :math) {:span 4})
+----
+
+The opcodes observed were `00 b6`, `00 b4`, `00 a2`, `00 b1`, `00 b7`.
+The clustering in the `0x00 b0`–`0x00 b8` range hints at a small command family, but only `00 b4` was sent more than once across the capture and no specific UI action was tied to any opcode by the original capture.
+Payloads (`arg`) are 4 bytes; values seen were `00 0a 00 00`, `00 0c 00 00`, `00 16 00 00`, `00 09 00 00`, `00 0b 00 00` — consistent with small integer parameter IDs rather than continuous control values.
+
+The Stagehand UI does *not* let the operator drive A9 faders, EQ, trim, or crossfader from the iPad (verified by hands-on test), so these opcodes presumably address some other surface — channel-select / FX-toggle / cue-button latches, or the "input source" / "color FX" selectors visible inside `0x39`.
+A scripted UI tour under MITM is still needed to map opcode → UI action.
+
+[#cdj-unicast-channel]
+== CDJ-3000 → Stagehand Unicast State
+
+When a CDJ-3000 joins a Stagehand-attached network it activates a second, denser unicast push channel to the iPad that runs in parallel with the broadcasts the rest of the network sees.
+The same five-port discipline as the A9 applies (50000 / 50001 / 50002 / 50004), with one new addition: port *50004* carries a 142.857 Hz monotonic counter that none of the broadcasts use.
+
+The full inventory:
+
+[cols=">1m,>1m,>1m,>1m,<10"]
+|===
+|Port |Type |Size |Rate |Purpose
+
+|50000 |06 02 |100 B |~0.5/sec |Paired keep-alive, structurally identical to the <<a9-paired-keepalive,A9 version>> but naming the CDJ at the head and the Stagehand peer at the tail.
+|50001 |6a |53 B |~3.4/sec |Beat-cadence heartbeat, parallel to the broadcast 53-byte heartbeat.
+|50001 |0b |68 B |~30/sec |<<cdj-0b-multiplex,Multiplexed telemetry — round-robin sub-types and a lookahead vector>>.
+|50001 |28 |96 B |on each beat |xref:beats.adoc#beat-packets[Beat packet], unicast variant — same body as the broadcast form.
+|50002 |55 / 56 |varies |on request |<<waveform-cue-color,Waveform / cue-color / metadata request and reply>>.
+|50002 |68 / 69 / 6b / 6c / 6d |varies |varies |<<command-snapshots,Settings-panel snapshots and command channel>>.
+|50002 |3d |2572 B |on track load |<<track-metadata-push,Track metadata push>>.
+|50004 |20 |varies |142.857 Hz |<<timing-stream,Network-wide timing stream>>.
+|===
+
+[#vcdj-3000-persona]
+=== The "VCDJ-3000" Persona
+
+A CDJ-3000 attached to a Stagehand-bearing network publishes *three* distinct names on the wire:
+
+* `CDJ-3000` — the broadcast-facing identity, used in every xref:startup.adoc#cdj-3000-initial-announcement[announce], xref:startup.adoc#cdj-3000-foreshadowing[keep-alive], and xref:vcdj.adoc#cdj-status-packets[status broadcast].
+* `NXS-GW` — an embedded *Kuvo gateway* persona used to send a sparse `0x40` heartbeat every ~3 minutes.
+The model-code byte for this persona is `00` (the dysentery-era value).
+Deep Symmetry's read (per maintainer feedback on this analysis) is that modern CDJ-3000s carry an embedded Kuvo server here: when several CDJ-3000s share a network they negotiate amongst themselves which one offers the Kuvo gateway, and only the elected unit publishes the `NXS-GW` persona — presumably so AlphaTheta no longer has to sell clubs a physical Kuvo server box.
+* `VCDJ-3000` — used **only** in `0x56` waveform / cue-color / metadata replies to Stagehand.
+Never broadcast.
+Stagehand's UI relies on `0x56` data for its waveform and cue-color rendering, and every such reply names the source as `VCDJ-3000` rather than `CDJ-3000`.
+
+All three personas share the one physical MAC and IP.
+The naming swap is interesting because dysentery already documents the *iPad-side* `0x56` request flow under the assumption that the responder names itself the same as it does on the broadcast plane — for AlphaTheta-era CDJ-3000s talking to Stagehand, it doesn't.
+A consumer that filters by name will need to recognise all three.
+
+[#timing-stream]
+=== Timing Stream (`0x20` on port 50004)
+
+Once Stagehand has joined, the CDJ-3000 unicasts a `0x20`-typed packet to the iPad on port 50004 at exactly 142.857 Hz (a precise 7.000 ms tick).
+The body carries a 24-bit monotonic counter and a small constant prefix; the counter increments every tick regardless of whether a track is loaded or playing.
+
+The cadence and the steadiness make this look like a *shared network timebase* — a way for the iPad to derive a sub-millisecond clock reference from a participating CDJ, independent of the per-beat timing carried by `0x28`.
+The choice of 7 ms specifically (vs. an obvious round number like 8 ms / 125 Hz or 10 ms / 100 Hz) is unexplained.
+
+This is the same type byte and port that dysentery documents under xref:touch_audio.adoc#audio-timing[Audio Timing] for Touch Audio — the encoding may be related.
+_Confidence: structurally consistent but not verified against the Touch Audio decoding._
+
+[#cdj-0b-multiplex]
+=== Multiplexed Telemetry (`0x0b`)
+
+The CDJ unicasts a 68-byte `0x0b` packet at ~30/sec, which is one of two streams that share that type byte:
+
+* An *8-slot round-robin* sub-stream identified by an `(NN, byte36)` pair in the body header.
+Eight sub-types rotate at ~4.4 Hz each (so collectively ~35 Hz), giving each sub-type its own slow update channel.
+The semantic content of each sub-type — what specific CDJ-state field it carries — has not been decoded; the round-robin structure was found by clustering on the pair, not by isolating any single field.
+* A *1× lookahead vector* with the body header `00 01 00 03 ...` whose payload is byte-equivalent to the lookahead fields in the broadcast xref:beats.adoc#beat-packets[`0x28` beat packet] (the `nextBeat` / `2ndBeat` / `nextBar` / `4thBeat` / `2ndBar` / `8thBeat` columns).
+So this is a unicast mirror of the broadcast beat lookahead, presumably so Stagehand can decorate its CDJ tiles with the same upcoming-beat hints the master-clock-aware devices use.
+
+The 8 round-robin sub-types include slow event counters (one byte ticks ~once every 65 s per sub-stream), fast counters (two bytes change every packet — likely frame-cadence), and per-channel slots that stay mostly empty under single-deck capture but probably populate under multi-deck mix.
+None of this has been provoked.
+
+NOTE: This is the same packet type as the xref:beats.adoc#absolute-position-packets[Absolute Position packets] dysentery documents on the broadcast plane, but the unicast variant carries different content (telemetry / lookahead rather than playhead).
+The 68 B unicast form sits alongside the 0x0b broadcast form rather than replacing it.
+
+[#waveform-cue-color]
+=== Waveform / Cue-Color / Metadata Requests (`0x55` / `0x56`)
+
+Stagehand fetches waveform overlays, cue-colour palettes, and detailed track metadata from the CDJ-3000 via an 8-opcode request/reply protocol on port 50002.
+The iPad sends a `0x55`-typed request, the CDJ replies with a `0x56`-typed packet whose body type is tagged by the opcode that asked.
+
+[cols=">1m,>1,<10"]
+|===
+|Op (`0x55`) |Reply size |Reply content
+
+|01 |596 B |Preview waveform (the small full-track strip Stagehand renders along the bottom of each deck tile).
+|02 |820 B |Colored overlay layer #1 (`reply-type = 0x27`).
+|03 |820 B |Colored overlay layer #2 (`reply-type = 0x2d`).
+|04 |384 B |Colored detail waveform — 54 columns × 6 bytes.
+|05 |~2400 B |Track metadata (still partially decoded — see <<track-metadata-push>>).
+|06 |160 B |4-slot cue-colour palette, variant A (`reply-type = 0x08`).
+|07 |~2400 B |Paired track metadata block.
+|08 |160 B |4-slot cue-colour palette, variant B (`reply-type = 0x08`, distinguished by byte 39).
+|===
+
+Two variants of the reply remain opaque: a 196-byte payload (entropy 6.22, vocabulary 85 distinct bytes) that is structurally consistent with a proprietary cue/loop list, and a 316-byte payload (entropy 7.19, exactly 16 AES blocks) that looks like AES-CBC ciphertext.
+The decryption key for the second one is presumably embedded in the AlphaTheta-Connect mobile app.
+_Hypothesis (strong): paired cue-colour palettes correspond to memory-cue vs hot-cue, or primary-deck vs secondary-deck — they are structurally identical and distinguished only by a single byte at offset 39._
+
+[#track-metadata-push]
+=== Track Metadata Push (`0x3d`)
+
+When a track loads on the CDJ-3000, the player unicasts a 2572-byte `0x3d` packet to Stagehand carrying a denormalised metadata blob.
+Roughly the first ~150 bytes have been decoded: UTF-16-LE string slots for title, artist, album, genre, comment, and label, plus two varying 16-bit fields at offsets `0x2a`/`0x56` (mirrored — almost certainly the track ID) and `0x2e` (purpose unknown).
+
+The remaining ~2370 bytes are unmapped.
+The post-string region (offsets `0x900`–`0xa04`) is the densest unknown zone and likely encodes BPM, key, length, hot-cue list, loop list, cue colour tags, rating, and file path — all the fields a "full" track tile would need to render.
+There is also a tag byte in the comment slot (`03` for raw ASCII in one capture, `01` for UTF-16-BOM + UTF-16 in another) that suggests a TLV-style encoding for the comment, but the full encoding has not been pinned down.
+
+[#command-snapshots]
+=== Settings-Panel Snapshots and the Command Channel
+
+A handful of small-packet types on port 50002 carry CDJ settings-panel content to Stagehand and Stagehand command writes back to the CDJ.
+These were the hardest to decode because they fire in clusters: each user-visible CDJ pref-write generates a 5–10 packet exchange across at least three of these types within ~50 ms.
+
+[cols=">1m,>1,<10"]
+|===
+|Type |Size |Behaviour
+
+|68 |68 B |iPad → CDJ heartbeat; body is byte-stable across the whole 21-minute capture (it does not carry commands).
+|69 |varies |CDJ → iPad settings-panel snapshot; flag bytes at offsets 36, 37, 46, 47 toggle when the iPad changes a pref.
+|6b |124 B |iPad → CDJ *pref-write* channel — see below.
+|6b |68 B (also seen) |CDJ → iPad settings-panel state refetch, fires when the user enters a CDJ settings submenu (~10 sends in 30 min, clustered 8–21 s before each prefs-step the operator made).
+|6c / 6d |varies |Device-list snapshots from CDJ — listed but not decoded; cardinality suggests they enumerate the network's other devices.
+|07 |56 B |iPad → CDJ *transport-command* channel — see below.
+|===
+
+Two of these are the *Stagehand command channel*: the route by which the iPad pushes CDJ preference changes and CDJ transport actions onto the wire.
+Phase 5 of the original analysis spent three weeks trying to find a TCP control channel for these commands; it turned out there is no TCP, just two UDP types that had been hiding in plain sight because earlier scans were marker-window-driven rather than transition-first.
+
+[#pref-write-channel]
+==== Pref-Write Channel (`0x6b`, 124 B)
+
+The 124 B `0x6b` packet on port 50002 carries CDJ preference writes from the iPad to the CDJ-3000.
+The body type at byte{nbsp}``24`` distinguishes a *write* (`0x01`) from a *poll* (`0x00`); writes carry the new value, polls do not.
+
+The verified writes:
+
+[cols=">1m,<3,<10"]
+|===
+|Body offset |Preference |Encoding
+
+|0x2c (44) |On-air display |`0x80` OFF, `0x81` ON.
+|0x3c (60) |Quantize |`0x80 \| enum_index` — `0x80` = 1, `0x81` = ½, `0x82` = ¼, etc.
+|===
+
+Both were confirmed by capturing the iPad → CDJ packet immediately before the user-visible value flipped on the CDJ screen, and by repeating the toggle in both directions to confirm directionality.
+
+[#transport-channel]
+==== Transport-Command Channel (`0x07`, 56 B)
+
+The 56 B `0x07` packet on port 50001 carries CDJ transport commands.
+Byte{nbsp}``2b`` of the body encodes the action; byte{nbsp}``2d`` is a press / release flag (`0x01` press, `0x00` release).
+
+[cols=">1m,<10"]
+|===
+|Action byte |Operation
+
+|0x0f |Play (paired with `0x14`).
+|0x14 |Play (paired with `0x0f`).
+|0x18 |Skip forward.
+|0x19 |Skip backward (also seen for some pause transitions).
+|0x1a |Seek forward.
+|0x1b |Seek backward.
+|===
+
+Body byte{nbsp}``21`` is a coupled sub-type / view-state hash that correlates with the action byte — the same Stagehand UI tap fires both bytes in a single packet.
+The `0x07` channel fires for app launch, UI navigation, and the transport actions above; it does **not** fire for Live-mode toggles, which stay iPad-local.
+
+This protocol is markedly different from dysentery's existing xref:loading_tracks.adoc#loading-tracks[load-track command] — there is no acknowledgment flow, no payload beyond the action byte and the press/release flag, and the channel is open continuously rather than opening a TCP session per command.
+The simplicity is consistent with a touch-surface controller rather than an automation interface.
+
+==== Live Mode Stays Local
+
+Live mode is the one Stagehand toggle that stays *entirely* on the iPad.
+Across two full MITM captures bracketing six Live-mode taps each, no iPad-originated packet of any kind fired at the moment of any tap.
+The Live-mode setting therefore does not propagate to the CDJ or the A9 via the wire — it gates something inside the Stagehand UI itself (probably which on-screen controls are active).
+
+[#cdj-broadcast-extras]
+== CDJ Broadcast Extras Observed Alongside Stagehand
+
+Two broadcasts the CDJ-3000 emits that this analysis hadn't seen before, and that may or may not be Stagehand-specific:
+
+* A *5-packet `0x04` burst* from the *DJM-A9* on port 50001 within ~7 s of a new CDJ joining the network.
+This was discovered when CDJ#2 powered on during a Phase 5a capture; the A9 fired 5 × 100-byte `0x04` packets in rapid succession.
+Hypothesis: the A9 maintains a per-CDJ binding table and re-broadcasts the table when a new player enters, so the existing devices can refresh their picture of "who is on the network".
+* The *`0x00` pre-claim* phase on the A9 join (xref:startup.adoc#mixer-startup[the dysentery-documented mixer startup] does not include this).
+Three `0x00`-typed packets are sent before the `0x02` claim, each advertising the A9's MAC address.
+This may be an AlphaTheta-era MAC-collision check added to the legacy mixer handshake.
+
+Neither was provoked under deliberate control, so the interpretations are _hypothesis_.
+
+[#whats-missing]
+== What's Missing
+
+A lot of the surface above is still under-decoded.
+The biggest gaps:
+
+* *The `0x39` master / effects block* (offsets `0xac`–`0x110`) is structurally visible but no master/FX controls were provoked under MITM.
+This is the easiest unmapped surface to pick up — the per-control provocation recipe that decoded the per-channel blocks should work directly.
+* *The `0x58` VU stream* almost certainly carries per-channel level meters, but every capture so far has been with no audio passing through the mixer.
+A capture with audio across all four channels would confirm.
+* *The Stagehand → A9 command opcodes* in the `0x00 b0`–`0x00 b8` range haven't been mapped to UI actions.
+A scripted UI tour under MITM (tap each channel select / cue button / FX block in sequence) would build the mapping table.
+* *The `0x0b` round-robin sub-types* on the CDJ unicast channel — 8 distinct sub-types are known to exist, but the per-sub-type semantics are open.
+* *The `0x3d` track-metadata body* past byte ~`0x150` — the post-string region almost certainly encodes BPM / key / length / cues / loops / colour / rating / file path but has not been correlated against a known-track-set load.
+* The two opaque *`0x56` reply variants* — 196-byte (likely cue/loop list, decodable by two-track diff) and 316-byte (likely AES-CBC, decodable only with the AlphaTheta-Connect key).
+* *Multi-deck SYNC / MASTER handshake* between two CDJ-3000s with Stagehand attached — needs a two-deck rig.
+* The *device-number-collision* behaviour when Stagehand's random 141–211 happens to collide with a connected device — never directly observed, only the structural avoidance of slots 1–6 and 33.
+
+The biggest open structural question is whether *any* part of Stagehand's protocol is encrypted at rest in the AlphaTheta-Connect mobile app — the 316-byte `0x56` reply is a strong candidate for AES-CBC, but the key has not been recovered.
+A mobile-app reverse-engineering pass on AlphaTheta-Connect would close that gap and unlock the encrypted metadata variant.
