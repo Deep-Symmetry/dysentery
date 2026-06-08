@@ -1003,7 +1003,8 @@ The 3-band preview tag body begins at byte `34` and has the following structure,
 (draw-column-headers)
 (draw-box (text "len_entry_bytes" :math) {:span 4})
 (draw-box (text "len_entries" :math) {:span 4})
-(draw-binary-field "entries" {:span 8})
+(draw-gap (text "entries" :math))
+(draw-bottom)
 ----
 
 _len_entry_bytes_ is always `3`.
@@ -1066,7 +1067,8 @@ The 3-band waveform detail tag body begins at byte `34` and has the following st
 (draw-box (text "len_entry_bytes" :math) {:span 4})
 (draw-box (text "len_entries" :math) {:span 4})
 (draw-related-boxes (repeat 4 nil))
-(draw-binary-field "entries" {:span 8})
+(draw-gap (text "entries" :math))
+(draw-bottom)
 ----
 
 _len_entry_bytes_ is always `3`.
