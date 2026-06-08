@@ -441,6 +441,7 @@ The meanings we have identified so far are:
 |===
 |Type |Meaning
 
+|0000 |Audio Path (seen in stream start menus)
 |0001 |Folder (such as in the playlists menu)footnote:[A nested list of playlists rather than an individual playlist.]
 |0002 |Album title
 |0003 |Disc
