@@ -281,7 +281,7 @@ The following queries have been tested against a CDJ-3000 playing a Beatport LIN
 
 For Beatport LINK tracks specifically, issuing a `GetTrackInfo` query (the same query used to obtain a local file path for rekordbox tracks) returns the Beatport catalog ID encoded as a pseudo-path rather than a real filesystem location.
 For example, a response of `/26883657.m4a` means the Beatport track ID is `26883657`.
-This value can be used directly with the Beatport catalog API — for example, `https://api.beatport.com/v4/catalog/tracks/26883657/` — to retrieve richer metadata than the CDJ itself provides.
+This value can be used directly with the Beatport catalog API — for example, `\https://api.beatport.com/v4/catalog/tracks/26883657/` — to retrieve richer metadata than the CDJ itself provides.
 Authenticating with the Beatport API is outside the scope of this document.
 
 _T~r~_ at byte{nbsp}``2a`` indicates the track type:
