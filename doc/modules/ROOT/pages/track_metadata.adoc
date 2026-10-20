@@ -557,7 +557,7 @@ Finally, _artwork_ identifies the specific artwork image you are requesting, as 
 As with other requests for graphical or binary objects, the value after _D_, which identifies the location of the menu for which data is being loaded, is 8.
 
 The response will be a message with _type_ `4002`, containing four arguments.
-The first argument echoes back our request type, which was`2003`.
+The first argument echoes back our request type, which was `2003`.
 The second always seems to be 0.
 The third contains the length of the image in bytes, which seems redundant, because that is also conveyed in the fourth argument itself, a blob containing the actual bytes of the image data, as shown below.
 However, if there is no image data, this value will be 0, and the blob field will be completely omitted from the response, so you _must not_ try to read it!
