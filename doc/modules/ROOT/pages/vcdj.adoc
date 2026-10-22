@@ -266,7 +266,7 @@ A device number greater than 6 will not receive responses.
 
 The following queries have been tested against a CDJ-3000 playing a Beatport LINK streaming track:
 
-[cols="<1,<3,<8"]
+[cols="<3,<2,<7"]
 |===
 |Query |Result |Notes
 
