@@ -818,7 +818,7 @@ Both the enhanced waveform preview and enhanced detail are requested using varia
 The https://github.com/Deep-Symmetry/crate-digger[Crate Digger project], which has its own
 xref:rekordbox-export-analysis::anlz.adoc[analysis document], is focused on obtaining and interpreting these files.
 
-NOTE: The HD waveform (`GetWaveformHD`) is also available for streaming tracks (e.g. Beatport LINK, _T~r~_ = `06`), confirmed on CDJ-3000 hardware.
+NOTE: This style waveform is also available for streaming tracks (e.g. Beatport LINK, _T~r~_ = `06`), confirmed on CDJ-3000 hardware.
 
 To request the enhanced waveform preview of a track, send a message with _type_ `2c04` containing the _rekordbox_ ID of the track, the tag type identifier `PWV4` and the file extension identifier `EXT` encoded as four-byte numbers, holding the ASCII in big-endian (backwards) order:
 
