@@ -301,7 +301,7 @@ _T~r~_ at byte{nbsp}``2a`` indicates the track type:
 |===
 
 The field _rekordbox_ at bytes{nbsp}``2c``–`2f` contains the rekordbox database ID of the loaded track when a rekordbox track is being played.
-When a non-rekordbox track is loaded from a media slot, this field still holds a unique ID by which the track can be identified for metadata requests, and when an audio CD track is loaded, this is just the track number.
+When a non-rekordbox track is loaded from a media slot or via streaming, this field still holds a unique ID by which the track can be identified for metadata requests, and when an audio CD track is loaded, this is just the track number.
 In all cases, combined with the player number and slot information, this can be used to request the track metadata as described in xref:track_metadata.adoc#track-metadata[the Track Metadata section].
 
 The track number being played (its position within a playlist or other scrolling list of tracks, as displayed on the CDJ) can be found at bytes{nbsp}``32`` and `33`, labeled _Track_.
