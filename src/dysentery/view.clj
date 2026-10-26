@@ -252,22 +252,24 @@
         cue-distance (util/build-int packet 164 2)
         raw-beat     (util/build-int packet 160 4)
         beat         (if (= raw-beat 0xffffffff) "n/a" raw-beat)
-        args         {:active           (get packet 39)
-                      :rekordbox-device (get packet 40)
-                      :rekordbox-slot   (case (get packet 41)
+        args         {:active           (get packet 0x27)
+                      :rekordbox-device (get packet 0x28)
+                      :rekordbox-slot   (case (get packet 0x29)
                                           0 "n/a"
                                           1 "CD"
                                           2 "SD"
                                           3 "USB"
                                           4 "collection"
+                                          9 "Beatport"
                                           "???")
-                      :rekordbox-type   (case (get packet 42)
+                      :rekordbox-type   (case (get packet 0x2a)
                                           0 "unloaded"
                                           1 "rekordbox"
                                           2 "unanalyzed"
                                           5 "CD-DA"
+                                          6 "streaming"
                                           "???")
-                      :rekordbox-id     (if (#{1 2 5} (get packet 42)) rekordbox-id "n/a")
+                      :rekordbox-id     (if (#{1 2 5 6 9} (get packet 0x2a)) rekordbox-id "n/a")
                       :track            (util/build-int packet 50 2)
                       :usb-activity     (get packet 106)
                       :usb-local        (case (get packet 111)
