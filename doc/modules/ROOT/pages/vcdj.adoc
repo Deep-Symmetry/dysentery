@@ -264,7 +264,7 @@ Use the _rekordbox_ value from the CDJ status packet as the track ID, with the a
 NOTE: Because the CDJ expects to be queried by another CDJ, the virtual CDJ device number must be 6 or lower for these queries to succeed.
 A device number greater than 6 will not receive responses.
 
-The following queries have been tested against a CDJ-3000 playing a Beatport LINK streaming track:
+The following queries have been tested against a CDJ-3000 playing a Beatport LINK streaming track (keep in mind that you need to retry the queries if the player has not yet finished analyzing the track):
 
 [cols="<3,<2,<7"]
 |===
@@ -275,7 +275,7 @@ The following queries have been tested against a CDJ-3000 playing a Beatport LIN
 |`2904` (waveform detail) |✅ Success |Returns a full detailed blue/white waveform.
 |`2c04` (extended waveform) |✅ Success |For extension `EXT` you can use tag `PWV4` to get a color preview, and tag `PWV5` to get color waveform detail.
 With the CDJ-3000 you can use extension `2EX` and tag `PWV6` to get the 3-band preview, and tag `PWV7` for the 3-band detail.
-|`2204` (beat grid) |❌ Error |CDJ returns an error response. Do not send this query for streaming tracks.
+|`2204` (beat grid) |✅ Success |As with waveforms, must wait for track analysis to complete.
 |`2104` (cues and loops) |❌ Error |CDJ returns an error response.
 |`2b04` (nxs2 cues and loops) |❌ Error |CDJ returns an error response.
 |===
