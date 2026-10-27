@@ -242,7 +242,8 @@ Similarly, _S~r~_ at byte{nbsp}``29`` reports the slot from which the track was 
 |06 |Streaming Direct Play.
 |07 |USB 2 (XDJ-AZ in four-deck mode).
 |08 |Unknown (possibly a streaming service).
-|09 |Beatport LINK streaming.
+|09 |Beatport LINK streaming (seen on CDJ-3000).
+|0E |Beatport LINK streaming (seen on XDJ-AZ).
 |===
 
 NOTE: The XDJ-XZ presents an unusual situation because it embodies two separate players and a mixer all sharing the same IP address.
